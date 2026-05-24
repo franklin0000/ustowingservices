@@ -7,7 +7,7 @@ import { notify, pushEvent } from '../services/notifications.js';
 import { estimateETA } from '../services/geo.js';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', { apiVersion: '2023-10-16' });
 
 const router = Router();
 router.use(authenticate);

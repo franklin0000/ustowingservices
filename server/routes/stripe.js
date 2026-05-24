@@ -5,7 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 import { v4 as uuid } from 'uuid';
 import { pushEvent } from '../services/notifications.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16',
 });
 
