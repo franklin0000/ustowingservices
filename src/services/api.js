@@ -37,6 +37,7 @@ export const auth = {
   me: () => request('GET', '/auth/me'),
   updateProfile: (data) => request('PUT', '/auth/profile', data),
   bypassKyc: () => request('POST', '/auth/bypass-kyc'),
+  kycUpload: (idDocument, licenseDoc) => request('POST', '/auth/kyc-upload', { idDocument, licenseDoc }),
   uploadAvatar: async (file) => {
     const formData = new FormData();
     formData.append('avatar', file);

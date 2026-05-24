@@ -1,41 +1,66 @@
-import { useState } from 'react'
-import { UploadCloud, CheckCircle, AlertTriangle, FileText, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowRight, ShieldCheck, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { auth } from '../../services/api'
+import { stripe } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 export default function KycUpload() {
   const { user, setUser } = useAuth()
   const navigate = useNavigate()
-  const [idDoc, setIdDoc] = useState('')
-  const [licenseDoc, setLicenseDoc] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
+  const [verifyingReturn, setVerifyingReturn] = useState(false)
 
-  // Simulate file upload by converting file to a base64 string
-  const handleFileChange = (e, setter) => {
-    const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setter(reader.result)
-    reader.readAsDataURL(file)
+  useEffect(() => {
+    const isStripeReturn = searchParams.get('stripe_return') === 'true'
+    if (isStripeReturn) {
+      handleStripeReturn()
+    }
+  }, [searchParams])
+
+  const handleStripeReturn = async () => {
+    setVerifyingReturn(true)
+    try {
+      const res = await stripe.checkConnectStatus()
+      if (res.connected) {
+        setUser(prev => ({ ...prev, kycStatus: 'approved' }))
+        navigate('/driver/dashboard', { replace: true })
+      } else {
+        alert('Stripe verification was not completed. Please try again.')
+        setSearchParams({}) // clear params
+      }
+    } catch (err) {
+      alert('Error verifying Stripe status: ' + err.message)
+      setSearchParams({})
+    } finally {
+      setVerifyingReturn(false)
+    }
   }
 
-  const handleSubmit = async () => {
-    if (!idDoc || !licenseDoc) return alert('Please upload both documents.')
+  const handleConnect = async () => {
     setLoading(true)
     try {
-      await auth.kycUpload(idDoc, licenseDoc)
-      // Simulate brief Stripe processing delay
-      setTimeout(() => {
-        setLoading(false)
-        setUser(prev => ({ ...prev, kycStatus: 'approved' }))
-        navigate('/driver/dashboard')
-      }, 1500)
+      const res = await stripe.connectAccount()
+      if (res.url) {
+        window.location.href = res.url // Redirect to Stripe Onboarding
+      } else {
+        throw new Error('Failed to retrieve Stripe URL')
+      }
     } catch (err) {
-      alert('Failed to verify documents: ' + err.message)
+      alert('Failed to connect to Stripe: ' + err.message)
       setLoading(false)
     }
+  }
+
+  if (verifyingReturn) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+        <h2 className="text-xl font-bold text-gray-900">Verifying your identity with Stripe...</h2>
+        <p className="text-gray-500 mt-2">Please wait a moment.</p>
+      </div>
+    )
   }
 
   return (
@@ -44,82 +69,29 @@ export default function KycUpload() {
         <div className="flex items-center gap-2 mb-2">
           <h2 className="text-2xl font-bold text-gray-900">Verify Your Identity</h2>
         </div>
-        <p className="text-gray-500 mb-6">To start accepting jobs and receive payouts, we need to verify your identity using our secure automated system.</p>
+        <p className="text-gray-500 mb-6">
+          To start accepting jobs and receive payouts, we need to verify your identity and banking details.
+        </p>
 
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-center gap-3 mb-8">
-          <ShieldCheck className="w-8 h-8 text-indigo-600 shrink-0" />
-          <p className="text-xs text-indigo-800 font-medium">
-            Your information is securely processed and verified instantly via <span className="font-bold">Stripe Identity</span>. 
-            We do not store your raw biometric data.
+        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 flex flex-col items-center text-center gap-4 mb-8">
+          <ShieldCheck className="w-12 h-12 text-indigo-600" />
+          <p className="text-sm text-indigo-800 font-medium">
+            We partner with <span className="font-bold text-indigo-900">Stripe</span> for secure financial onboarding. 
+            You will be redirected to Stripe to upload your ID and connect your payout bank account.
+            We do not store your biometric data.
           </p>
         </div>
 
-        <div className="space-y-6">
-          {/* Official ID */}
-          <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center relative hover:border-indigo-400 transition bg-gray-50 group">
-            <input type="file" accept="image/*,.pdf" onChange={e => handleFileChange(e, setIdDoc)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-            <div className="flex flex-col items-center justify-center pointer-events-none">
-              {idDoc ? (
-                <>
-                  <CheckCircle className="w-10 h-10 text-emerald-500 mb-2" />
-                  <p className="font-bold text-emerald-700">Official ID Uploaded</p>
-                </>
-              ) : (
-                <>
-                  <FileText className="w-10 h-10 text-gray-400 mb-2 group-hover:text-indigo-500 transition" />
-                  <p className="font-bold text-gray-700">Upload Official ID</p>
-                  <p className="text-sm text-gray-400">Passport, National ID (Front and Back)</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Driver License */}
-          <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center relative hover:border-indigo-400 transition bg-gray-50 group">
-            <input type="file" accept="image/*,.pdf" onChange={e => handleFileChange(e, setLicenseDoc)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-            <div className="flex flex-col items-center justify-center pointer-events-none">
-              {licenseDoc ? (
-                <>
-                  <CheckCircle className="w-10 h-10 text-emerald-500 mb-2" />
-                  <p className="font-bold text-emerald-700">Driver's License Uploaded</p>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="w-10 h-10 text-gray-400 mb-2 group-hover:text-indigo-500 transition" />
-                  <p className="font-bold text-gray-700">Upload Driver's License</p>
-                  <p className="text-sm text-gray-400">Valid license document (Front and Back)</p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
         <button 
-          onClick={handleSubmit}
-          disabled={!idDoc || !licenseDoc || loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl mt-8 shadow-lg shadow-indigo-900/20 disabled:opacity-50 flex items-center justify-center gap-2 transition"
+          onClick={handleConnect}
+          disabled={loading}
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-900/20 disabled:opacity-50 flex items-center justify-center gap-2 transition"
         >
           {loading ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> Verifying with Stripe...</>
+            <><Loader2 className="w-5 h-5 animate-spin" /> Connecting to Stripe...</>
           ) : (
-            <>Verify Identity <ArrowRight className="w-5 h-5" /></>
+            <>Verify Identity with Stripe <ArrowRight className="w-5 h-5" /></>
           )}
-        </button>
-
-        {/* DEV BYPASS BUTTON */}
-        <button
-          onClick={async () => {
-            try {
-              await auth.bypassKyc();
-              setUser(prev => ({ ...prev, kycStatus: 'approved' }));
-              navigate('/driver/dashboard');
-            } catch (err) {
-              alert('Failed to bypass: ' + err.message);
-            }
-          }}
-          className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl mt-4 border border-red-200 flex items-center justify-center transition"
-        >
-          Skip Verification (Local Dev Bypass)
         </button>
       </motion.div>
     </div>

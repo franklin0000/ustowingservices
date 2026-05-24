@@ -47,7 +47,7 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
   credentials: true
 }));
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // Request logger
 app.use((req, res, next) => {

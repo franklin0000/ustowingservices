@@ -173,8 +173,8 @@ router.post('/connect', authenticate, async (req, res) => {
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${FRONTEND_URL}/driver/earnings`,
-      return_url: `${FRONTEND_URL}/driver/earnings?stripe_connected=true`,
+      refresh_url: `${FRONTEND_URL}/driver`,
+      return_url: `${FRONTEND_URL}/driver?stripe_return=true`,
       type: 'account_onboarding',
     });
 
