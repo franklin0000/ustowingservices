@@ -4,6 +4,10 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupWebSocket } from './websocket.js';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import hpp from 'hpp';
+import xss from 'xss-clean';
 
 // Route imports
 import authRoutes from './routes/auth.js';
@@ -18,9 +22,32 @@ import pricingRoutes from './routes/pricing.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ── Middleware ───────────────────────────────────────────────
-app.use(cors()); // Allow all origins for production compatibility
-app.use(express.json());
+// ── Security Middleware ────────────────────────────────────────
+// Set security HTTP headers
+app.use(helmet({
+  contentSecurityPolicy: false // Disabled for local dev compatibility
+}));
+
+// Global API rate limiting
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // limit each IP to 300 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api', globalLimiter);
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+// Sanitize user data to prevent XSS
+app.use(xss());
+
+// ── General Middleware ─────────────────────────────────────────
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
+  credentials: true
+}));
+app.use(express.json({ limit: '10kb' }));
 
 // Request logger
 app.use((req, res, next) => {

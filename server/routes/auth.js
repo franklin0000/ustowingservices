@@ -3,11 +3,18 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import db from '../db.js';
 import { generateToken, authenticate } from '../middleware/auth.js';
+import rateLimit from 'express-rate-limit';
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: { error: 'Too many authentication attempts from this IP, please try again later.' }
+});
 
 const router = Router();
 
 // POST /api/auth/login
-router.post('/login', (req, res) => {
+router.post('/login', authLimiter, (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
@@ -44,7 +51,7 @@ router.post('/login', (req, res) => {
 });
 
 // POST /api/auth/register
-router.post('/register', (req, res) => {
+router.post('/register', authLimiter, (req, res) => {
   const { email, password, name, phone, role } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Email, password, and name required' });

@@ -214,6 +214,9 @@ export default function RequestService() {
     }
 
     if (step === 1) {
+      if (!form.vehicleType) {
+        return alert("Please select a vehicle type.");
+      }
       setLoadingQuote(true);
       try {
         const q = await getQuote({
@@ -229,6 +232,12 @@ export default function RequestService() {
       setLoadingQuote(false);
     }
     
+    if (step === 2) {
+      if (!form.service) {
+        return alert("Please select a service.");
+      }
+    }
+
     setStep(s => s + 1);
   }
 

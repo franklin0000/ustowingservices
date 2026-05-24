@@ -52,7 +52,7 @@ const users = [
   { id: 'd5', email: 'sofia@email.com',     password: hash('password'), name: 'Sofia Hernandez',   phone: '+1 555-0105', role: 'driver' },
   { id: 'd6', email: 'luis@email.com',      password: hash('password'), name: 'Luis Morales',      phone: '+1 555-0106', role: 'driver' },
   // Admins
-  { id: 'a1', email: 'admin@gruas.com',     password: hash('admin123'), name: 'Admin User',        phone: '+1 555-0001', role: 'admin' },
+  { id: 'a1', email: 'fammiliafabian@yandex.com',     password: hash('Abrahana0211@'), name: 'Admin User',        phone: '+1 555-0001', role: 'admin' },
 ];
 
 const insertUser = db.prepare(

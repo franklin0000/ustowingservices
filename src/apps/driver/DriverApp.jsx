@@ -21,10 +21,7 @@ export default function DriverApp() {
     return <KycUpload />
   }
 
-  // Stripe Subscription Gateway
-  if (!user.subscriptionActive) {
-    return <Subscriptions />
-  }
+  // Stripe Subscription Gateway removed for 25% commission model
 
   return (
     <Routes>

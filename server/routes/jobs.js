@@ -241,7 +241,7 @@ router.put('/:id/status', driverOnly, (req, res) => {
     `).run(job.id);
 
     const feePct = parseFloat(
-      db.prepare("SELECT value FROM platform_settings WHERE key = 'platform_fee_pct'").get()?.value || '5'
+      db.prepare("SELECT value FROM platform_settings WHERE key = 'platform_fee_pct'").get()?.value || '25'
     ) / 100;
     const actualAmount = job.agreed_price || job.amount;
     const platformFee = actualAmount * feePct;

@@ -105,6 +105,22 @@ export default function KycUpload() {
             <>Verify Identity <ArrowRight className="w-5 h-5" /></>
           )}
         </button>
+
+        {/* DEV BYPASS BUTTON */}
+        <button
+          onClick={async () => {
+            try {
+              await auth.bypassKyc();
+              setUser(prev => ({ ...prev, kycStatus: 'approved' }));
+              navigate('/driver/dashboard');
+            } catch (err) {
+              alert('Failed to bypass: ' + err.message);
+            }
+          }}
+          className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl mt-4 border border-red-200 flex items-center justify-center transition"
+        >
+          Skip Verification (Local Dev Bypass)
+        </button>
       </motion.div>
     </div>
   )
