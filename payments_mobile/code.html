@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DriveService - Payments</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .chart-bar-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 120px;
+        }
+        .chart-bar {
+            flex: 1;
+            border-radius: 4px 4px 0 0;
+            transition: height 1s ease-in-out;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#424656",
+                        "surface-container-low": "#f6f3f2",
+                        "tertiary": "#b21320",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#313030",
+                        "surface-container-high": "#ebe7e7",
+                        "outline-variant": "#c2c6d8",
+                        "on-surface": "#1c1b1b",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-primary": "#b3c5ff",
+                        "on-secondary-container": "#00714d",
+                        "surface-tint": "#0054d6",
+                        "surface": "#fcf9f8",
+                        "secondary-container": "#6cf8bb",
+                        "tertiary-fixed": "#ffdad7",
+                        "on-background": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "on-tertiary-container": "#fff6f5",
+                        "primary": "#0050cb",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed-variant": "#930013",
+                        "primary-container": "#0066ff",
+                        "secondary": "#006c49",
+                        "background": "#fcf9f8",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-error": "#ffffff",
+                        "outline": "#727687",
+                        "primary-fixed": "#dae1ff",
+                        "on-primary-fixed": "#001849",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-primary-container": "#f8f7ff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-variant": "#e5e2e1",
+                        "on-primary-fixed-variant": "#003fa4",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-highest": "#e5e2e1",
+                        "surface-container": "#f0edec",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#d63135",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#410004"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "margin-desktop": "48px",
+                        "xs": "4px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-40 bg-surface border-b border-outline-variant flex items-center justify-between px-margin-mobile h-16">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">DriveService</h1>
+</div>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<main class="px-margin-mobile pt-lg max-w-md mx-auto">
+<!-- Balance Card -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm mb-lg">
+<div class="flex flex-col gap-xs mb-lg">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Current Balance</span>
+<span class="font-headline-xl text-headline-xl text-on-surface">$482.00</span>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg active:scale-95 transition-transform flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                Cash Out
+            </button>
+</section>
+<!-- Earnings Chart -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg mb-lg">
+<div class="flex justify-between items-center mb-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface">Weekly Earnings</h2>
+<span class="font-label-sm text-label-sm text-primary">This Week</span>
+</div>
+<div class="chart-bar-container px-xs">
+<!-- Chart Bars with dynamic heights -->
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-surface-container-high w-full" style="height: 40%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">M</span>
+</div>
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-surface-container-high w-full" style="height: 65%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">T</span>
+</div>
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-primary-container w-full" style="height: 85%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">W</span>
+</div>
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-surface-container-high w-full" style="height: 30%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">T</span>
+</div>
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-surface-container-high w-full" style="height: 95%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">F</span>
+</div>
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-primary w-full" style="height: 100%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-bold">S</span>
+</div>
+<div class="flex flex-col flex-1 items-center gap-xs">
+<div class="chart-bar bg-surface-container-high w-full" style="height: 20%;"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">S</span>
+</div>
+</div>
+</section>
+<!-- Recent Transactions -->
+<section>
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Recent Transactions</h2>
+<button class="font-label-md text-label-md text-primary">See All</button>
+</div>
+<div class="flex flex-col gap-sm">
+<!-- Transaction Item 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex justify-between items-center hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="local_shipping">local_shipping</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Job ID: #DX-9821</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Oct 24, 2023 • 2:15 PM</span>
+</div>
+</div>
+<span class="font-label-md text-label-md text-on-secondary-container font-bold">+$124.50</span>
+</div>
+<!-- Transaction Item 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex justify-between items-center hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="local_shipping">local_shipping</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Job ID: #DX-9744</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Oct 23, 2023 • 11:30 AM</span>
+</div>
+</div>
+<span class="font-label-md text-label-md text-on-secondary-container font-bold">+$88.20</span>
+</div>
+<!-- Transaction Item 3 (Payout) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex justify-between items-center hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-fixed-variant" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Cash Out to Bank</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Oct 22, 2023 • 09:00 AM</span>
+</div>
+</div>
+<span class="font-label-md text-label-md text-on-tertiary-fixed-variant font-bold">-$200.00</span>
+</div>
+<!-- Transaction Item 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex justify-between items-center hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="local_shipping">local_shipping</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Job ID: #DX-9611</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Oct 21, 2023 • 4:45 PM</span>
+</div>
+</div>
+<span class="font-label-md text-label-md text-on-secondary-container font-bold">+$156.30</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 border-t border-outline-variant bg-surface h-16 flex justify-around items-center">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<!-- Payments (Active) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="payments" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-sm text-label-sm font-bold">Payments</span>
+</a>
+<!-- Alerts -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-sm text-label-sm">Alerts</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple entry animation for chart bars
+        document.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach(bar => {
+                const height = bar.style.height;
+                bar.style.height = '0';
+                setTimeout(() => {
+                    bar.style.height = height;
+                }, 100);
+            });
+        });
+    </script>
+</body></html>

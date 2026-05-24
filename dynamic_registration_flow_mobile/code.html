@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registration &amp; Plan Selection - DriveService</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        @keyframes pulse-custom {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-custom { animation: pulse-custom 2s infinite; }
+        .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        .step-transition { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .shimmer-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        .shimmer-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+        .shimmer-btn:hover::after {
+            animation: shimmer 1.5s infinite;
+        }
+
+        .input-focus-effect:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 15px rgba(0, 102, 255, 0.15);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 30%, #3b82f6 70%, #06b6d4 100%);
+        }
+
+        .heading-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#4F46E5",
+                        "secondary": "#06b6d4",
+                        "vibrant-blue": "#0066FF",
+                        "electric-cyan": "#00F5FF",
+                        "surface-container-low": "#f6f3f2",
+                        "background": "#fcf9f8",
+                        "on-surface": "#1c1b1b",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#c2c6d8",
+                        "outline": "#727687"
+                    },
+                    "borderRadius": {
+                        "lg": "1rem",
+                        "xl": "1.5rem"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "48px",
+                        "xl": "32px"
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="gradient-bg text-on-surface font-body-md min-h-screen selection:bg-electric-cyan/30">
+<!-- TopAppBar -->
+<header class="bg-white/10 backdrop-blur-md border-b border-white/10 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 sticky top-0 z-50">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-white cursor-pointer hover:rotate-90 transition-transform duration-300">menu</span>
+<span class="heading-font text-2xl font-extrabold text-white tracking-tight">DriveService</span>
+</div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full border-2 border-white/20 p-0.5 overflow-hidden transition-transform hover:scale-110">
+<img alt="User Profile" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClxxxor1Ga6NmH-5smv0QqMvP-DDI3w9t2YBKTH51-qVs0OgtLYkGFEkLSXR0hy0w9lC46ACM1v8-DlRyT2xvfUBZQs6WlsDGrfsz6SzqNbbmiRtBwk2DfEYTdVx6RPDGV-Bb8yMZMxCutB3-j02Kz4KtxWXZ92Mtyn7WA7JBtoYphdPnUi9hRTPLogMcoghfAIAvHeqtRqR3J5ku_WC6a_hnZC3LzRe5_bblyLddaD-yI1qFv6IcC8U1FXpTGKTmd_CBcMYiOqIk"/>
+</div>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-xl pb-32">
+<!-- Stepper -->
+<div class="flex items-center justify-between mb-xl max-w-2xl mx-auto relative z-10">
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-12 h-12 rounded-full bg-white text-primary flex items-center justify-center font-bold text-lg shadow-xl shadow-primary/20 transition-all animate-float ring-4 ring-white/10" id="step-node-1">
+                1
+            </div>
+<span class="text-xs font-bold uppercase tracking-wider text-white">Details</span>
+</div>
+<div class="flex-1 h-1 bg-white/20 mx-4 mt-[-28px] rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-white to-electric-cyan w-0 transition-all duration-700" id="progress-1"></div>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-full bg-white/20 text-white/60 flex items-center justify-center font-bold text-lg transition-all border border-white/20" id="step-node-2">
+                2
+            </div>
+<span class="text-xs font-bold uppercase tracking-wider text-white/40">Plan</span>
+</div>
+<div class="flex-1 h-1 bg-white/20 mx-4 mt-[-28px] rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-white to-electric-cyan w-0 transition-all duration-700" id="progress-2"></div>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-full bg-white/20 text-white/60 flex items-center justify-center font-bold text-lg transition-all border border-white/20" id="step-node-3">
+                3
+            </div>
+<span class="text-xs font-bold uppercase tracking-wider text-white/40">Finish</span>
+</div>
+</div>
+<!-- Form Containers -->
+<div class="relative overflow-visible min-h-[500px]">
+<!-- Step 1: Basic Details -->
+<section class="step-transition w-full animate-slide-up" id="step-1">
+<div class="max-w-xl mx-auto glass-card rounded-xl p-8 md:p-10">
+<h2 class="heading-font text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">Basic Details</h2>
+<p class="text-slate-600 mb-8 font-medium">Tell us a bit about yourself to get your driving career started.</p>
+<form class="space-y-6" onsubmit="event.preventDefault(); goToStep(2);">
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 uppercase tracking-wide">Full Name</label>
+<input class="input-focus-effect w-full p-4 bg-white/50 border border-slate-200 rounded-xl focus:border-vibrant-blue focus:ring-0 outline-none transition-all placeholder:text-slate-400 font-medium" placeholder="e.g. Alex Johnson" required="" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 uppercase tracking-wide">Phone Number</label>
+<input class="input-focus-effect w-full p-4 bg-white/50 border border-slate-200 rounded-xl focus:border-vibrant-blue focus:ring-0 outline-none transition-all placeholder:text-slate-400 font-medium" placeholder="+1 (555) 000-0000" required="" type="tel"/>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 uppercase tracking-wide">Email Address</label>
+<input class="input-focus-effect w-full p-4 bg-white/50 border border-slate-200 rounded-xl focus:border-vibrant-blue focus:ring-0 outline-none transition-all placeholder:text-slate-400 font-medium" placeholder="alex@example.com" required="" type="email"/>
+</div>
+<button class="shimmer-btn w-full bg-gradient-to-r from-vibrant-blue to-primary text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 active:translate-y-0 transition-all mt-8" type="submit">
+                        Continue to Plans
+                    </button>
+</form>
+</div>
+</section>
+<!-- Step 2: Plan Selection -->
+<section class="step-transition w-full hidden translate-x-full absolute top-0" id="step-2">
+<div class="max-w-4xl mx-auto">
+<div class="text-center mb-10">
+<h2 class="heading-font text-3xl md:text-5xl font-extrabold text-white mb-4">Choose Your Plan</h2>
+<p class="text-white/70 text-lg">Select a flexible option that fits your schedule.</p>
+</div>
+<div class="grid md:grid-cols-2 gap-8 px-4">
+<!-- Daily Plan -->
+<div class="cursor-pointer glass-card !bg-white/90 border-transparent rounded-2xl p-8 hover:scale-[1.02] transition-all group relative" id="plan-daily" onclick="selectPlan('daily')">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="heading-font text-2xl font-bold text-primary">Daily</h3>
+<p class="text-slate-500 font-medium">For occasional drivers</p>
+</div>
+<div class="text-right">
+<span class="heading-font text-3xl font-extrabold text-slate-900">$9</span>
+<span class="text-slate-500 font-bold">/day</span>
+</div>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-secondary font-bold">check</span>
+                                24-hour full access
+                            </li>
+<li class="flex items-center gap-3 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-secondary font-bold">check</span>
+                                Standard support
+                            </li>
+<li class="flex items-center gap-3 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-secondary font-bold">check</span>
+                                No long-term commitment
+                            </li>
+</ul>
+<div class="plan-indicator absolute top-4 right-4 opacity-0 transition-opacity">
+<span class="material-symbols-outlined text-vibrant-blue text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Monthly Plan -->
+<div class="cursor-pointer glass-card !bg-white border-vibrant-blue/50 border-2 rounded-2xl p-8 hover:scale-[1.02] transition-all group relative" id="plan-monthly" onclick="selectPlan('monthly')">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-secondary to-vibrant-blue text-white px-6 py-1 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg">
+                            MOST POPULAR
+                        </div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="heading-font text-2xl font-bold text-primary">Monthly</h3>
+<p class="text-slate-500 font-medium">For career professionals</p>
+</div>
+<div class="text-right">
+<span class="heading-font text-3xl font-extrabold text-slate-900">$149</span>
+<span class="text-slate-500 font-bold">/mo</span>
+</div>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-vibrant-blue font-bold">verified</span>
+                                Priority route matching
+                            </li>
+<li class="flex items-center gap-3 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-vibrant-blue font-bold">verified</span>
+                                24/7 Dedicated support
+                            </li>
+<li class="flex items-center gap-3 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-vibrant-blue font-bold">verified</span>
+                                Fuel &amp; maintenance perks
+                            </li>
+</ul>
+<div class="plan-indicator absolute top-4 right-4 opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-vibrant-blue text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+<div class="mt-12 flex flex-col md:flex-row gap-4 px-4">
+<button class="flex-1 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-4 rounded-xl font-bold transition-all" onclick="goToStep(1)">
+                        Back
+                    </button>
+<button class="shimmer-btn flex-[2] bg-gradient-to-r from-vibrant-blue to-primary text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/30" onclick="goToStep(3)">
+                        Confirm Plan
+                    </button>
+</div>
+</div>
+</section>
+<!-- Step 3: Enable Notifications -->
+<section class="step-transition w-full hidden translate-x-full absolute top-0" id="step-3">
+<div class="max-w-xl mx-auto glass-card rounded-2xl overflow-hidden">
+<div class="aspect-video w-full relative overflow-hidden">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjRFjSVdxzq9ax3sx6i1Z352SV8X4GpJdlgxYUX2e5OTd1aHaPZ-OYFb1BcxXlrvM4CR6J0MuyJ_tLzckv1Vj60UmJYhc_TqknoSyIGSDSEn_zcbHzZT1Ck5K729Cb24EIxtZz1p3Xjc2lH5x6qeStqRabb5oL_AMR9ovjpOpVetzRLs8Q8cl7uczso1xpor_f-Xq1nA5RFrNDkZkDOnpnl797tjPufws0doJ7E_O1QtmuPyCHPj_hfvobD5OnxqvxRMP3uetT6JQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl animate-pulse-custom">
+<span class="material-symbols-outlined text-vibrant-blue text-5xl" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+</div>
+</div>
+</div>
+<div class="p-10 text-center">
+<h2 class="heading-font text-3xl font-extrabold text-slate-900 mb-4">Stay Notified</h2>
+<p class="text-slate-600 font-medium mb-10 text-lg leading-relaxed">
+                        Don't miss out on high-priority jobs. Enable notifications to get real-time alerts about new deliveries and route updates.
+                    </p>
+<div class="flex flex-col gap-4">
+<button class="shimmer-btn w-full bg-vibrant-blue text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-vibrant-blue/30 hover:-translate-y-1 transition-all" onclick="completeRegistration()">
+                            Enable Notifications
+                        </button>
+<button class="w-full text-slate-500 py-3 rounded-xl font-bold hover:text-vibrant-blue transition-all" onclick="completeRegistration()">
+                            Skip for now
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-4 left-4 right-4 z-50 flex justify-around items-center h-16 md:hidden glass-card rounded-2xl !bg-white/90">
+<div class="flex flex-col items-center justify-center text-slate-400 transition-all hover:text-vibrant-blue active:scale-90 px-4">
+<span class="material-symbols-outlined">work</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Jobs</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 transition-all hover:text-vibrant-blue active:scale-90 px-4">
+<span class="material-symbols-outlined">history</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">History</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 transition-all hover:text-vibrant-blue active:scale-90 px-4 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Alerts</span>
+<div class="absolute top-1 right-3 w-2 h-2 bg-vibrant-blue rounded-full"></div>
+</div>
+<div class="flex flex-col items-center justify-center text-vibrant-blue px-4 scale-110">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+</div>
+</nav>
+<script>
+    function goToStep(stepNumber) {
+        const steps = [1, 2, 3];
+        
+        steps.forEach(s => {
+            const section = document.getElementById(`step-${s}`);
+            const node = document.getElementById(`step-node-${s}`);
+            
+            if (s === stepNumber) {
+                section.classList.remove('hidden', 'translate-x-full', '-translate-x-full');
+                section.classList.add('relative', 'animate-slide-up');
+                
+                // Active State Styling
+                node.classList.remove('bg-white/20', 'text-white/60');
+                node.classList.add('bg-white', 'text-primary', 'animate-float', 'shadow-xl');
+            } else if (s < stepNumber) {
+                section.classList.add('hidden', '-translate-x-full');
+                section.classList.remove('relative');
+                
+                // Completed State Styling
+                node.innerHTML = '<span class="material-symbols-outlined">check</span>';
+                node.classList.remove('animate-float', 'bg-white/20');
+                node.classList.add('bg-secondary', 'text-white');
+            } else {
+                section.classList.add('hidden', 'translate-x-full');
+                section.classList.remove('relative');
+                
+                // Future State Styling
+                node.classList.add('bg-white/20', 'text-white/60');
+                node.classList.remove('bg-white', 'text-primary', 'animate-float');
+            }
+        });
+
+        // Progress bar logic
+        if (stepNumber >= 2) document.getElementById('progress-1').style.width = '100%';
+        else document.getElementById('progress-1').style.width = '0%';
+        
+        if (stepNumber >= 3) document.getElementById('progress-2').style.width = '100%';
+        else document.getElementById('progress-2').style.width = '0%';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function selectPlan(plan) {
+        const plans = ['daily', 'monthly'];
+        plans.forEach(p => {
+            const el = document.getElementById(`plan-${p}`);
+            const indicator = el.querySelector('.plan-indicator');
+            if (p === plan) {
+                el.classList.add('!bg-white', 'border-vibrant-blue', 'border-2', 'ring-4', 'ring-vibrant-blue/10');
+                indicator.style.opacity = '1';
+            } else {
+                el.classList.remove('!bg-white', 'border-vibrant-blue', 'border-2', 'ring-4', 'ring-vibrant-blue/10');
+                el.classList.add('!bg-white/90');
+                indicator.style.opacity = '0';
+            }
+        });
+    }
+
+    function completeRegistration() {
+        alert('Welcome to the future of driving! Your profile is ready.');
+    }
+</script>
+</body></html>

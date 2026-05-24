@@ -1,0 +1,47 @@
+{
+  "name": "gruas-app",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node --env-file=.env server/index.js",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server/index.js",
+    "seed": "node --env-file=.env server/seed.js"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^6.4.0",
+    "@stripe/stripe-js": "^9.6.0",
+    "@turf/helpers": "^7.3.5",
+    "@turf/length": "^7.3.5",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "concurrently": "^9.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "framer-motion": "^12.40.0",
+    "jsonwebtoken": "^9.0.2",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.441.0",
+    "multer": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "react-router-dom": "^6.26.0",
+    "recharts": "^2.12.7",
+    "stripe": "^22.1.1",
+    "uuid": "^10.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.12",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "vite": "^5.4.2"
+  }
+}

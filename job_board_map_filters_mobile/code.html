@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DriveService - Job Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 30%, #3b82f6 70%, #06b6d4 100%);
+            background-attachment: fixed;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .heading-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .map-container {
+            height: 35vh;
+            min-height: 280px;
+        }
+
+        @keyframes pulse-custom {
+            0% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 245, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0); }
+        }
+        .animate-pulse-custom { animation: pulse-custom 2s infinite; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#4F46E5",
+                        "secondary": "#06b6d4",
+                        "vibrant-blue": "#0066FF",
+                        "electric-cyan": "#00F5FF",
+                        "background": "#fcf9f8",
+                        "on-surface": "#1c1b1b",
+                    },
+                    "borderRadius": {
+                        "lg": "1rem",
+                        "xl": "1.5rem"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "xl": "32px"
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="gradient-bg text-on-surface font-body-md min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="glass-nav flex justify-between items-center w-full px-margin-mobile h-16 sticky top-0 z-50">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-white cursor-pointer hover:rotate-90 transition-transform duration-300">menu</span>
+<span class="heading-font text-2xl font-extrabold text-white tracking-tight">DriveService</span>
+</div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full border-2 border-white/20 p-0.5 overflow-hidden transition-transform hover:scale-110">
+<img alt="User Profile" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ-daiUF_WuH7d55VWRUL_KEDm0fEpl6en6pmvEO2qaCzR2YVCLfLVSm91kF4RxjnyjYqeO2KNgsH6Z7Lbvl6RMElXnTGux-qxA_WdadfpenVXLOkHWHyTDxKvknmNMzQf-3EnBrQVv2mFk7a8vdQKlulQgk-ovU2imq8TnfhB78edfY557yMrdE3nn2MfTKxu59tPXiIqudWahqlSZ3uHGpfh_A9c8PE2BlcoknPYQh7zxn2ArIeiC3DdKVDlsfvgY1gpsY04-PM"/>
+</div>
+</div>
+</header>
+<main class="relative">
+<!-- Map Section -->
+<div class="map-container relative w-full overflow-hidden border-b border-white/10">
+<img class="w-full h-full object-cover grayscale brightness-50" data-alt="A stylized, top-down minimalist map snippet with clean lines and a monochromatic blue palette. The map shows simplified street layouts with glow pins for jobs." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBz0yY03Ryg_YQxPKSpbMOrzYXNDWByhHzU5D-y52E6TZFBfiPagRZt5zAd8nzWV3AAWm_QK9cH1CQh4X7rbVwPXVonlKRePeUlxyRfVZeXsqxI2rWtlqvoMx74xwj7iQXg-pI27P7uGJkSdSxcSFcZ8VeF_7Nalm3tvFEC82kJboC3WuujZDSzr5-TvUWCT1EdE3zMp8oO5x34lA0y3Ci0FuZ1pPsYZjBG86spy98vsELUl4NeB0Wbw1k1WgfbafWAUMfeAefts4"/>
+<!-- Interactive Pins Overlay (Simulated) -->
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute top-1/4 left-1/3 w-4 h-4 bg-vibrant-blue border-2 border-white rounded-full animate-pulse-custom pointer-events-auto cursor-pointer"></div>
+<div class="absolute top-1/2 left-2/3 w-4 h-4 bg-secondary border-2 border-white rounded-full animate-pulse-custom pointer-events-auto cursor-pointer" style="animation-delay: 0.5s"></div>
+<div class="absolute bottom-1/4 left-1/2 w-4 h-4 bg-vibrant-blue border-2 border-white rounded-full animate-pulse-custom pointer-events-auto cursor-pointer" style="animation-delay: 1s"></div>
+</div>
+<!-- Search Bar & View Toggle -->
+<div class="absolute top-4 left-0 right-0 px-4 flex flex-col gap-3">
+<div class="flex gap-2">
+<div class="flex-1 glass-card !bg-white/95 rounded-full flex items-center px-4 py-2.5 shadow-lg">
+<span class="material-symbols-outlined text-slate-400 mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-sm font-medium text-slate-700" placeholder="Search routes or cities..." type="text"/>
+<span class="material-symbols-outlined text-vibrant-blue cursor-pointer">my_location</span>
+</div>
+<button class="glass-card !bg-white/95 w-11 h-11 flex items-center justify-center rounded-full shadow-lg">
+<span class="material-symbols-outlined text-slate-700">layers</span>
+</button>
+</div>
+</div>
+<!-- Float Map/List Toggle -->
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+<div class="glass-card !bg-slate-900/80 !backdrop-blur-xl p-1 rounded-full flex items-center shadow-2xl border border-white/20">
+<button class="px-6 py-2 rounded-full text-xs font-extrabold uppercase tracking-widest text-white/50 transition-all">List</button>
+<button class="px-6 py-2 rounded-full text-xs font-extrabold uppercase tracking-widest text-white bg-vibrant-blue shadow-lg shadow-vibrant-blue/30 transition-all">Map</button>
+</div>
+</div>
+</div>
+<!-- Content Overlap -->
+<div class="px-margin-mobile -mt-4 relative z-30">
+<!-- Section Header -->
+<div class="flex flex-col gap-1 mb-6">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-electric-cyan rounded-full animate-pulse"></span>
+<span class="text-[10px] font-black uppercase tracking-[0.2em] text-electric-cyan">Real-time Available</span>
+</div>
+<h2 class="heading-font text-3xl font-extrabold text-white">Job Board</h2>
+</div>
+<!-- Scrolling Filters -->
+<div class="flex overflow-x-auto gap-3 pb-6 hide-scrollbar -mx-4 px-4">
+<button class="flex items-center gap-2 bg-vibrant-blue text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm shadow-xl shadow-vibrant-blue/20">
+<span class="material-symbols-outlined text-lg">tune</span>
+                Filter
+            </button>
+<button class="bg-white/10 border border-white/20 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-white/20 transition-all">
+                High Priority
+            </button>
+<button class="bg-white/10 border border-white/20 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-white/20 transition-all">
+                $100+ Pay
+            </button>
+<button class="bg-white/10 border border-white/20 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-white/20 transition-all">
+                Long Distance
+            </button>
+<button class="bg-white/10 border border-white/20 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-white/20 transition-all">
+                Local
+            </button>
+</div>
+<!-- Job Cards List -->
+<div class="space-y-4">
+<!-- Featured Card -->
+<div class="glass-card rounded-2xl overflow-hidden group">
+<div class="p-6">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-secondary text-white px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg shadow-secondary/20">
+                            High Priority
+                        </div>
+<div class="text-right">
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Estimated</p>
+<p class="heading-font text-2xl font-black text-vibrant-blue">$142.50</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 mb-6">
+<div class="flex gap-4">
+<div class="flex flex-col items-center pt-1">
+<span class="material-symbols-outlined text-vibrant-blue text-xl" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<div class="w-px h-full border-l-2 border-dashed border-slate-300 my-1"></div>
+</div>
+<div>
+<p class="text-[10px] font-bold text-slate-400 uppercase">Pickup</p>
+<p class="text-sm font-extrabold text-slate-800">Port Logistics Center, Zone A</p>
+<p class="text-xs font-medium text-slate-500">14:00 PM</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-red-500 text-xl" style="font-variation-settings: 'FILL' 1;">flag</span>
+<div>
+<p class="text-[10px] font-bold text-slate-400 uppercase">Dropoff</p>
+<p class="text-sm font-extrabold text-slate-800">Central Distribution Hub</p>
+<p class="text-xs font-medium text-slate-500">18:30 PM Deadline</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-5 border-t border-slate-200/50">
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-400 text-lg">route</span>
+<span class="text-xs font-bold text-slate-700">42.5 mi</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-400 text-lg">inventory_2</span>
+<span class="text-xs font-bold text-slate-700">24 Pallets</span>
+</div>
+</div>
+<button class="bg-vibrant-blue text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-xl shadow-vibrant-blue/30 hover:scale-105 transition-transform active:scale-95">
+                            Quick Accept
+                        </button>
+</div>
+</div>
+</div>
+<!-- Standard Card -->
+<div class="glass-card rounded-2xl p-5 hover:border-vibrant-blue/50 transition-colors">
+<div class="flex justify-between items-center mb-4">
+<p class="heading-font text-xl font-black text-slate-900">$65.00</p>
+<span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">12.2 mi</span>
+</div>
+<div class="space-y-2.5 mb-5">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-vibrant-blue"></span>
+<span class="text-sm font-bold text-slate-700 truncate">Eastside Pharma Lab</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+<span class="text-sm font-bold text-slate-700 truncate">Metro General Hospital</span>
+</div>
+</div>
+<button class="w-full bg-white border border-vibrant-blue/30 text-vibrant-blue py-3 rounded-xl font-bold text-sm hover:bg-vibrant-blue hover:text-white transition-all">
+                    Quick Accept
+                </button>
+</div>
+<!-- Standard Card 2 -->
+<div class="glass-card rounded-2xl p-5">
+<div class="flex justify-between items-center mb-4">
+<p class="heading-font text-xl font-black text-slate-900">$88.20</p>
+<span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">18.5 mi</span>
+</div>
+<div class="space-y-2.5 mb-5">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-vibrant-blue"></span>
+<span class="text-sm font-bold text-slate-700 truncate">Tech Park Gate 4</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+<span class="text-sm font-bold text-slate-700 truncate">Downtown Retail Center</span>
+</div>
+</div>
+<button class="w-full bg-white border border-vibrant-blue/30 text-vibrant-blue py-3 rounded-xl font-bold text-sm hover:bg-vibrant-blue hover:text-white transition-all">
+                    Quick Accept
+                </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-4 left-4 right-4 z-50 flex justify-around items-center h-16 md:hidden glass-card rounded-2xl !bg-white/95">
+<a class="flex flex-col items-center justify-center text-vibrant-blue scale-110 px-4" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">work</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Jobs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 transition-all hover:text-vibrant-blue active:scale-90 px-4" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 transition-all hover:text-vibrant-blue active:scale-90 px-4 relative" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Alerts</span>
+<div class="absolute top-1 right-3 w-2 h-2 bg-vibrant-blue rounded-full"></div>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 transition-all hover:text-vibrant-blue active:scale-90 px-4" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+</a>
+</nav>
+<script>
+    // Simple logic for Quick Accept feedback
+    document.querySelectorAll('button').forEach(btn => {
+        if(btn.innerText.includes('Quick Accept')) {
+            btn.addEventListener('click', function() {
+                const originalText = this.innerText;
+                this.innerText = 'Accepted!';
+                this.classList.remove('bg-vibrant-blue', 'text-vibrant-blue', 'border-vibrant-blue/30');
+                this.classList.add('bg-secondary', 'text-white');
+                
+                setTimeout(() => {
+                    const card = this.closest('.glass-card');
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-20px) scale(0.95)';
+                    card.style.transition = 'all 0.4s ease';
+                    setTimeout(() => card.remove(), 400);
+                }, 800);
+            });
+        }
+    });
+</script>
+</body></html>

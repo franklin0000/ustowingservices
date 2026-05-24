@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Driver Survey | DriveService</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-fixed": "#001849",
+                        "primary-container": "#0066ff",
+                        "on-error-container": "#93000a",
+                        "primary": "#0050cb",
+                        "surface-dim": "#dcd9d9",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "on-surface": "#1c1b1b",
+                        "tertiary-container": "#d63135",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#ebe7e7",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface-variant": "#e5e2e1",
+                        "on-tertiary-fixed": "#410004",
+                        "surface-bright": "#fcf9f8",
+                        "primary-fixed": "#dae1ff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#b3c5ff",
+                        "outline": "#727687",
+                        "on-tertiary-container": "#fff6f5",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-secondary-fixed": "#002113",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c2c6d8",
+                        "inverse-surface": "#313030",
+                        "secondary-fixed-dim": "#4edea3",
+                        "secondary-container": "#6cf8bb",
+                        "secondary": "#006c49",
+                        "on-surface-variant": "#424656",
+                        "surface-container": "#f0edec",
+                        "tertiary": "#b21320",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#f8f7ff",
+                        "on-secondary-container": "#00714d",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface": "#fcf9f8",
+                        "inverse-on-surface": "#f3f0ef",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-background": "#1c1b1b",
+                        "on-tertiary-fixed-variant": "#930013",
+                        "surface-tint": "#0054d6",
+                        "surface-container-low": "#f6f3f2",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#003fa4",
+                        "background": "#fcf9f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "sm": "12px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .vibrant-mesh {
+            background-color: #0066ff;
+            background-image: 
+                radial-gradient(at 0% 0%, #00d2ff 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #9d50bb 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #6e48aa 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #00f2fe 0px, transparent 50%);
+        }
+        .emoji-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .emoji-btn:active {
+            transform: scale(1.4);
+        }
+        .chip-active {
+            background-color: #0066ff !important;
+            color: #ffffff !important;
+            border-color: #0066ff !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="vibrant-mesh min-h-screen flex items-center justify-center p-gutter font-body-md text-on-surface">
+<!-- Main Container -->
+<main class="w-full max-w-lg glass-panel rounded-xl shadow-2xl overflow-hidden relative">
+<!-- Atmospheric background element -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container opacity-20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="p-xl relative z-10">
+<!-- Header Section -->
+<header class="mb-xl text-center md:text-left">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-primary-fixed mb-xs">
+                    Quick Question
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant opacity-80">
+                    Help us match you with the best jobs.
+                </p>
+</header>
+<!-- Survey Content -->
+<div class="space-y-xl">
+<!-- Satisfaction Section -->
+<section class="space-y-md">
+<h2 class="font-label-md text-label-md text-on-surface uppercase tracking-wider">
+                        How was your registration experience?
+                    </h2>
+<div class="flex justify-between items-center bg-surface-container-low/50 p-lg rounded-xl">
+<button class="emoji-btn text-4xl grayscale hover:grayscale-0 focus:grayscale-0 focus:scale-125 transition-all outline-none" onclick="selectEmoji(this)" title="Angry">😠</button>
+<button class="emoji-btn text-4xl grayscale hover:grayscale-0 focus:grayscale-0 focus:scale-125 transition-all outline-none" onclick="selectEmoji(this)" title="Dissatisfied">🙁</button>
+<button class="emoji-btn text-4xl grayscale hover:grayscale-0 focus:grayscale-0 focus:scale-125 transition-all outline-none" onclick="selectEmoji(this)" title="Neutral">😐</button>
+<button class="emoji-btn text-4xl grayscale hover:grayscale-0 focus:grayscale-0 focus:scale-125 transition-all outline-none" onclick="selectEmoji(this)" title="Satisfied">🙂</button>
+<button class="emoji-btn text-4xl grayscale hover:grayscale-0 focus:grayscale-0 focus:scale-125 transition-all outline-none" onclick="selectEmoji(this)" title="Very Satisfied">😍</button>
+</div>
+</section>
+<!-- Job Preferences Section -->
+<section class="space-y-md">
+<h2 class="font-label-md text-label-md text-on-surface uppercase tracking-wider">
+                        Which types of jobs do you prefer?
+                    </h2>
+<div class="flex flex-wrap gap-sm">
+<button class="px-lg py-sm rounded-full border border-outline text-label-md bg-surface-container-lowest hover:bg-surface-container-high transition-colors" onclick="toggleChip(this)">
+                            Long distance
+                        </button>
+<button class="px-lg py-sm rounded-full border border-outline text-label-md bg-surface-container-lowest hover:bg-surface-container-high transition-colors" onclick="toggleChip(this)">
+                            Local delivery
+                        </button>
+<button class="px-lg py-sm rounded-full border border-outline text-label-md bg-surface-container-lowest hover:bg-surface-container-high transition-colors" onclick="toggleChip(this)">
+                            High value
+                        </button>
+<button class="px-lg py-sm rounded-full border border-outline text-label-md bg-surface-container-lowest hover:bg-surface-container-high transition-colors" onclick="toggleChip(this)">
+                            Flexible hours
+                        </button>
+</div>
+</section>
+<!-- Informational Graphic / Image -->
+<div class="relative h-40 w-full rounded-xl overflow-hidden shadow-sm group">
+<img alt="Logistics Fleet" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A professional fleet of high-end logistics delivery trucks parked in a modern, brightly lit warehouse facility during the golden hour. The sunlight filters through large glass panels, creating a warm, vibrant atmosphere with blue and purple lens flares. The scene reflects the DriveService brand's focus on efficiency, reliability, and technological advancement in modern transportation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBifb-ugAYtPDVLBzgoei6TMtOY4DCFIjm4QYUDFeCOK4vpMHlVePCiXgOcXGR1z_4g5SOAYhiFlSAcWJe8m_kj5KIENSQ-osiEsVQ-FCAmPG7AM82dpRN7IsyMmKl2a56KXKtYK-uwnxabU4DnLJKNr1CMDQgTlJ3ZfUlC_JpxJORCgQ0oroN8-4XwTo8t8P6fByEFr7rJSXi_vMh3eHLZMVQ7N75T3f2ngcxeY5N1C2-fpKcHGEckOW1wH2DzxU1SNL1cfLiPiVU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-lg">
+<span class="text-white font-label-md">Ready to hit the road?</span>
+</div>
+</div>
+<!-- Action Section -->
+<footer class="pt-md flex flex-col gap-md items-center">
+<button class="w-full bg-primary-container text-on-primary-container font-label-md text-label-md py-lg rounded-lg shadow-lg hover:shadow-xl hover:bg-primary transition-all active:scale-[0.98]">
+                        Finish &amp; Go to Jobs
+                    </button>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">
+                        Skip for now
+                    </a>
+</footer>
+</div>
+</div>
+</main>
+<!-- Interactive Logic -->
+<script>
+        function selectEmoji(el) {
+            const btns = el.parentElement.querySelectorAll('button');
+            btns.forEach(btn => {
+                btn.classList.add('grayscale');
+                btn.classList.remove('scale-125');
+            });
+            el.classList.remove('grayscale');
+            el.classList.add('scale-125');
+        }
+
+        function toggleChip(el) {
+            el.classList.toggle('chip-active');
+            // Micro-interaction
+            el.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                el.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // Floating particles background effect
+        const createParticle = () => {
+            const particle = document.createElement('div');
+            particle.className = 'fixed rounded-full pointer-events-none opacity-20 bg-white';
+            const size = Math.random() * 10 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}vw`;
+            particle.style.top = `${Math.random() * 100}vh`;
+            document.body.appendChild(particle);
+
+            const animation = particle.animate([
+                { transform: 'translate(0, 0)', opacity: 0.2 },
+                { transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)`, opacity: 0 }
+            ], {
+                duration: Math.random() * 3000 + 2000,
+                easing: 'ease-out'
+            });
+
+            animation.onfinish = () => particle.remove();
+        };
+
+        setInterval(createParticle, 500);
+    </script>
+</body></html>

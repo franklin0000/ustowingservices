@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#424656",
+                        "surface-container-low": "#f6f3f2",
+                        "tertiary": "#b21320",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#313030",
+                        "surface-container-high": "#ebe7e7",
+                        "outline-variant": "#c2c6d8",
+                        "on-surface": "#1c1b1b",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-primary": "#b3c5ff",
+                        "on-secondary-container": "#00714d",
+                        "surface-tint": "#0054d6",
+                        "surface": "#fcf9f8",
+                        "secondary-container": "#6cf8bb",
+                        "tertiary-fixed": "#ffdad7",
+                        "on-background": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "on-tertiary-container": "#fff6f5",
+                        "primary": "#0050cb",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed-variant": "#930013",
+                        "primary-container": "#0066ff",
+                        "secondary": "#006c49",
+                        "background": "#fcf9f8",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-error": "#ffffff",
+                        "outline": "#727687",
+                        "primary-fixed": "#dae1ff",
+                        "on-primary-fixed": "#001849",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-primary-container": "#f8f7ff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-variant": "#e5e2e1",
+                        "on-primary-fixed-variant": "#003fa4",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-highest": "#e5e2e1",
+                        "surface-container": "#f0edec",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#d63135",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#410004"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "margin-desktop": "48px",
+                        "xs": "4px",
+                        "base": "8px"
+                    },
+                    "fontSize": {
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-20">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background w-full top-0 sticky border-b border-outline-variant dark:border-outline flex items-center justify-between px-margin-mobile md:px-margin-desktop h-16 w-full z-40">
+<div class="flex items-center gap-base">
+<button class="text-primary dark:text-primary-fixed active:scale-95 transition-transform p-xs">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">DriveService</h1>
+</div>
+<button class="text-primary dark:text-primary-fixed active:scale-95 transition-transform p-xs">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<main class="max-w-md mx-auto px-margin-mobile py-lg">
+<!-- Section Header -->
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Alerts</h2>
+<button class="font-label-md text-label-md text-primary hover:bg-surface-container-high transition-colors px-sm py-xs rounded-lg">
+                Mark all as read
+            </button>
+</div>
+<!-- Notification Feed -->
+<div class="space-y-sm"><!-- Driver Arrival Notification -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex gap-md items-start active:scale-[0.98] transition-transform cursor-pointer">
+<div class="bg-secondary-container text-on-secondary-container p-sm rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">Arrival Confirmed</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Just now</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Your arrival at 452 Broadway has been logged. Waiting for client.</p>
+</div>
+<div class="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
+</div>
+<!-- Client Arrival Notification -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex gap-md items-start active:scale-[0.98] transition-transform cursor-pointer">
+<div class="bg-secondary-container text-on-secondary-container p-sm rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="hail">hail</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">Driver Arrived</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Just now</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Your driver is here at the pickup location. Look for Job #284-B.</p>
+</div>
+<div class="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
+</div>
+<!-- Job Completed Notification -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex gap-md items-start active:scale-[0.98] transition-transform cursor-pointer">
+<div class="bg-secondary-container text-on-secondary-container p-sm rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">Job Completed</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Delivery to 124 Oak St successfully verified by client signature.</p>
+</div>
+<div class="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
+</div>
+<!-- New Bonus Available -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex gap-md items-start active:scale-[0.98] transition-transform cursor-pointer">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed-variant p-sm rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="military_tech" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">New Bonus Available</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">45m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Complete 5 more rides tonight to unlock a $25 surge bonus.</p>
+<div class="mt-sm">
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-3/5"></div>
+</div>
+<p class="font-label-sm text-label-sm text-primary mt-xs">3/5 Completed</p>
+</div>
+</div>
+<div class="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
+</div>
+<!-- Payment Received -->
+<div class="bg-surface-container-low border border-transparent rounded-xl p-lg flex gap-md items-start active:scale-[0.98] transition-transform cursor-pointer opacity-80">
+<div class="bg-primary-fixed text-on-primary-fixed-variant p-sm rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">Payment Received</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Your weekly earnings of $842.50 have been deposited.</p>
+</div>
+</div>
+<!-- System Update -->
+<div class="bg-surface-container-low border border-transparent rounded-xl p-lg flex gap-md items-start active:scale-[0.98] transition-transform cursor-pointer opacity-80">
+<div class="bg-surface-variant text-on-surface-variant p-sm rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">System Update</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Yesterday</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">DriveService v2.4.0 is now live. Check out the new route optimization features.</p>
+</div>
+</div>
+<!-- Bonus Image Card (Visual Interest) -->
+<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden mt-xl">
+<img class="w-full h-full object-cover" data-alt="A clean, professional photograph of a modern service vehicle driving through a sleek, brightly lit city at dusk. The lighting is soft and cinematic, with a high-key blue and white palette that reflects efficiency and technological progress. The composition is dynamic, showing motion and reliability in a minimal urban setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl5L_jrevpBTR--zZNdhUPbAjyaE6qiaAcsfu0ea9yydie7oIECFHDFeoa8Y7kL7hC7GqKKF20Q_a_IFmcGT79UH_lbsegPqr08yw9cuNYZpVua3imAPovQbndl5R-B3QJqGQSdDu_-NUiwQVg1Ymqox73_jUy3L8fgO3QVa9jirmvG3lE7jcpBcCTPvk5nkBzNl4RTJBvi308hYLtwZjYogxJK1p6Zv9_6CVFWo-TRLaGMi5UQF1wnKr2wgbUfyDDiE546bXDBis"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-lg">
+<span class="inline-block bg-secondary text-on-secondary font-label-sm text-label-sm px-sm py-xs rounded-full w-fit mb-xs">Promotion</span>
+<h4 class="text-white font-headline-md text-headline-md">Earn 20% More</h4>
+<p class="text-white/90 font-body-md text-body-md">During the weekend holiday peak hours.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-background border-t border-outline-variant dark:border-outline flex justify-around items-center h-16 w-full shadow-lg">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-low active:scale-90 transition-transform flex-1 h-full">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-sm text-label-sm mt-xs">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-low active:scale-90 transition-transform flex-1 h-full">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-sm text-label-sm mt-xs">Payments</span>
+</button>
+<!-- Alerts is ACTIVE -->
+<button class="flex-1 h-full flex items-center justify-center">
+<div class="flex flex-col items-center justify-center bg-secondary-container dark:bg-on-secondary-container text-on-secondary-container dark:text-secondary-container rounded-full px-4 py-1 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-label-sm text-label-sm">Alerts</span>
+</div>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-low active:scale-90 transition-transform flex-1 h-full">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-xs">Profile</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for notification items
+        document.querySelectorAll('.cursor-pointer').forEach(item => {
+            item.addEventListener('click', function() {
+                // Clear the unread dot
+                const dot = this.querySelector('.bg-primary.rounded-full');
+                if (dot) {
+                    dot.style.opacity = '0';
+                    setTimeout(() => dot.remove(), 300);
+                }
+                // Transition to "read" appearance
+                this.classList.add('opacity-80', 'bg-surface-container-low');
+                this.classList.remove('bg-surface', 'border-outline-variant');
+                this.style.border = '1px solid transparent';
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  * {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-5 rounded-xl border border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98];
+  }
+  .btn-accent {
+    @apply bg-accent-500 hover:bg-accent-600 text-brand-950 font-semibold py-2.5 px-5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98];
+  }
+  .btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98];
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all duration-200 bg-white;
+  }
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-brand-50 hover:text-brand-700 transition-all duration-200 font-medium;
+  }
+  .sidebar-link.active {
+    @apply bg-brand-50 text-brand-700 font-semibold;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-success {
+    @apply badge bg-emerald-100 text-emerald-700;
+  }
+  .badge-warning {
+    @apply badge bg-amber-100 text-amber-700;
+  }
+  .badge-danger {
+    @apply badge bg-red-100 text-red-700;
+  }
+  .badge-info {
+    @apply badge bg-blue-100 text-blue-700;
+  }
+  .stat-card {
+    @apply card flex flex-col gap-2;
+  }
+}
+
+/* ── Driver App: dark theme overrides ─────────────────────── */
+.driver-app .card {
+  @apply bg-gray-800/60 border-gray-700/50 text-gray-100;
+}
+.driver-app .stat-card {
+  @apply bg-gray-800/60 border-gray-700/50;
+}
+.driver-app h1, .driver-app h2, .driver-app h3 {
+  @apply text-gray-100;
+}
+.driver-app .text-gray-900 { color: #f3f4f6; }
+.driver-app .text-gray-800 { color: #e5e7eb; }
+.driver-app .text-gray-700 { color: #d1d5db; }
+.driver-app .text-gray-600 { color: #9ca3af; }
+.driver-app .text-gray-500 { color: #6b7280; }
+.driver-app .bg-gray-50   { background-color: rgba(31,41,55,0.4); }
+.driver-app .bg-white     { background-color: #1f2937; }
+.driver-app .border-gray-100 { border-color: #374151; }
+.driver-app .border-gray-200 { border-color: #374151; }
+
+/* ── Admin App: dark purple theme overrides ───────────────── */
+.admin-app .card {
+  @apply bg-gray-900 border-purple-900/30 text-gray-100;
+}
+.admin-app .stat-card {
+  @apply bg-gray-900 border-purple-900/30;
+}
+.admin-app h1, .admin-app h2, .admin-app h3 {
+  @apply text-gray-100;
+}
+.admin-app .text-gray-900 { color: #f3f4f6; }
+.admin-app .text-gray-800 { color: #e5e7eb; }
+.admin-app .text-gray-700 { color: #d1d5db; }
+.admin-app .text-gray-600 { color: #9ca3af; }
+.admin-app .text-gray-500 { color: #6b7280; }
+.admin-app .bg-gray-50   { background-color: rgba(31,41,55,0.4); }
+.admin-app .bg-white     { background-color: #111827; }
+.admin-app .border-gray-100 { border-color: #1f2937; }
+.admin-app .border-gray-200 { border-color: #1f2937; }
+.admin-app .input-field {
+  @apply bg-gray-800 border-gray-700 text-gray-100 focus:border-purple-500 focus:ring-purple-500/20;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 1rem;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulse-ring 1.5s ease-out infinite;
+  opacity: 0.4;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.slide-in {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}

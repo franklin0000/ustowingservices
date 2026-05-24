@@ -1,0 +1,35 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
+import ClientApp from './apps/client/ClientApp'
+import DriverApp from './apps/driver/DriverApp'
+import AdminApp  from './apps/admin/AdminApp'
+
+/**
+ * Root orchestrator — reads the authenticated user's role
+ * and mounts the corresponding isolated sub-application.
+ * Each sub-app has its own layout, navigation, and route guards.
+ */
+export default function App() {
+  const { isAuthenticated, user } = useAuth()
+
+  // Not logged in → Auth routes
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
+  }
+
+  // Route to the correct sub-app based on role
+  if (user?.role === 'client') return <ClientApp />
+  if (user?.role === 'driver') return <DriverApp />
+  if (user?.role === 'admin')  return <AdminApp />
+
+  // Unknown role fallback
+  return <Navigate to="/login" />
+}
