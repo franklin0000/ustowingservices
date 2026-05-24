@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { setupWebSocket } from './websocket.js';
 
 // Route imports
@@ -49,11 +50,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── Production Frontend Serving ───────────────────────────────
-const __filename = new URL(import.meta.url).pathname;
-// On Windows, URL pathname starts with a slash like /C:/..., so we remove the leading slash for Windows paths
-const isWindows = process.platform === 'win32';
-const rootPath = isWindows ? __filename.substring(1) : __filename;
-const distPath = path.join(path.dirname(rootPath), '../dist');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, '../dist');
 
 app.use(express.static(distPath));
 app.get('*', (req, res) => {
