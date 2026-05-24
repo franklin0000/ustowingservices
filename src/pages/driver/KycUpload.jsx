@@ -93,6 +93,16 @@ export default function KycUpload() {
             <>Verify Identity with Stripe <ArrowRight className="w-5 h-5" /></>
           )}
         </button>
+
+        <button 
+          onClick={() => {
+            localStorage.removeItem('gruas_token');
+            window.location.reload();
+          }}
+          className="w-full bg-white hover:bg-gray-50 text-gray-500 font-bold py-3 rounded-xl mt-3 border border-gray-200 transition"
+        >
+          Sign Out
+        </button>
       </motion.div>
     </div>
   )
