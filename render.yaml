@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: gruas-app
+    env: node
+    region: ohio # Adjust if needed
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      # IMPORTANT: Ensure you add your sensitive keys (JWT_SECRET, STRIPE_SECRET_KEY, etc.) 
+      # directly in the Render Dashboard after deploying!
