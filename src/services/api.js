@@ -23,6 +23,10 @@ async function request(method, path, body = null) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    if (res.status === 401) {
+      setToken(null);
+      window.location.href = '/';
+    }
     const err = new Error(data?.error || `HTTP ${res.status}`);
     err.status = res.status;
     throw err;
