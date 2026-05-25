@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowRight, ShieldCheck, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { stripe } from '../../services/api'
+import { stripe, auth } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -92,6 +92,24 @@ export default function KycUpload() {
           ) : (
             <>Verify Identity with Stripe <ArrowRight className="w-5 h-5" /></>
           )}
+        </button>
+
+        <button 
+          onClick={async () => {
+            try {
+              setLoading(true)
+              await auth.bypassKyc()
+              setUser(prev => ({ ...prev, kycStatus: 'approved' }))
+              navigate('/driver/dashboard', { replace: true })
+            } catch (err) {
+              alert('Bypass failed: ' + err.message)
+              setLoading(false)
+            }
+          }}
+          disabled={loading}
+          className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold py-3 rounded-xl mt-4 border border-orange-200 transition"
+        >
+          [Dev] Bypass Stripe Connect
         </button>
 
         <button 
