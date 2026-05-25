@@ -8,16 +8,20 @@ console.log('Seeding database...');
 
 // ── Clear existing data ─────────────────────────────────────
 db.exec(`
+  PRAGMA foreign_keys = OFF;
   DELETE FROM system_logs;
   DELETE FROM gps_sessions;
   DELETE FROM chat_messages;
   DELETE FROM subscriptions;
   DELETE FROM notifications;
   DELETE FROM payments;
+  DELETE FROM payouts;
+  DELETE FROM payment_methods;
   DELETE FROM jobs;
   DELETE FROM driver_profiles;
   DELETE FROM users;
   DELETE FROM platform_settings;
+  PRAGMA foreign_keys = ON;
 `);
 
 // ── Platform settings ───────────────────────────────────────
