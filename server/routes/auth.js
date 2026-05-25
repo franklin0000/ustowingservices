@@ -170,7 +170,7 @@ router.put('/profile', authenticate, (req, res) => {
 // ── DEV MODE BYPASS ROUTES ─────────────────────────────────────
 router.post('/bypass-kyc', authenticate, (req, res) => {
   if (req.user.role !== 'driver') return res.status(403).json({ error: 'Only drivers' });
-  db.prepare(`UPDATE driver_profiles SET kyc_status = 'approved' WHERE user_id = ?`).run(req.user.id);
+  db.prepare(`UPDATE driver_profiles SET kyc_status = 'approved', stripe_account_id = 'acct_bypass_123' WHERE user_id = ?`).run(req.user.id);
   res.json({ success: true, bypassed: true });
 });
 

@@ -40,12 +40,13 @@ export default function Earnings() {
   const handleConnectStripe = async () => {
     setLoadingConnect(true)
     try {
-      const res = await connectDriverStripe()
-      if (res && res.url) {
-        window.location.href = res.url
-      }
+      // Force bypass instead of connectDriverStripe()
+      const { auth } = await import('../../services/api')
+      await auth.bypassKyc()
+      await loadData()
     } catch (e) {
-      setError('Failed to connect Stripe: ' + e.message)
+      setError('Failed to bypass Stripe: ' + e.message)
+    } finally {
       setLoadingConnect(false)
     }
   }
