@@ -13,7 +13,7 @@ const STATUS_TO_STAGE = { accepted: 1, en_route: 2, arrived: 3, in_service: 4, c
 const NEXT_STATUS = { accepted: 'en_route', en_route: 'arrived', arrived: 'in_service', in_service: 'completed' }
 
 export default function ActiveJob() {
-  const { getActiveJob, updateJobStatus, getDriverProfile, updateLocation, proposePrice } = useApp()
+  const { getActiveJob, updateJobStatus, getDriverProfile, updateLocation, proposePrice, cancelJob } = useApp()
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
   const [job, setJob] = useState(null)
@@ -105,6 +105,17 @@ export default function ActiveJob() {
       alert(e.message);
     } finally {
       setProposing(false);
+    }
+  }
+
+  const handleCancelJob = async () => {
+    if (!window.confirm('Are you sure you want to cancel this job?')) return;
+    try {
+      await cancelJob(job.id);
+      addNotification({ type: 'alert', title: 'Job Cancelled', message: 'You have cancelled the service request.' });
+      navigate('/driver');
+    } catch (e) {
+      alert(e.message);
     }
   }
 
@@ -285,6 +296,9 @@ export default function ActiveJob() {
                     {proposing ? 'Sending...' : 'Send Payment Link'}
                   </button>
                 )}
+                <button onClick={handleCancelJob} className="w-full py-3 rounded-xl font-bold text-sm transition-all shadow-md bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 mt-2">
+                  Cancel Job
+                </button>
               </div>
             ) : (
               <button onClick={advanceStage}

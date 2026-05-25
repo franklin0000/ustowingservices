@@ -314,11 +314,14 @@ router.put('/:id/rate', clientOnly, (req, res) => {
   res.json({ success: true });
 });
 
-// ── CLIENT: Cancel a pending job ────────────────────────────
-router.put('/:id/cancel', clientOnly, (req, res) => {
+// ── CLIENT & DRIVER: Cancel a job ────────────────────────────
+router.put('/:id/cancel', (req, res) => {
   const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
   if (!job) return res.status(404).json({ error: 'Job not found' });
-  if (job.client_id !== req.user.id) return res.status(403).json({ error: 'Not your job' });
+  
+  if (req.user.role === 'client' && job.client_id !== req.user.id) return res.status(403).json({ error: 'Not your job' });
+  if (req.user.role === 'driver' && job.driver_id !== req.user.id) return res.status(403).json({ error: 'Not your job' });
+  
   if (!['pending', 'accepted', 'negotiating'].includes(job.status)) {
     return res.status(400).json({ error: 'Can only cancel pending, accepted, or negotiating jobs' });
   }
@@ -328,8 +331,14 @@ router.put('/:id/cancel', clientOnly, (req, res) => {
   if (job.driver_id) {
     db.prepare("UPDATE driver_profiles SET available = 1, updated_at = datetime('now') WHERE user_id = ?")
       .run(job.driver_id);
-    notify(job.driver_id, 'job', 'Job Cancelled', `${req.user.name} cancelled the ${job.service_type} request`);
-    pushEvent(job.driver_id, 'job_cancelled', { jobId: job.id });
+      
+    if (req.user.role === 'client') {
+      notify(job.driver_id, 'job', 'Job Cancelled', `${req.user.name} cancelled the ${job.service_type} request`);
+      pushEvent(job.driver_id, 'job_cancelled', { jobId: job.id });
+    } else if (req.user.role === 'driver') {
+      notify(job.client_id, 'job', 'Job Cancelled by Driver', `The driver cancelled the ${job.service_type} request`);
+      pushEvent(job.client_id, 'job_cancelled', { jobId: job.id });
+    }
   }
 
   res.json({ success: true });
