@@ -9,7 +9,7 @@
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server/seed.js && node server/index.js",
+    "start": "node server/init_prod.js && node server/index.js",
     "seed": "node --env-file=.env server/seed.js"
   },
   "dependencies": {
