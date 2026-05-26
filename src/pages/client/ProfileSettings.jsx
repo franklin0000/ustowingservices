@@ -61,7 +61,7 @@ export default function ProfileSettings() {
         <div className="flex flex-col items-center mb-6">
           <div className="w-24 h-24 rounded-full bg-gray-100 overflow-hidden mb-3 relative group">
             {user?.avatar ? (
-              <img src={`http://localhost:3001${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <User className="w-12 h-12 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
             )}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Car, Wrench, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Zap } from 'lucide-react'
+import { MapPin, Car, Wrench, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Zap, Camera, Trash2 } from 'lucide-react'
 import { VEHICLE_TYPES, SERVICE_TYPES } from '../../data/mockData'
 import { useApp } from '../../context/AppContext'
 import { useNotifications } from '../../context/NotificationContext'
@@ -23,16 +23,37 @@ export default function RequestService() {
     location: '', destination: '', lat: null, lng: null,
     destLat: null, destLng: null,
     vehicleType: '', vehicleDetails: '', licensePlate: '',
-    service: '', notes: '',
+    service: '', notes: '', photos: [],
   })
   const [quote, setQuote] = useState(null)
   const [loadingQuote, setLoadingQuote] = useState(false)
   const [matching, setMatching] = useState(false)
   const [matched,  setMatched]  = useState(false)
   const [nearbyDrivers, setNearbyDrivers] = useState([])
-  const { createJob, getQuote, geocode, fetchNearbyDrivers } = useApp()
+  const { createJob, getQuote, geocode, fetchNearbyDrivers, uploadJobPhoto } = useApp()
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingPhotos(true)
+    try {
+      const res = await uploadJobPhoto(file)
+      if (res?.photoUrl) {
+        setForm(f => ({ ...f, photos: [...f.photos, res.photoUrl] }))
+      }
+    } catch (err) {
+      addNotification({ title: 'Error', message: 'Failed to upload photo', type: 'error' })
+    } finally {
+      setUploadingPhotos(false)
+    }
+  }
+
+  const removePhoto = (idx) => {
+    setForm(f => ({ ...f, photos: f.photos.filter((_, i) => i !== idx) }))
+  }
 
   // Get real user GPS location
   useEffect(() => {
@@ -107,6 +128,7 @@ export default function RequestService() {
         destLng:         form.destLng,
         amount:          quote ? quote.total : (selectedService?.price || 85),
         notes:           form.notes,
+        photos:          form.photos,
       })
       const unsubAcc = onEvent('job_accepted', (data) => {
         setMatching(false); setMatched(true)
@@ -346,6 +368,27 @@ export default function RequestService() {
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">License Plate</label>
                     <input className="input-field" placeholder="e.g., ABC-1234"
                       value={form.licensePlate} onChange={e => setForm({ ...form, licensePlate: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Photos (Optional)</label>
+                    <div className="flex flex-wrap gap-3">
+                      {form.photos.map((photo, idx) => (
+                        <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden shadow-sm">
+                          <img src={photo} alt="Vehicle" className="w-full h-full object-cover" />
+                          <button onClick={() => removePhoto(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {form.photos.length < 10 && (
+                        <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors bg-gray-50">
+                          {uploadingPhotos ? <Loader2 className="w-6 h-6 animate-spin text-blue-600" /> : <Camera className="w-6 h-6" />}
+                          <span className="text-[10px] mt-1 font-medium">{uploadingPhotos ? 'Subiendo...' : 'Añadir'}</span>
+                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhotos} />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

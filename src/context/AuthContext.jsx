@@ -50,12 +50,25 @@ export function AuthProvider({ children }) {
   }, [])
 
   const register = useCallback(async (data) => {
-    const { token, user: u } = await authApi.register(data)
+    const response = await authApi.register(data)
+    // We no longer log the user in immediately. We return the response which contains a success message.
+    return response
+  }, [])
+
+  const loginWithGoogle = useCallback(async (credential, role) => {
+    const { token, user: u } = await authApi.googleLogin(credential, role)
     setToken(token)
     setUser(u)
     setIsAuthenticated(true)
     connectWS()
     return u
+  }, [])
+
+  const verifyPhone = useCallback(async (code) => {
+    await authApi.verifySms(code)
+    // Update local user state
+    setUser(prev => ({ ...prev, phoneVerified: true }))
+    return true
   }, [])
 
   const logout = useCallback(() => {
@@ -86,7 +99,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, isAuthenticated, loading, setUser,
-      login, loginWithCredentials, register, logout, switchRole,
+      login, loginWithCredentials, loginWithGoogle, verifyPhone, register, logout, switchRole,
     }}>
       {children}
     </AuthContext.Provider>

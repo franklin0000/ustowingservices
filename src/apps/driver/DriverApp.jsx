@@ -9,6 +9,7 @@ import Earnings from '../../pages/driver/Earnings'
 import Ratings from '../../pages/driver/Ratings'
 import KycUpload from '../../pages/driver/KycUpload'
 import Subscriptions from '../../pages/driver/Subscriptions'
+import ProfileSettings from '../../pages/driver/ProfileSettings'
 
 export default function DriverApp() {
   const { isAuthenticated, user } = useAuth()
@@ -31,6 +32,7 @@ export default function DriverApp() {
         <Route path="/driver/active"   element={<ActiveJob />} />
         <Route path="/driver/earnings" element={<Earnings />} />
         <Route path="/driver/ratings"  element={<Ratings />} />
+        <Route path="/driver/profile"  element={<ProfileSettings />} />
         <Route path="*"                element={<Navigate to="/driver" replace />} />
       </Route>
     </Routes>

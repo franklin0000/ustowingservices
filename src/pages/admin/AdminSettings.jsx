@@ -1,7 +1,9 @@
 import { Settings, Bell, DollarSign, MapPin, Shield, Save } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useApp } from '../../context/AppContext'
 
 export default function AdminSettings() {
+  const { getAdminSettings, updateAdminSettings } = useApp()
   const [settings, setSettings] = useState({
     platformName: 'Gruas',
     platformFee: 25,
@@ -16,9 +18,44 @@ export default function AdminSettings() {
   })
   const [saved, setSaved] = useState(false)
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  useEffect(() => {
+    getAdminSettings().then(data => {
+      if (!data) return;
+      setSettings(prev => ({
+        ...prev,
+        platformName: data.platform_name || prev.platformName,
+        platformFee: data.platform_fee_pct !== undefined ? Number(data.platform_fee_pct) : prev.platformFee,
+        maxRadius: data.max_search_radius_km !== undefined ? Number(data.max_search_radius_km) : prev.maxRadius,
+        currency: data.currency || prev.currency,
+        autoAssign: data.auto_assign === 'true',
+        notifyDrivers: data.notify_drivers === 'true',
+        notifyClients: data.notify_clients === 'true',
+        requireRating: data.require_rating === 'true',
+        minDriverRating: data.min_driver_rating !== undefined ? Number(data.min_driver_rating) : prev.minDriverRating,
+        maxActiveJobs: data.max_active_jobs_per_driver !== undefined ? Number(data.max_active_jobs_per_driver) : prev.maxActiveJobs,
+      }))
+    }).catch(e => console.error(e))
+  }, [])
+
+  const handleSave = async () => {
+    try {
+      await updateAdminSettings({
+        platform_name: settings.platformName,
+        platform_fee_pct: settings.platformFee.toString(),
+        max_search_radius_km: settings.maxRadius.toString(),
+        currency: settings.currency,
+        auto_assign: settings.autoAssign.toString(),
+        notify_drivers: settings.notifyDrivers.toString(),
+        notify_clients: settings.notifyClients.toString(),
+        require_rating: settings.requireRating.toString(),
+        min_driver_rating: settings.minDriverRating.toString(),
+        max_active_jobs_per_driver: settings.maxActiveJobs.toString()
+      });
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (

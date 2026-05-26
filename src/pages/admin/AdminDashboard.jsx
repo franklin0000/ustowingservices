@@ -20,9 +20,10 @@ export default function AdminDashboard() {
     const u1 = onEvent('job_status', fetchData)
     const u2 = onEvent('new_job', fetchData)
     const u3 = onEvent('job_accepted', fetchData)
+    const u4 = onEvent('job_cancelled', fetchData)
     
     // Live driver GPS tracking
-    const u4 = onEvent('driver_location', ({ userId, latitude, longitude }) => {
+    const u5 = onEvent('driver_location', ({ userId, latitude, longitude }) => {
       setData(prev => {
         if (!prev) return prev
         const exists = prev.activeDriversList.find(d => d.id === userId)
@@ -41,7 +42,7 @@ export default function AdminDashboard() {
       })
     })
 
-    return () => { u1(); u2(); u3(); u4() }
+    return () => { u1(); u2(); u3(); u4(); u5() }
   }, [])
 
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full" /></div>
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
     { label: 'Pending Requests', value: data.pendingRequests, change: data.pendingRequests > 0 ? 'Needs attention' : 'All clear', icon: Clock, color: 'bg-amber-100 text-amber-600', up: data.pendingRequests === 0 },
   ]
 
-  const pieData = data.serviceDistribution.map(s => ({ ...s, color: SERVICE_COLORS[s.name] || '#6b7280' }))
+  const pieData = data.serviceDistribution.map(s => ({ name: s.service_type, value: s.count, color: SERVICE_COLORS[s.service_type] || '#6b7280' }))
 
   const mapMarkers = []
   const mapConnections = []

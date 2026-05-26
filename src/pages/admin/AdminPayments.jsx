@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 
 export default function AdminPayments() {
-  const { getAdminPayments, getAdminPayouts, processAdminPayout } = useApp()
+  const { getAdminPayments, getAdminPayouts, processAdminPayout, getAdminSettings } = useApp()
   const [data, setData] = useState(null)
   const [payouts, setPayouts] = useState([])
+  const [fee, setFee] = useState(null)
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState('transactions') // 'transactions' | 'payouts'
   const [processing, setProcessing] = useState(false)
@@ -13,6 +14,7 @@ export default function AdminPayments() {
   const loadAll = () => {
     getAdminPayments().then(setData).catch(() => {})
     getAdminPayouts().then(setPayouts).catch(() => {})
+    getAdminSettings().then(s => setFee(Number(s.platform_fee_pct))).catch(() => {})
   }
 
   useEffect(() => { loadAll() }, [])
@@ -46,8 +48,8 @@ export default function AdminPayments() {
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center"><DollarSign className="w-6 h-6 text-blue-600" /></div><div><p className="text-sm text-gray-500">Total Revenue</p><p className="text-2xl font-bold text-gray-900">${data.total_revenue.toFixed(2)}</p></div></div></div>
-        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center"><TrendingUp className="w-6 h-6 text-emerald-600" /></div><div><p className="text-sm text-gray-500">Platform Fees (25%)</p><p className="text-2xl font-bold text-emerald-600">${data.platform_fees.toFixed(2)}</p></div></div></div>
-        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center"><Wallet className="w-6 h-6 text-purple-600" /></div><div><p className="text-sm text-gray-500">Driver Earnings (75%)</p><p className="text-2xl font-bold text-gray-900">${data.driver_payouts.toFixed(2)}</p></div></div></div>
+        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center"><TrendingUp className="w-6 h-6 text-emerald-600" /></div><div><p className="text-sm text-gray-500">Platform Fees {fee !== null ? `(${fee}%)` : ''}</p><p className="text-2xl font-bold text-emerald-600">${data.platform_fees.toFixed(2)}</p></div></div></div>
+        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center"><Wallet className="w-6 h-6 text-purple-600" /></div><div><p className="text-sm text-gray-500">Driver Earnings {fee !== null ? `(${100 - fee}%)` : ''}</p><p className="text-2xl font-bold text-gray-900">${data.driver_payouts.toFixed(2)}</p></div></div></div>
       </div>
 
       <div className="card">

@@ -63,8 +63,12 @@ export default function DriverLayout() {
             </button>
 
             <div className="flex items-center gap-2 pl-2 border-l border-gray-700">
-              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden shadow-sm">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)
+                )}
               </div>
               <span className="hidden md:block text-sm font-semibold text-gray-200">{user?.name}</span>
               <button onClick={logout} className="p-1.5 rounded-lg hover:bg-white/5 transition" title="Logout">

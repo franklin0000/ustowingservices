@@ -29,12 +29,24 @@ export function NotificationProvider({ children }) {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const unsub = onEvent('notification', (payload) => {
-      setNotifications(prev => [payload, ...prev])
-      setUnreadCount(prev => prev + 1)
-    })
+    let unsubs = []
 
-    return unsub
+    import('../utils/audio').then(({ playNotificationSound }) => {
+      unsubs.push(onEvent('notification', (payload) => {
+        setNotifications(prev => [payload, ...prev])
+        setUnreadCount(prev => prev + 1)
+        playNotificationSound('default')
+      }))
+
+      unsubs.push(onEvent('chat_message', () => playNotificationSound('chat')))
+      unsubs.push(onEvent('new_job', () => playNotificationSound('new_job')))
+      unsubs.push(onEvent('price_proposed', () => playNotificationSound('new_job')))
+      unsubs.push(onEvent('job_accepted', () => playNotificationSound('new_job')))
+    }).catch(() => {})
+    
+    return () => {
+      unsubs.forEach(fn => fn && fn())
+    }
   }, [isAuthenticated])
 
   const addNotification = useCallback((notif) => {

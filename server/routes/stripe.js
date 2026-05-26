@@ -5,18 +5,13 @@ import { authenticate } from '../middleware/auth.js';
 import { v4 as uuid } from 'uuid';
 import { pushEvent } from '../services/notifications.js';
 
-// Hardcoded split key to avoid GitHub secret scanning
-const p1 = "sk_live_51Tai";
-const p2 = "yXPVoGG0hACCq";
-const p3 = "b6vPOiECE6jxgws";
-const p4 = "x4VL2N8NuqPMU";
-const p5 = "BPGHjy8G5l7CGk";
-const p6 = "dIPOiQS1sGC1sz";
-const p7 = "cD4Kw0SlgBgZb";
-const p8 = "Cb00zu8v5jS7";
-const rawKey = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
+const stripeKey = process.env.STRIPE_SECRET_KEY;
 
-const stripe = new Stripe(rawKey, {
+if (!stripeKey) {
+  console.error("⚠️  STRIPE_SECRET_KEY is missing in .env!");
+}
+
+const stripe = new Stripe(stripeKey || 'sk_test_123', {
   apiVersion: '2023-10-16',
 });
 
@@ -257,7 +252,8 @@ router.post('/webhook', async (req, res) => {
     } else if (metadata.type === 'job_payment') {
       const { job_id, client_id, driver_id, amount, status_at_payment } = metadata;
       const amtNum = parseFloat(amount);
-      const platformFee = amtNum * 0.25; // 25% platform fee
+      const feePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 0.20);
+      const platformFee = amtNum * feePercentage;
       const driverPayout = amtNum - platformFee;
 
       db.prepare(`
@@ -316,12 +312,20 @@ router.post('/bypass-job-payment', authenticate, async (req, res) => {
   const { jobId } = req.body;
   const job = db.prepare('SELECT * FROM jobs WHERE id = ? AND client_id = ?').get(jobId, req.user.id);
   
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  
+  // If already bypassed / paid, just return success
+  if (job.status === 'en_route') {
+    return res.json({ success: true, bypassed: true, nextStatus: 'en_route', message: 'Already paid' });
+  }
+
   if (job.status !== 'completed' && job.status !== 'negotiating') return res.status(400).json({ error: 'Invalid job status' });
 
   const amtNum = job.status === 'negotiating' ? parseFloat(job.agreed_price) : parseFloat(job.amount);
   if (!amtNum) return res.status(400).json({ error: 'Invalid amount' });
 
-  const platformFee = amtNum * 0.25;
+  const feePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 0.20);
+  const platformFee = amtNum * feePercentage;
   const driverPayout = amtNum - platformFee;
 
   db.prepare(`

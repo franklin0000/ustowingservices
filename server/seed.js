@@ -27,7 +27,7 @@ db.exec(`
 // ── Platform settings ───────────────────────────────────────
 const settings = [
   ['platform_name', 'Gruas'],
-  ['platform_fee_pct', '25'],
+  ['platform_fee_pct', '20'],
   ['max_search_radius_km', '15'],
   ['currency', 'USD'],
   ['auto_assign', 'true'],

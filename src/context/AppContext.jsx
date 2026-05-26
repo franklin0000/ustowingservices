@@ -27,6 +27,7 @@ export function AppProvider({ children }) {
 
   // ── Client API methods ──────────────────────────────────
   const createJob = useCallback((data) => apiCall(() => jobsApi.create(data)), [apiCall])
+  const uploadJobPhoto = useCallback((file) => apiCall(() => jobsApi.uploadPhoto(file)), [apiCall])
   const getMyJobs = useCallback((status) => apiCall(() => jobsApi.my(status)), [apiCall])
   const getJob = useCallback((id) => apiCall(() => jobsApi.get(id)), [apiCall])
   const cancelJob = useCallback((id) => apiCall(() => jobsApi.cancel(id)), [apiCall])
@@ -79,7 +80,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       loading, error, clearError,
       // Client
-      createJob, getMyJobs, getJob, cancelJob, rateJob, getMyPayments, getQuote,
+      createJob, uploadJobPhoto, getMyJobs, getJob, cancelJob, rateJob, getMyPayments, getQuote,
       geocode,
       // Driver
       getAvailableJobs, acceptJob, updateJobStatus, proposePrice, fetchNearbyDrivers,

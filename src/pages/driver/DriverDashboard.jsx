@@ -47,7 +47,7 @@ export default function DriverDashboard() {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gray-800 border-2 border-emerald-500/30 overflow-hidden relative group shrink-0">
             {profile.avatar ? (
-              <img src={`http://localhost:3001${profile.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xl">
                 {profile.name.charAt(0)}
@@ -133,7 +133,7 @@ export default function DriverDashboard() {
               <div className="flex justify-between items-end pt-4 border-t border-emerald-500/20">
                 <div>
                   <p className="text-[10px] text-emerald-500/80 uppercase font-bold tracking-widest mb-1">Estimated Payout</p>
-                  <span className="font-black text-3xl text-emerald-400">${(activeJob.amount * 0.75).toFixed(2)}</span>
+                  <span className="font-black text-3xl text-emerald-400">${(activeJob.amount * 0.8).toFixed(2)}</span>
                 </div>
                 <Link to="/driver/active" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition shadow-lg shadow-emerald-900/50">
                   View <ArrowRight className="w-4 h-4" />
@@ -172,7 +172,7 @@ export default function DriverDashboard() {
                   <p className="text-xs text-gray-500 truncate mt-0.5">{job.pickupLocation}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-black text-emerald-400">${(job.amount * 0.75).toFixed(0)}</p>
+                  <p className="text-sm font-black text-emerald-400">${(job.amount * 0.8).toFixed(0)}</p>
                   {job.rating && (
                     <p className="text-[11px] font-bold text-amber-400 flex items-center justify-end gap-0.5 mt-0.5">
                       <Star className="w-3 h-3 fill-amber-400" /> {job.rating}

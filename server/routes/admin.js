@@ -458,7 +458,7 @@ router.put('/payouts/:id/process', async (req, res) => {
     notify(payout.driver_id, 'payment', 'Payout Processed', `Your payout of $${payout.amount} has been processed via Stripe.`, { payoutId: id });
     pushEvent(payout.driver_id, 'payout_completed', { payoutId: id, amount: payout.amount });
 
-    res.json({ success: true, transfer_id: mockTransferId });
+    res.json({ success: true, transfer_id: transfer.id });
   } catch (error) {
     db.prepare("UPDATE payouts SET status = 'failed', updated_at = datetime('now') WHERE id = ?").run(id);
     res.status(500).json({ error: 'Stripe transfer failed: ' + error.message });

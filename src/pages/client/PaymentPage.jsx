@@ -1,6 +1,6 @@
 import { CreditCard, Wallet, DollarSign, CheckCircle2, Clock, Plus, TrendingUp, Trash2, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { payments as paymentsApi } from '../../services/api'
+import { payments as paymentsApi, stripe as stripeApi } from '../../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function PaymentPage() {
@@ -118,7 +118,7 @@ export default function PaymentPage() {
         </div>
         <button onClick={async () => {
           try {
-            const { url } = await paymentsApi.createPortalSession()
+            const { url } = await stripeApi.createPortalSession()
             window.location.href = url
           } catch (err) { alert(err.message) }
         }} className="whitespace-nowrap px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition">

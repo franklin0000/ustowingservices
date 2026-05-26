@@ -38,6 +38,11 @@ async function request(method, path, body = null) {
 export const auth = {
   login: (email, password) => request('POST', '/auth/login', { email, password }),
   register: (data) => request('POST', '/auth/register', data),
+  googleLogin: (credential, role) => request('POST', '/auth/google', { credential, role }),
+  sendSms: (phone) => request('POST', '/auth/send-sms', { phone }),
+  verifySms: (code) => request('POST', '/auth/verify-sms', { code }),
+  forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
+  resetPassword: (email, code, newPassword) => request('POST', '/auth/reset-password', { email, code, newPassword }),
   me: () => request('GET', '/auth/me'),
   updateProfile: (data) => request('PUT', '/auth/profile', data),
   bypassKyc: () => request('POST', '/auth/bypass-kyc'),
@@ -68,10 +73,21 @@ export const jobs = {
   getChat: (id) => request('GET', `/jobs/${id}/chat`),
   sendChatMessage: (id, message) => request('POST', `/jobs/${id}/chat`, { message }),
   nearbyDrivers: (lat, lng) => request('GET', `/jobs/nearby-drivers?lat=${lat}&lng=${lng}`),
+  uploadPhoto: async (file) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const headers = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE}/jobs/upload`, { method: 'POST', headers, body: formData });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+    return data;
+  },
 };
 
 // ── Drivers ──────────────────────────────────────────────────
 export const drivers = {
+  publicProfile: (id) => request('GET', `/drivers/${id}/public-profile`),
   profile: () => request('GET', '/drivers/profile'),
   activeJob: () => request('GET', '/drivers/active-job'),
   updateLocation: (lat, lng) => request('PUT', '/drivers/location', { latitude: lat, longitude: lng }),
@@ -125,6 +141,7 @@ export const admin = {
 export const stripe = {
   createSubscriptionCheckout: (plan) => request('POST', '/stripe/create-subscription-checkout', { plan }),
   createJobCheckout: (jobId) => request('POST', '/stripe/create-job-checkout', { jobId }),
+  createPortalSession: () => request('POST', '/stripe/create-portal-session'),
   connectAccount: () => request('POST', '/stripe/connect'),
   checkConnectStatus: () => request('GET', '/stripe/connect/status'),
   // DEV BYPASS ROUTES

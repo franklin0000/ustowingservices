@@ -202,7 +202,7 @@ export default function ActiveJob() {
             <div className="flex items-center gap-4 pt-2">
               <div className="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center text-gray-300 font-bold text-xl shadow-md border-2 border-gray-600 overflow-hidden">
                 {job.clientAvatar ? (
-                  <img src={`http://localhost:3001${job.clientAvatar}`} alt="Client" className="w-full h-full object-cover" />
+                  <img src={job.clientAvatar} alt="Client" className="w-full h-full object-cover" />
                 ) : (
                   job.clientName?.split(' ').map(n => n[0]).join('').slice(0, 2)
                 )}
@@ -221,6 +221,21 @@ export default function ActiveJob() {
                 </button>
               </div>
             </div>
+
+            {job.photos && job.photos.length > 0 && (
+              <>
+                <div className="h-px bg-gray-700 w-full" />
+                <div className="py-2">
+                  <p className="text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider">Job Photos</p>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {job.photos.map((url, idx) => (
+                      <img key={idx} src={url} alt="Job Detail" onClick={() => window.open(url, '_blank')}
+                        className="w-20 h-20 object-cover rounded-xl border border-gray-600 shadow-sm cursor-pointer hover:opacity-80 transition" />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="h-px bg-gray-700 w-full" />
 

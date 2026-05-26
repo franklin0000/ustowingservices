@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Truck, Navigation, DollarSign, Star } from 'lucide-react'
+import { LayoutDashboard, Truck, Navigation, DollarSign, Star, Settings } from 'lucide-react'
 
 const tabs = [
   { to: '/driver',          label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -7,6 +7,7 @@ const tabs = [
   { to: '/driver/active',   label: 'Active',    icon: Navigation },
   { to: '/driver/earnings', label: 'Earnings',  icon: DollarSign },
   { to: '/driver/ratings',  label: 'Ratings',   icon: Star },
+  { to: '/driver/profile',  label: 'Profile',   icon: Settings },
 ]
 
 export default function DriverNav() {

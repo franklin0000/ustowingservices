@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import { SERVICE_TYPES } from '../../data/mockData'
 import AdminDispatchModal from './AdminDispatchModal'
+import { onEvent } from '../../services/websocket'
 
 const statusStyles = { completed: 'badge-success', in_progress: 'badge-info', in_service: 'badge-info', accepted: 'badge-info', en_route: 'badge-info', arrived: 'badge-info', pending: 'badge-warning', cancelled: 'badge-danger' }
 const statusLabels = { completed: 'Completed', in_progress: 'In Progress', in_service: 'In Service', accepted: 'Accepted', en_route: 'En Route', arrived: 'Arrived', pending: 'Pending', cancelled: 'Cancelled' }
@@ -30,7 +31,20 @@ export default function AdminRequests() {
     getAdminDrivers().then(d => setActiveDrivers(d.filter(x => x.available && x.kycStatus === 'approved'))).catch(()=>{})
   }
 
-  useEffect(() => { load() }, [filter, search])
+  useEffect(() => { 
+    load() 
+    
+    // Listen for real-time job updates to keep the table fresh
+    const u1 = onEvent('new_job', load)
+    const u2 = onEvent('job_accepted', load)
+    const u3 = onEvent('job_status', load)
+    const u4 = onEvent('job_cancelled', load)
+    
+    return () => {
+      u1(); u2(); u3(); u4();
+    }
+  }, [filter, search])
+
   useEffect(() => { loadDrivers() }, [])
 
   const handleCancel = async (id) => {

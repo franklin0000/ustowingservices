@@ -3,10 +3,11 @@ import { Phone, MessageSquare, Navigation, MapPin, CheckCircle2, Clock, Star } f
 import { useApp } from '../../context/AppContext'
 import MapView from '../../components/MapView'
 import { onEvent } from '../../services/websocket'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { stripe } from '../../services/api'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import LiveChat from '../../components/LiveChat'
+import DriverProfileModal from '../../components/DriverProfileModal'
 
 const STATUS_CONFIG = {
   negotiating: { label: 'Negotiating Price', color: 'bg-orange-100 text-orange-700', step: 1 },
@@ -31,6 +32,7 @@ export default function TrackDriver() {
   const [loaded,     setLoaded]     = useState(false)
   const [isPaying,   setIsPaying]   = useState(false)
   const [chatOpen,   setChatOpen]   = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
@@ -42,15 +44,19 @@ export default function TrackDriver() {
       if (jobId) {
         // Fallback for local dev: manually trigger the webhook logic via bypass
         // so the system updates even if stripe CLI is not forwarding webhooks.
-        import('../../services/api').then(({ stripe: stripeApi }) => {
-          stripeApi.bypassJobPayment(jobId).catch(err => console.warn('Bypass trigger failed:', err))
-        })
+        stripe.bypassJobPayment(jobId)
+          .then(() => {
+            if (paymentStatus === 'success') setShowRating(true)
+            setSearchParams({})
+          })
+          .catch(err => {
+            console.warn('Bypass trigger failed:', err)
+            setSearchParams({})
+          })
+      } else {
+        if (paymentStatus === 'success') setShowRating(true)
+        setSearchParams({})
       }
-      
-      if (paymentStatus === 'success') {
-        setShowRating(true)
-      }
-      setSearchParams({})
     }
 
     getMyJobs().then(jobs => {
@@ -192,10 +198,10 @@ export default function TrackDriver() {
             {/* Driver Profile Section */}
             {driver ? (
               <div className="flex items-center gap-4 pt-2">
-                <div className="relative">
+                <button onClick={() => setProfileOpen(true)} className="relative flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full transition-transform hover:scale-105">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md border-4 border-white overflow-hidden">
                     {driver.avatar ? (
-                      <img src={`http://localhost:3001${driver.avatar}`} alt="Driver" className="w-full h-full object-cover" />
+                      <img src={driver.avatar} alt="Driver" className="w-full h-full object-cover" />
                     ) : (
                       driver.name?.split(' ').map(n => n[0]).join('').slice(0, 2)
                     )}
@@ -203,8 +209,11 @@ export default function TrackDriver() {
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full shadow border border-gray-100 flex items-center gap-1 text-[10px] font-bold">
                     <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {driver.rating}
                   </div>
-                </div>
-                <div className="flex-1">
+                </button>
+                <div 
+                  className="flex-1 cursor-pointer hover:bg-gray-50 p-1 -ml-1 rounded-lg transition"
+                  onClick={() => setProfileOpen(true)}
+                >
                   <h3 className="font-bold text-gray-900 text-lg leading-tight">{driver.name}</h3>
                   <p className="text-sm text-gray-500 font-medium">{driver.vehicle}</p>
                   <p className="text-xs text-blue-600 font-semibold mt-0.5">{driver.phone || 'No phone provided'}</p>
@@ -339,6 +348,17 @@ export default function TrackDriver() {
           onClose={() => setChatOpen(false)} 
         />
       )}
+
+      {/* ── Driver Profile Modal ── */}
+      <AnimatePresence>
+        {profileOpen && driver && (
+          <DriverProfileModal
+            isOpen={profileOpen}
+            driverId={driver.id}
+            onClose={() => setProfileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   )

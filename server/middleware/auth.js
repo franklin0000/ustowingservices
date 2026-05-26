@@ -17,6 +17,7 @@ export function generateToken(user) {
 export function authenticate(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
+    console.error('Auth fail: No Bearer token', req.originalUrl, header);
     return res.status(401).json({ error: 'Authentication required' });
   }
 
@@ -26,7 +27,7 @@ export function authenticate(req, res, next) {
 
     // Fetch full user from DB (ensures user still exists and is active)
     const user = db.prepare(
-      'SELECT id, email, name, phone, role, status, avatar, stripe_customer_id, created_at FROM users WHERE id = ?'
+      'SELECT id, email, name, phone, phone_verified, role, status, avatar, stripe_customer_id, created_at FROM users WHERE id = ?'
     ).get(decoded.id);
 
     if (!user) {
@@ -39,6 +40,7 @@ export function authenticate(req, res, next) {
     req.user = user;
     next();
   } catch (err) {
+    console.error('Auth fail:', err.name, err.message, req.originalUrl);
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'Token expired' });
     }

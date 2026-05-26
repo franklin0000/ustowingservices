@@ -25,13 +25,33 @@ router.get('/nearby-drivers', clientOnly, (req, res) => {
   })));
 });
 
+import multer from 'multer';
+import path from 'path';
+
+// Multer storage config for job photos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'server/uploads/'),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'job-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
+// ── CLIENT: Upload job photo ────────────────────────────────
+router.post('/upload', clientOnly, upload.single('photo'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const photoUrl = `/uploads/${req.file.filename}`;
+  res.json({ photoUrl });
+});
+
 // ── CLIENT: Create a new service request ────────────────────
 router.post('/', clientOnly, (req, res) => {
   const {
     serviceType, vehicleType, vehicleDetails,
     pickupLocation, pickupLat, pickupLng,
     destination, destLat, destLng,
-    amount, notes,
+    amount, notes, photos
   } = req.body;
 
   if (!serviceType || !vehicleType || !pickupLocation || !pickupLat || !pickupLng || !amount) {
@@ -39,11 +59,13 @@ router.post('/', clientOnly, (req, res) => {
   }
 
   const id = uuid();
+  const photosJson = photos && photos.length > 0 ? JSON.stringify(photos) : null;
+
   db.prepare(`
-    INSERT INTO jobs (id, client_id, service_type, vehicle_type, vehicle_details,
+    INSERT INTO jobs (id, client_id, service_type, vehicle_type, vehicle_details, photos,
       pickup_location, pickup_lat, pickup_lng, destination, dest_lat, dest_lng, amount, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, req.user.id, serviceType, vehicleType, vehicleDetails || null,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, req.user.id, serviceType, vehicleType, vehicleDetails || null, photosJson,
     pickupLocation, pickupLat, pickupLng, destination || null, destLat || null, destLng || null,
     amount, notes || null);
 
@@ -76,6 +98,8 @@ router.post('/', clientOnly, (req, res) => {
       clientName: req.user.name,
     });
   }
+  
+  broadcastToRole('admin', { event: 'new_job', payload: { jobId: id } });
 
   res.status(201).json(formatJob(job));
 });
@@ -206,6 +230,7 @@ router.put('/:id/accept', driverOnly, (req, res) => {
       driver: { id: req.user.id, name: req.user.name, phone: req.user.phone, avatar: req.user.avatar, vehicle: dp.vehicle, rating: dp.rating, lat: dp.latitude, lng: dp.longitude },
       eta,
     });
+    broadcastToRole('admin', { event: 'job_accepted', payload: { jobId: job.id } });
   }
 
   const updated = db.prepare('SELECT * FROM jobs WHERE id = ?').get(job.id);
@@ -266,6 +291,7 @@ router.put('/:id/status', driverOnly, (req, res) => {
       { jobId: job.id }
     );
     pushEvent(job.client_id, 'job_status', { jobId: job.id, status: 'completed', message: 'Service completed' });
+    broadcastToRole('admin', { event: 'job_status', payload: { jobId: job.id, status: 'completed' } });
     
     notify(req.user.id, 'payment', 'Job Completed!',
       `Earned $${driverPayout.toFixed(2)} for ${job.service_type} service`,
@@ -276,6 +302,7 @@ router.put('/:id/status', driverOnly, (req, res) => {
     // Notify client of status change
     const statusLabels = { en_route: 'Driver is on the way', arrived: 'Driver has arrived', in_service: 'Service in progress' };
     pushEvent(job.client_id, 'job_status', { jobId: job.id, status, message: statusLabels[status] });
+    broadcastToRole('admin', { event: 'job_status', payload: { jobId: job.id, status } });
   }
 
   const updated = db.prepare('SELECT * FROM jobs WHERE id = ?').get(job.id);
@@ -339,6 +366,7 @@ router.put('/:id/cancel', (req, res) => {
       notify(job.client_id, 'job', 'Job Cancelled by Driver', `The driver cancelled the ${job.service_type} request`);
       pushEvent(job.client_id, 'job_cancelled', { jobId: job.id });
     }
+    broadcastToRole('admin', { event: 'job_cancelled', payload: { jobId: job.id } });
   }
 
   res.json({ success: true });
@@ -423,7 +451,7 @@ router.get('/:id', (req, res) => {
   // Attach driver info for clients
   if (job.driver_id && req.user.role === 'client') {
     const driver = db.prepare(`
-      SELECT u.name, u.phone, u.avatar, dp.vehicle, dp.rating, dp.completed_jobs, dp.latitude, dp.longitude
+      SELECT u.id, u.name, u.phone, u.avatar, dp.vehicle, dp.rating, dp.completed_jobs, dp.latitude, dp.longitude
       FROM users u JOIN driver_profiles dp ON dp.user_id = u.id WHERE u.id = ?
     `).get(job.driver_id);
     enriched.driver = driver;
@@ -440,6 +468,11 @@ router.get('/:id', (req, res) => {
 
 // Helper: format job row for JSON response
 function formatJob(row) {
+  let photosArr = [];
+  try {
+    if (row.photos) photosArr = JSON.parse(row.photos);
+  } catch(e) {}
+
   return {
     id: row.id,
     clientId: row.client_id,
@@ -447,6 +480,7 @@ function formatJob(row) {
     serviceType: row.service_type,
     vehicleType: row.vehicle_type,
     vehicleDetails: row.vehicle_details,
+    photos: photosArr,
     pickupLocation: row.pickup_location,
     pickupLat: row.pickup_lat,
     pickupLng: row.pickup_lng,
@@ -461,7 +495,7 @@ function formatJob(row) {
     review: row.review,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    completedAt: row.completed_at,
+    completedAt: row.completed_at
   };
 }
 

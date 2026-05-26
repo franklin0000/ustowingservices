@@ -84,7 +84,7 @@ export default function LiveChat({ jobId, otherPartyName, otherPartyAvatar, onCl
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 overflow-hidden">
                 {otherPartyAvatar ? (
-                  <img src={`http://localhost:3001${otherPartyAvatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={otherPartyAvatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   otherPartyName?.split(' ').map(n => n[0]).join('').slice(0, 2) || <User className="w-5 h-5" />
                 )}

@@ -16,12 +16,25 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id            TEXT PRIMARY KEY,
     email         TEXT UNIQUE NOT NULL,
-    password      TEXT NOT NULL,
+    password      TEXT,
+    google_id     TEXT UNIQUE,
     name          TEXT NOT NULL,
     phone         TEXT,
+    phone_verified INTEGER DEFAULT 0,
     role          TEXT NOT NULL CHECK(role IN ('client','driver','admin')),
     status        TEXT DEFAULT 'active' CHECK(status IN ('active','suspended')),
+    avatar        TEXT,
     stripe_customer_id TEXT,
+    email_verified INTEGER DEFAULT 0,
+    created_at    TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS sms_codes (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id       TEXT NOT NULL REFERENCES users(id),
+    phone         TEXT NOT NULL,
+    code          TEXT NOT NULL,
+    expires_at    TEXT NOT NULL,
     created_at    TEXT DEFAULT (datetime('now'))
   );
 
@@ -50,6 +63,7 @@ db.exec(`
     service_type      TEXT NOT NULL,
     vehicle_type      TEXT NOT NULL,
     vehicle_details   TEXT,
+    photos            TEXT,
     pickup_location   TEXT NOT NULL,
     pickup_lat        REAL NOT NULL,
     pickup_lng        REAL NOT NULL,
@@ -158,6 +172,14 @@ db.exec(`
     created_at    TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS verification_tokens (
+    id            TEXT PRIMARY KEY,
+    user_id       TEXT NOT NULL REFERENCES users(id),
+    token         TEXT NOT NULL UNIQUE,
+    expires_at    TEXT NOT NULL,
+    created_at    TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS region_pricing (
     state         TEXT PRIMARY KEY,
     base_rate     REAL NOT NULL,
@@ -216,6 +238,19 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pay_methods   ON payment_methods(user_id);
   CREATE INDEX IF NOT EXISTS idx_notif_user    ON notifications(user_id);
   CREATE INDEX IF NOT EXISTS idx_driver_avail  ON driver_profiles(available);
+  CREATE INDEX IF NOT EXISTS idx_verif_token   ON verification_tokens(token);
 `);
+
+// Apply migrations dynamically if adding new columns to existing tables
+try {
+  db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0');
+} catch (e) {
+  // Ignore
+}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN avatar TEXT');
+} catch (e) {
+  // Ignore
+}
 
 export default db;

@@ -98,7 +98,7 @@ export default function AvailableJobs() {
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-2xl shrink-0 overflow-hidden relative">
                       {job.clientAvatar ? (
-                        <img src={`http://localhost:3001${job.clientAvatar}`} alt="Client" className="w-full h-full object-cover" />
+                        <img src={job.clientAvatar} alt="Client" className="w-full h-full object-cover" />
                       ) : (
                         service?.icon || '🔗'
                       )}
@@ -110,6 +110,15 @@ export default function AvailableJobs() {
                         <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md">To Negotiate</span>
                       </div>
                       <p className="text-xs text-gray-400 mb-3 truncate">{job.clientName} · {job.vehicleDetails}</p>
+
+                      {job.photos && job.photos.length > 0 && (
+                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+                          {job.photos.map((url, idx) => (
+                            <img key={idx} src={url} alt="Job" onClick={() => window.open(url, '_blank')}
+                              className="w-16 h-16 object-cover rounded-lg border border-gray-700/50 cursor-pointer hover:opacity-80 transition" title="Click to enlarge" />
+                          ))}
+                        </div>
+                      )}
 
                       <div className="space-y-2 mb-4">
                         <div className="flex items-start gap-2">

@@ -8,6 +8,43 @@ import { pushEvent, broadcastToRole } from '../services/notifications.js';
 
 const router = Router();
 router.use(authenticate);
+
+// ── GET /api/drivers/:id/public-profile — public driver profile and reviews
+router.get('/:id/public-profile', (req, res) => {
+  const driverId = req.params.id;
+  const dp = db.prepare(`
+    SELECT dp.vehicle, dp.license_plate, dp.rating, dp.total_ratings, dp.completed_jobs, u.name, u.avatar
+    FROM driver_profiles dp JOIN users u ON u.id = dp.user_id
+    WHERE dp.user_id = ?
+  `).get(driverId);
+
+  if (!dp) return res.status(404).json({ error: 'Driver not found' });
+
+  const reviews = db.prepare(`
+    SELECT j.rating, j.review, j.completed_at, u.name as client_name
+    FROM jobs j JOIN users u ON u.id = j.client_id
+    WHERE j.driver_id = ? AND j.rating IS NOT NULL
+    ORDER BY j.completed_at DESC LIMIT 10
+  `).all(driverId);
+
+  res.json({
+    id: driverId,
+    name: dp.name,
+    avatar: dp.avatar,
+    vehicle: dp.vehicle,
+    licensePlate: dp.license_plate,
+    rating: dp.rating,
+    totalRatings: dp.total_ratings,
+    completedJobs: dp.completed_jobs,
+    reviews: reviews.map(r => ({
+      rating: r.rating,
+      review: r.review,
+      clientName: r.client_name,
+      date: r.completed_at,
+    })),
+  });
+});
+
 router.use(driverOnly);
 
 // ── PUT /api/drivers/location — update GPS ──────────────────
@@ -73,7 +110,7 @@ router.put('/availability', (req, res) => {
 // ── GET /api/drivers/profile — get own driver profile ───────
 router.get('/profile', (req, res) => {
   const dp = db.prepare(`
-    SELECT dp.*, u.name, u.email, u.phone
+    SELECT dp.*, u.name, u.email, u.phone, u.avatar
     FROM driver_profiles dp JOIN users u ON u.id = dp.user_id
     WHERE dp.user_id = ?
   `).get(req.user.id);
@@ -105,6 +142,7 @@ router.get('/profile', (req, res) => {
     name: dp.name,
     email: dp.email,
     phone: dp.phone,
+    avatar: dp.avatar,
     vehicle: dp.vehicle,
     licensePlate: dp.license_plate,
     latitude: dp.latitude,
