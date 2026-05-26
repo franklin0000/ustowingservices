@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { ArrowRight, Lock, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import BackgroundSlider from '../../components/BackgroundSlider'
+import InstallAppButton from '../../components/InstallAppButton'
 
 function FloatingInput({ label, type = "text", value, onChange, required, icon: Icon }) {
   return (
@@ -178,6 +179,10 @@ export default function Login() {
               Create one now
             </Link>
           </p>
+
+          <div className="mt-6">
+            <InstallAppButton />
+          </div>
         </motion.div>
       </div>
     </div>

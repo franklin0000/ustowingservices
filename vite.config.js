@@ -7,7 +7,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.jpg'],
+      injectRegister: 'auto',
+      includeAssets: ['logo-192.png', 'logo-512.png'],
       manifest: {
         name: 'US Towing Services',
         short_name: 'US Towing',
@@ -17,15 +18,15 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: '/logo.jpg',
+            src: '/logo-192.png',
             sizes: '192x192',
-            type: 'image/jpeg',
+            type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/logo.jpg',
+            src: '/logo-512.png',
             sizes: '512x512',
-            type: 'image/jpeg',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]

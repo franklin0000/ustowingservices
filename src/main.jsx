@@ -6,7 +6,11 @@ import { AuthProvider } from './context/AuthContext'
 import { AppProvider } from './context/AppContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { registerSW } from 'virtual:pwa-register'
 import './index.css'
+
+// Register PWA service worker
+registerSW({ immediate: true })
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
