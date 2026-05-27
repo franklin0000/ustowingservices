@@ -61,4 +61,12 @@ try {
   console.error('[PROD_INIT] Error verifying admin user:', error.message);
 }
 
+// ── Mark all users as verified so no one gets blocked ─────────
+try {
+  db.prepare('UPDATE users SET phone_verified = 1, email_verified = 1').run();
+  console.log('[PROD_INIT] All users marked as verified.');
+} catch (error) {
+  console.error('[PROD_INIT] Error marking users as verified:', error.message);
+}
+
 console.log('[PROD_INIT] Database verification complete.');

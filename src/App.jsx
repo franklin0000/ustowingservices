@@ -35,16 +35,7 @@ export default function App() {
     )
   }
 
-  // If logged in but phone is not verified (and not an admin, or admins too?)
-  // Let's enforce for all clients and drivers
-  if (user?.role !== 'admin' && !user?.phoneVerified) {
-    return (
-      <Routes>
-        <Route path="/verify-phone" element={<VerifyPhone />} />
-        <Route path="*" element={<Navigate to="/verify-phone" replace />} />
-      </Routes>
-    )
-  }
+  // Phone verification gate removed - users can access app directly
 
   // Route to the correct sub-app based on role
   if (user?.role === 'client') return <ClientApp />
