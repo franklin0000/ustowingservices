@@ -25,7 +25,8 @@ const PORT = process.env.PORT || 3001;
 // ── Security Middleware ────────────────────────────────────────
 // Set security HTTP headers
 app.use(helmet({
-  contentSecurityPolicy: false // Disabled for local dev compatibility
+  contentSecurityPolicy: false, // Disabled for local dev compatibility
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } // Fixes Google OAuth popup blank screen
 }));
 
 // Global API rate limiting
