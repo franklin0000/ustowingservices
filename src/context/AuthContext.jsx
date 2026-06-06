@@ -55,8 +55,8 @@ export function AuthProvider({ children }) {
     return response
   }, [])
 
-  const loginWithGoogle = useCallback(async (credential, role) => {
-    const { token, user: u } = await authApi.googleLogin(credential, role)
+  const loginWithGoogle = useCallback(async (tokenString, role, isAccessToken = false) => {
+    const { token, user: u } = await authApi.googleLogin(tokenString, role, isAccessToken)
     setToken(token)
     setUser(u)
     setIsAuthenticated(true)

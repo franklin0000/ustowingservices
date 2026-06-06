@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { ArrowRight, ShieldCheck, Mail, Lock, LogIn, Chrome, Car, HelpCircle, Navigation, ChevronRight } from 'lucide-react'
 import { SERVICE_TYPES } from '../../data/mockData'
 import { motion } from 'framer-motion'
-import { GoogleLogin } from '@react-oauth/google'
+import { useGoogleLogin } from '@react-oauth/google'
 import InstallAppButton from '../../components/InstallAppButton'
 
 function FloatingInput({ label, type = "text", value, onChange, required, icon: Icon }) {
@@ -39,22 +39,20 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setError('')
-    setLoading(true)
-    try {
-      // The credential is the JWT id_token from Google
-      await loginWithGoogle(credentialResponse.credential, 'client')
-      navigate('/')
-    } catch (err) {
-      setError(err.message || 'Google Login failed')
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleError = () => {
-    setError('Google authentication failed or was cancelled')
-  }
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setError('')
+      setLoading(true)
+      try {
+        await loginWithGoogle(tokenResponse.access_token, 'client', true)
+        navigate('/')
+      } catch (err) {
+        setError(err.message || 'Google Login failed')
+        setLoading(false)
+      }
+    },
+    onError: () => setError('Google Login Failed')
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -166,17 +164,14 @@ export default function Login() {
 
               {/* Google Auth Button */}
               <div className="mb-8 flex justify-center w-full">
-                <div className="w-full relative rounded-2xl overflow-hidden [&>div]:w-full [&_iframe]:w-full [&_iframe]:h-[52px]">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    theme="outline"
-                    size="large"
-                    shape="rectangular"
-                    text="signin_with"
-                    useOneTap={false}
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => googleLogin()}
+                  className="w-full bg-white text-gray-700 font-bold py-3.5 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all hover:bg-gray-50 active:scale-[0.98] shadow-sm"
+                >
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                  Sign in with Google
+                </button>
               </div>
 
               <div className="relative flex items-center justify-center my-8">

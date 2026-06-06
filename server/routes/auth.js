@@ -124,10 +124,10 @@ router.get('/verify-email', (req, res) => {
 
 // POST /api/auth/google
 router.post('/google', authLimiter, async (req, res) => {
-  const { credential, role } = req.body;
+  const { credential, access_token, role } = req.body;
   
-  if (!credential) {
-    return res.status(400).json({ error: 'Missing Google credential' });
+  if (!credential && !access_token) {
+    return res.status(400).json({ error: 'Missing Google credential or access_token' });
   }
 
   try {
@@ -141,6 +141,13 @@ router.post('/google', authLimiter, async (req, res) => {
         name: 'Mock Google User',
         email_verified: true
       };
+    } else if (access_token) {
+      // Handle frontend useGoogleLogin (implicit flow) which provides an access_token
+      const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+      if (!resp.ok) throw new Error('Invalid Google access token');
+      payload = await resp.json();
     } else {
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,

@@ -38,7 +38,7 @@ async function request(method, path, body = null) {
 export const auth = {
   login: (email, password) => request('POST', '/auth/login', { email, password }),
   register: (data) => request('POST', '/auth/register', data),
-  googleLogin: (credential, role) => request('POST', '/auth/google', { credential, role }),
+  googleLogin: (token, role, isAccessToken = false) => request('POST', '/auth/google', isAccessToken ? { access_token: token, role } : { credential: token, role }),
   sendSms: (phone) => request('POST', '/auth/send-sms', { phone }),
   verifySms: (code) => request('POST', '/auth/verify-sms', { code }),
   forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
