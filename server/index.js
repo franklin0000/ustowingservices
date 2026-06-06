@@ -25,9 +25,10 @@ const PORT = process.env.PORT || 3001;
 // ── Security Middleware ────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled for local dev compatibility
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Fixes Google OAuth popup blank screen
+  crossOriginOpenerPolicy: false, // Disabled entirely for mobile Safari compatibility with Google OAuth
   crossOriginResourcePolicy: false, // Fixes Google iframe blocking
-  crossOriginEmbedderPolicy: false // Fixes Google iframe blocking
+  crossOriginEmbedderPolicy: false, // Fixes Google iframe blocking
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" } // Required for Google OAuth to verify origin
 }));
 
 // Global API rate limiting
