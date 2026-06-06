@@ -32,6 +32,7 @@ export function AppProvider({ children }) {
   const getJob = useCallback((id) => apiCall(() => jobsApi.get(id)), [apiCall])
   const cancelJob = useCallback((id) => apiCall(() => jobsApi.cancel(id)), [apiCall])
   const rateJob = useCallback((id, rating, review) => apiCall(() => jobsApi.rate(id, rating, review)), [apiCall])
+  const getJobChat = useCallback((id) => apiCall(() => jobsApi.getChat(id)), [apiCall])
   const getMyPayments = useCallback(() => apiCall(() => {
     // Dynamic import to get the correct module
     return import('../services/api').then(mod => mod.payments.my())
@@ -43,7 +44,7 @@ export function AppProvider({ children }) {
   // ── Driver API methods ──────────────────────────────────
   const getAvailableJobs = useCallback(() => apiCall(() => jobsApi.available()), [apiCall])
   const acceptJob = useCallback((id) => apiCall(() => jobsApi.accept(id)), [apiCall])
-  const updateJobStatus = useCallback((id, status) => apiCall(() => jobsApi.updateStatus(id, status)), [apiCall])
+  const updateJobStatus = useCallback((id, status, data={}) => apiCall(() => jobsApi.updateStatus(id, status, data)), [apiCall])
   const proposePrice = useCallback((id, amount) => apiCall(() => jobsApi.proposePrice(id, amount)), [apiCall])
   const fetchNearbyDrivers = useCallback((lat, lng) => apiCall(() => jobsApi.nearbyDrivers(lat, lng)), [apiCall])
 
@@ -81,7 +82,7 @@ export function AppProvider({ children }) {
       loading, error, clearError,
       // Client
       createJob, uploadJobPhoto, getMyJobs, getJob, cancelJob, rateJob, getMyPayments, getQuote,
-      geocode,
+      geocode, getJobChat,
       // Driver
       getAvailableJobs, acceptJob, updateJobStatus, proposePrice, fetchNearbyDrivers,
       getDriverProfile, getActiveJob, updateLocation, setAvailability,

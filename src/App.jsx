@@ -7,9 +7,11 @@ import VerifyPhone from './pages/auth/VerifyPhone'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
+import FireTourDemo from './pages/FireTourDemo'
 import ClientApp from './apps/client/ClientApp'
 import DriverApp from './apps/driver/DriverApp'
 import AdminApp  from './apps/admin/AdminApp'
+
 
 /**
  * Root orchestrator — reads the authenticated user's role
@@ -18,6 +20,15 @@ import AdminApp  from './apps/admin/AdminApp'
  */
 export default function App() {
   const { isAuthenticated, user } = useAuth()
+
+  // Public demo route works regardless of auth state
+  if (typeof window !== 'undefined' && window.location.pathname === '/fire-demo') {
+    return (
+      <Routes>
+        <Route path="/fire-demo" element={<FireTourDemo />} />
+      </Routes>
+    )
+  }
 
   // Not logged in → Auth routes
   if (!isAuthenticated) {
@@ -30,6 +41,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/fire-demo" element={<FireTourDemo />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     )

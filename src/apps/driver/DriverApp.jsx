@@ -7,7 +7,6 @@ import AvailableJobs from '../../pages/driver/AvailableJobs'
 import ActiveJob from '../../pages/driver/ActiveJob'
 import Earnings from '../../pages/driver/Earnings'
 import Ratings from '../../pages/driver/Ratings'
-import KycUpload from '../../pages/driver/KycUpload'
 import Subscriptions from '../../pages/driver/Subscriptions'
 import ProfileSettings from '../../pages/driver/ProfileSettings'
 
@@ -17,10 +16,6 @@ export default function DriverApp() {
   if (!isAuthenticated) return <LoginPage />
   if (user?.role !== 'driver') return <Navigate to="/" replace />
 
-  // KYC Verification Gateway
-  if (user.kycStatus === 'pending' || user.kycStatus === 'rejected') {
-    return <KycUpload />
-  }
 
   // Stripe Subscription Gateway removed for 25% commission model
 

@@ -19,18 +19,18 @@ export default function ClientLayout() {
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-blue-100 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-brand-100/50 shadow-sm"
       >
         <div className="h-16 px-4 md:px-6 flex items-center justify-between max-w-screen-2xl mx-auto">
 
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl flex items-center justify-center shadow-md">
               <Truck className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm font-bold text-gray-900 leading-none">US Towing Services</p>
-              <p className="text-[11px] text-blue-500 font-medium">Client Portal</p>
+              <p className="text-[11px] text-brand-500 font-bold uppercase tracking-wider">Client Portal</p>
             </div>
           </div>
 
@@ -38,7 +38,7 @@ export default function ClientLayout() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowPanel(true)}
-              className="relative p-2 rounded-xl hover:bg-blue-50 transition"
+              className="relative p-2 rounded-xl hover:bg-brand-50 transition-colors"
             >
               <Bell className="w-5 h-5 text-gray-500" />
               {unreadCount > 0 && (
@@ -49,7 +49,7 @@ export default function ClientLayout() {
             </button>
 
             <div className="flex items-center gap-2 pl-2 border-l border-gray-100">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                 {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
               {/* Show name on md+ */}

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import db from '../db.js';
 import { authenticate } from '../middleware/auth.js';
-import { clientOnly, driverOnly } from '../middleware/roles.js';
+import { clientOnly, driverOnly, authorize } from '../middleware/roles.js';
 import { findBestDriver, findNearbyDrivers, estimateETA, haversine } from '../services/geo.js';
 import { notify, pushEvent, broadcastToRole } from '../services/notifications.js';
 
@@ -38,8 +38,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ── CLIENT: Upload job photo ────────────────────────────────
-router.post('/upload', clientOnly, upload.single('photo'), (req, res) => {
+// ── CLIENT & DRIVER: Upload job photo ───────────────────────
+router.post('/upload', authorize('client', 'driver'), upload.single('photo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const photoUrl = `/uploads/${req.file.filename}`;
   res.json({ photoUrl });
@@ -176,8 +176,14 @@ router.post('/:id/propose-price', driverOnly, (req, res) => {
     message: `I have proposed a final price of $${amount}. Please review and pay.`,
     timestamp: new Date().toISOString(),
   });
+  broadcastToRole('admin', { event: 'chat_message', payload: {
+    id: msgId, jobId: job.id, senderId: req.user.id,
+    message: `I have proposed a final price of $${amount}. Please review and pay.`,
+    createdAt: new Date().toISOString()
+  }});
   
   pushEvent(job.client_id, 'price_proposed', { jobId: job.id, amount });
+  broadcastToRole('admin', { event: 'price_proposed', payload: { jobId: job.id, amount } });
 
   res.json({ success: true, amount });
 });
@@ -220,6 +226,7 @@ router.put('/:id/accept', driverOnly, (req, res) => {
       jobId: job.id,
       driver: { id: req.user.id, name: req.user.name, phone: req.user.phone, avatar: req.user.avatar, vehicle: dp.vehicle, rating: dp.rating },
     });
+    broadcastToRole('admin', { event: 'job_status', payload: { jobId: job.id, status: nextStatus } });
   } else {
     notify(job.client_id, 'job', 'Driver Assigned!',
       `${req.user.name} is on the way with their ${dp.vehicle}. ETA: ${eta} min`,
@@ -260,10 +267,11 @@ router.put('/:id/status', driverOnly, (req, res) => {
 
   const updates = { status, updated_at: "datetime('now')" };
   if (status === 'completed') {
+    const photosStr = req.body.completionPhotos && req.body.completionPhotos.length ? JSON.stringify(req.body.completionPhotos) : null;
     // Complete the job: create payment, update driver stats
     db.prepare(`
-      UPDATE jobs SET status = 'completed', completed_at = datetime('now'), updated_at = datetime('now') WHERE id = ?
-    `).run(job.id);
+      UPDATE jobs SET status = 'completed', completed_at = datetime('now'), updated_at = datetime('now'), completion_photos = ? WHERE id = ?
+    `).run(photosStr, job.id);
 
     const feePct = parseFloat(
       db.prepare("SELECT value FROM platform_settings WHERE key = 'platform_fee_pct'").get()?.value || '25'
@@ -425,6 +433,7 @@ router.post('/:id/chat', (req, res) => {
 
   // Push event in real time via WebSockets
   pushEvent(receiverId, 'chat_message', formattedMsg);
+  broadcastToRole('admin', { event: 'chat_message', payload: formattedMsg });
 
   res.status(201).json(formattedMsg);
 });
@@ -495,7 +504,8 @@ function formatJob(row) {
     review: row.review,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    completedAt: row.completed_at
+    completedAt: row.completed_at,
+    completionPhotos: row.completion_photos ? JSON.parse(row.completion_photos) : []
   };
 }
 

@@ -1,30 +1,31 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { ArrowRight, Lock, ShieldCheck, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, ShieldCheck, Mail, Lock, LogIn, Chrome, Car, HelpCircle, Navigation, ChevronRight } from 'lucide-react'
+import { SERVICE_TYPES } from '../../data/mockData'
 import { motion } from 'framer-motion'
-import BackgroundSlider from '../../components/BackgroundSlider'
+import { GoogleLogin } from '@react-oauth/google'
 import InstallAppButton from '../../components/InstallAppButton'
 
 function FloatingInput({ label, type = "text", value, onChange, required, icon: Icon }) {
   return (
-    <div className="relative">
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-400 transition-colors z-10">
+          <Icon className="w-5 h-5" />
+        </div>
+      )}
       <input 
         type={type} 
         value={value}
         onChange={onChange}
         required={required}
         placeholder=" "
-        className="block px-4 pb-2.5 pt-6 w-full text-gray-900 bg-white rounded-xl border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent peer transition-all shadow-sm"
+        className={`block px-4 pb-2.5 pt-6 w-full text-white bg-white/5 border border-white/10 rounded-2xl appearance-none focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/50 peer transition-all shadow-inner ${Icon ? 'pl-11' : ''}`}
       />
-      <label className="absolute text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-blue-600 font-medium pointer-events-none">
+      <label className={`absolute text-gray-400 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-brand-400 font-medium pointer-events-none ${Icon ? 'left-11' : 'left-4'}`}>
         {label}
       </label>
-      {Icon && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-          <Icon className="w-5 h-5" />
-        </div>
-      )}
     </div>
   )
 }
@@ -38,15 +39,21 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleMockGoogleLogin = async () => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     setError('')
     setLoading(true)
     try {
-      await loginWithGoogle('mock-credential', 'client')
+      // The credential is the JWT id_token from Google
+      await loginWithGoogle(credentialResponse.credential, 'client')
+      navigate('/')
     } catch (err) {
-      setError(err.message || 'Login failed')
+      setError(err.message || 'Google Login failed')
       setLoading(false)
     }
+  }
+
+  const handleGoogleError = () => {
+    setError('Google authentication failed or was cancelled')
   }
 
   const handleSubmit = async (e) => {
@@ -63,127 +70,169 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      {/* LEFT SIDE - IMMERSIVE BACKGROUND & BRANDING */}
-      <div className="relative flex flex-col justify-between p-6 lg:p-12 overflow-hidden z-0 h-[35vh] min-h-[250px] lg:h-auto lg:min-h-screen lg:w-[45%] xl:w-[50%] lg:shadow-2xl">
-        <BackgroundSlider />
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-[#0A0A0B]">
+      
+      {/* Ultra-Premium Animated Background Elements */}
+      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-600/20 blur-[120px] mix-blend-screen" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[150px] mix-blend-screen" />
+        <div className="absolute top-[40%] left-[30%] w-[30%] h-[30%] rounded-full bg-indigo-500/5 blur-[100px] mix-blend-screen" />
         
-        {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-3 lg:gap-4 lg:mb-0">
-          <div className="bg-white p-2 lg:p-2.5 rounded-xl lg:rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.3)]">
-            <img src="/logo.jpg" alt="US Towing Services" className="h-8 lg:h-10 object-contain rounded-lg" />
-          </div>
-          <div>
-            <h2 className="text-white font-bold text-lg lg:text-xl drop-shadow-md">US Towing Services</h2>
-            <p className="text-gray-200 text-xs lg:text-sm font-medium drop-shadow-md">Client & Driver Portal</p>
-          </div>
-        </div>
-
-        {/* Value Proposition */}
-        <div className="relative z-10 hidden lg:block max-w-lg mb-12">
-          <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-5xl font-black text-white mb-6 leading-tight drop-shadow-lg">
-            Welcome back.
-          </motion.h1>
-          <p className="text-gray-200 text-lg font-medium drop-shadow-md mb-8">
-            Access your secure dashboard to manage jobs, track drivers, and review payments.
-          </p>
-          
-          <div className="space-y-6">
-            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 mt-1">
-                <CheckCircle2 className="text-white w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-lg drop-shadow-md">Secure Connection</h3>
-                <p className="text-gray-200 text-sm drop-shadow-md">Industry standard encryption for your peace of mind.</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWgyMHYyMEgxVjF6IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==')] opacity-50" />
       </div>
 
-      {/* RIGHT SIDE - PROFESSIONAL FORM */}
-      <div className="relative z-20 w-full lg:w-[55%] xl:w-[50%] flex items-start lg:items-center justify-center p-0 lg:p-12 xl:p-24 bg-transparent lg:bg-gray-50 overflow-y-auto">
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }} 
-          animate={{ y: 0, opacity: 1 }}
-          className="w-full max-w-md bg-white p-8 sm:p-10 rounded-t-[32px] lg:rounded-[32px] shadow-[0_-8px_30px_rgb(0,0,0,0.12)] lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-t border-x border-gray-100 lg:border min-h-[65vh] lg:min-h-0 -mt-6 lg:mt-0 pb-12"
-        >
-
-          <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Sign In</h2>
-          <p className="text-gray-500 mb-8 font-medium">Please enter your credentials to securely access your account.</p>
-
-          {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-3 border border-red-100">
-              <div className="mt-0.5"><Lock className="w-4 h-4" /></div>
-              <p className="font-medium">{error}</p>
+      <div className="relative z-10 w-full max-w-[1200px] px-6 py-12 flex flex-col lg:flex-row items-center justify-between gap-16">
+        
+        {/* Left Side: Brand & Value Prop */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full mb-8 backdrop-blur-md">
+              <ShieldCheck className="w-4 h-4 text-brand-400" />
+              <span className="text-xs font-semibold tracking-wider text-gray-300 uppercase">Secure Portal Access</span>
             </div>
-          )}
-
-          {/* Premium Google Button */}
-          <div className="mb-8">
-            <button 
-              type="button"
-              onClick={handleMockGoogleLogin}
-              className="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3.5 rounded-xl shadow-sm flex justify-center items-center gap-3 hover:bg-gray-50 hover:shadow transition focus:ring-4 focus:ring-gray-100"
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              Sign in with Google
-            </button>
-          </div>
-
-          <div className="relative flex items-center justify-center mb-8">
-            <div className="absolute inset-0 border-t border-gray-200"></div>
-            <span className="relative bg-white px-4 text-sm text-gray-400 font-bold uppercase tracking-wider">or sign in with email</span>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FloatingInput 
-              label="Email Address" 
-              type="email" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
-            />
             
-            <div>
-              <FloatingInput 
-                label="Password" 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                required 
-              />
-              <div className="flex justify-end mt-2 px-1">
-                <Link to="/forgot-password" className="text-sm font-semibold text-blue-600 hover:underline">Forgot your password?</Link>
+            <h1 className="text-5xl lg:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tight">
+              US Towing <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-500">
+                Services
+              </span>
+            </h1>
+            
+            <p className="text-lg lg:text-xl text-gray-400 font-medium max-w-lg mb-8 leading-relaxed">
+              Log in to request rapid roadside assistance, track your driver in real-time, and manage your payments effortlessly.
+            </p>
+
+            {/* Services List (Text Only) */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-5 max-w-lg mb-10">
+              {SERVICE_TYPES.map(service => (
+                <div key={service.id} className="group border-l border-white/10 pl-4 hover:border-brand-400 transition-colors">
+                  <h3 className="text-gray-300 font-semibold text-sm tracking-wide group-hover:text-white transition-colors">
+                    {service.label}
+                  </h3>
+                  <p className="text-gray-500 text-xs mt-1">
+                    {service.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden lg:flex items-center gap-6">
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-full border-2 border-white/5 bg-gray-800/80 flex items-center justify-center text-xs font-bold text-white shadow-lg backdrop-blur-sm">24/7</div>
+                <div className="w-12 h-12 rounded-full border-2 border-brand-500/30 bg-brand-600/90 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 backdrop-blur-sm"><ShieldCheck className="w-5 h-5"/></div>
+                <div className="w-12 h-12 rounded-full border-2 border-blue-500/30 bg-blue-600/90 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 backdrop-blur-sm"><ArrowRight className="w-5 h-5"/></div>
+              </div>
+              <div className="text-sm font-medium text-gray-400">
+                <span className="text-white font-bold">1,000+</span> providers ready <br/> to assist you.
               </div>
             </div>
+          </motion.div>
+        </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 mt-4 disabled:opacity-70"
-            >
-              {loading ? 'Authenticating...' : 'Sign In Securely'} <ArrowRight className="w-5 h-5" />
-            </button>
-          </form>
+        {/* Right Side: Auth Card */}
+        <div className="w-full lg:w-[440px] shrink-0">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            className="relative"
+          >
+            {/* Ambient Card Glow */}
+            <div className="absolute -inset-1 bg-gradient-to-b from-brand-500/20 to-blue-500/20 rounded-[2.5rem] blur-xl opacity-50" />
+            
+            <div className="relative bg-[#121214]/80 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 rounded-[2.5rem] shadow-2xl">
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg p-2">
+                  <img src="/logo.jpg" alt="Logo" className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
+                  <p className="text-sm font-medium text-gray-400">Enter your details to sign in</p>
+                </div>
+              </div>
 
-          <p className="text-center mt-8 text-gray-600 font-medium">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-blue-600 font-bold hover:underline">
-              Create one now
-            </Link>
-          </p>
+              {error && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm mb-6 flex items-start gap-3">
+                  <div className="mt-0.5"><Lock className="w-4 h-4" /></div>
+                  <p className="font-medium">{error}</p>
+                </motion.div>
+              )}
 
-          <div className="mt-6">
+              {/* Google Auth Button */}
+              <div className="mb-8 flex justify-center w-full">
+                <div className="w-full relative rounded-2xl overflow-hidden [&>div]:w-full [&_iframe]:w-full [&_iframe]:h-[52px]">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="outline"
+                    size="large"
+                    shape="rectangular"
+                    text="signin_with"
+                    useOneTap={false}
+                  />
+                </div>
+              </div>
+
+              <div className="relative flex items-center justify-center my-8">
+                <div className="absolute inset-0 border-t border-white/10"></div>
+                <span className="relative bg-[#121214] px-4 text-xs text-gray-500 font-bold uppercase tracking-widest">Or sign in with email</span>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <FloatingInput 
+                  label="Email Address" 
+                  type="email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  required 
+                  icon={Mail}
+                />
+                
+                <div>
+                  <FloatingInput 
+                    label="Password" 
+                    type="password" 
+                    value={password} 
+                    onChange={e => setPassword(e.target.value)} 
+                    required 
+                    icon={Lock}
+                  />
+                  <div className="flex justify-end mt-3 px-1">
+                    <Link to="/forgot-password" className="text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors">Forgot Password?</Link>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 mt-2 transition-all active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none shadow-[0_0_20px_rgba(var(--brand-600),0.3)] hover:shadow-[0_0_30px_rgba(var(--brand-500),0.5)]"
+                >
+                  {loading ? 'Authenticating...' : 'Sign In securely'} <ChevronRight className="w-5 h-5" />
+                </button>
+              </form>
+
+              <div className="mt-8 text-center bg-white/5 rounded-2xl p-4 border border-white/5">
+                <p className="text-gray-400 text-sm font-medium">
+                  Don't have an account?{' '}
+                  <Link to="/register" className="text-white font-bold hover:text-brand-400 transition-colors">
+                    Create one now
+                  </Link>
+                </p>
+              </div>
+
+            </div>
+          </motion.div>
+
+          <div className="mt-8">
             <InstallAppButton />
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )

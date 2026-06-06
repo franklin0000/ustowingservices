@@ -18,7 +18,7 @@ router.get('/dashboard', (req, res) => {
   const totalRequests = db.prepare('SELECT COUNT(*) as c FROM jobs').get().c;
   const pendingRequests = db.prepare("SELECT COUNT(*) as c FROM jobs WHERE status = 'pending'").get().c;
   const completedRequests = db.prepare("SELECT COUNT(*) as c FROM jobs WHERE status = 'completed'").get().c;
-  const activeJobs = db.prepare("SELECT COUNT(*) as c FROM jobs WHERE status IN ('accepted','en_route','arrived','in_service')").get().c;
+  const activeJobs = db.prepare("SELECT COUNT(*) as c FROM jobs WHERE status IN ('accepted','negotiating','en_route','arrived','in_service')").get().c;
 
   const totalDrivers = db.prepare('SELECT COUNT(*) as c FROM driver_profiles').get().c;
   const activeDrivers = db.prepare('SELECT COUNT(*) as c FROM driver_profiles WHERE available = 1').get().c;
@@ -56,12 +56,12 @@ router.get('/dashboard', (req, res) => {
   const activeDriversList = db.prepare(`
     SELECT u.id, u.name, dp.latitude, dp.longitude, dp.vehicle
     FROM driver_profiles dp JOIN users u ON u.id = dp.user_id
-    WHERE dp.available = 1 OR dp.user_id IN (SELECT driver_id FROM jobs WHERE status IN ('accepted','en_route','arrived','in_service'))
+    WHERE dp.available = 1 OR dp.user_id IN (SELECT driver_id FROM jobs WHERE status IN ('accepted','negotiating','en_route','arrived','in_service'))
   `).all();
 
   const activeJobsList = db.prepare(`
-    SELECT id, client_id, driver_id, pickup_lat, pickup_lng, dest_lat, dest_lng, status, service_type
-    FROM jobs WHERE status IN ('pending','matched','accepted','en_route','arrived','in_service')
+    SELECT id, client_id, driver_id, pickup_lat, pickup_lng, dest_lat, dest_lng, status, service_type, amount, agreed_price
+    FROM jobs WHERE status IN ('pending','matched','accepted','negotiating','en_route','arrived','in_service')
   `).all();
 
   // Generate weekly revenue array for the last 7 days (Admin sees total platform revenue)
@@ -137,6 +137,7 @@ router.get('/jobs', (req, res) => {
       driverName: j.driver_name, serviceType: j.service_type, vehicleType: j.vehicle_type,
       vehicleDetails: j.vehicle_details, pickupLocation: j.pickup_location,
       destination: j.destination, status: j.status, amount: j.amount,
+      agreedPrice: j.agreed_price,
       rating: j.rating, createdAt: j.created_at, completedAt: j.completed_at,
     })),
   });

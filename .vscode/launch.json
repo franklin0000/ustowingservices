@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Server (Express)",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/server/index.js",
+      "runtimeArgs": ["--env-file=.env"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": { "NODE_ENV": "development" }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Seed DB",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/server/seed.js",
+      "runtimeArgs": ["--env-file=.env"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Frontend (Vite + Chrome)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src",
+      "sourceMaps": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["Server (Express)", "Frontend (Vite + Chrome)"],
+      "stopAll": true
+    }
+  ]
+}

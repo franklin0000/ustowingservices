@@ -33,6 +33,7 @@ export default function TrackDriver() {
   const [isPaying,   setIsPaying]   = useState(false)
   const [chatOpen,   setChatOpen]   = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
@@ -42,17 +43,11 @@ export default function TrackDriver() {
     
     if (paymentStatus === 'success' || paymentStatus === 'success_negotiating') {
       if (jobId) {
-        // Fallback for local dev: manually trigger the webhook logic via bypass
-        // so the system updates even if stripe CLI is not forwarding webhooks.
-        stripe.bypassJobPayment(jobId)
-          .then(() => {
-            if (paymentStatus === 'success') setShowRating(true)
-            setSearchParams({})
-          })
-          .catch(err => {
-            console.warn('Bypass trigger failed:', err)
-            setSearchParams({})
-          })
+        // Optimistically update UI so the user knows payment succeeded,
+        // but rely entirely on Stripe Webhook to update the real status in the DB.
+        setActiveReq(prev => prev && prev.id === jobId ? { ...prev, status: 'en_route' } : prev)
+        if (paymentStatus === 'success') setShowRating(true)
+        setSearchParams({})
       } else {
         if (paymentStatus === 'success') setShowRating(true)
         setSearchParams({})
@@ -167,32 +162,45 @@ export default function TrackDriver() {
       </div>
 
       {/* ── Overlay UI (Floating Elements) ── */}
-      <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-4 pb-24 md:pb-6">
+      <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between pb-0">
         
         {/* Top Floating Status (Like Uber's header) */}
-        <div className="w-full max-w-md mx-auto mt-16 pointer-events-auto space-y-4">
+        <div className="w-full max-w-md mx-auto mt-6 md:mt-16 pointer-events-auto space-y-4 px-4">
           <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             className="bg-white/90 backdrop-blur-md rounded-full px-5 py-3 shadow-lg flex items-center justify-between border border-gray-100">
             <div className="flex items-center gap-3">
               <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-60" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-500 opacity-60" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-600" />
               </span>
               <span className="font-bold text-gray-900 text-sm">{statusInfo.label}</span>
             </div>
-            <span className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">ETA {eta} min</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => alert('SOS: Calling 911...')} className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-red-200 transition-colors">
+                SOS
+              </button>
+              <span className="text-sm font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full">ETA {eta} min</span>
+            </div>
           </motion.div>
         </div>
 
         {/* Bottom Floating Sheet (Driver & Job Details) */}
-        <div className="w-full max-w-md mx-auto pointer-events-auto">
+        <div className="w-full max-w-md mx-auto pointer-events-auto px-2 md:px-0 pb-4 md:pb-6">
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-            className="bg-white rounded-[2rem] p-5 shadow-2xl border border-gray-100 space-y-5 relative overflow-hidden">
+            className="bg-white rounded-[2rem] p-5 shadow-2xl border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
             
             {/* Progress Bar top edge */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-100">
-              <div className="h-full bg-blue-600 transition-all duration-1000" 
+              <div className="h-full bg-brand-600 transition-all duration-1000" 
                 style={{ width: `${(statusInfo.step / 5) * 100}%` }} />
+            </div>
+
+            {/* Drag Handle */}
+            <div 
+              className="w-full flex justify-center pt-1 pb-1 cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <div className="w-12 h-1.5 bg-gray-200 hover:bg-gray-300 transition-colors rounded-full" />
             </div>
 
             {/* Driver Profile Section */}
@@ -214,15 +222,20 @@ export default function TrackDriver() {
                   className="flex-1 cursor-pointer hover:bg-gray-50 p-1 -ml-1 rounded-lg transition"
                   onClick={() => setProfileOpen(true)}
                 >
-                  <h3 className="font-bold text-gray-900 text-lg leading-tight">{driver.name}</h3>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <h3 className="font-bold text-gray-900 text-lg leading-tight">{driver.name}</h3>
+                    <div className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> Verified
+                    </div>
+                  </div>
                   <p className="text-sm text-gray-500 font-medium">{driver.vehicle}</p>
-                  <p className="text-xs text-blue-600 font-semibold mt-0.5">{driver.phone || 'No phone provided'}</p>
+                  <p className="text-xs text-brand-600 font-semibold mt-0.5">{driver.phone || 'No phone provided'}</p>
                 </div>
                 <div className="flex gap-2">
                   <a href={`tel:${driver.phone}`} className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition relative">
                     <Phone className="w-4 h-4" />
                   </a>
-                  <button onClick={() => setChatOpen(true)} className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition relative">
+                  <button onClick={() => setChatOpen(true)} className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center hover:bg-brand-100 transition relative">
                     <MessageSquare className="w-4 h-4" />
                   </button>
                 </div>
@@ -235,39 +248,51 @@ export default function TrackDriver() {
 
             <div className="h-px bg-gray-100 w-full" />
 
-            {/* Location Details */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-gray-800" />
-                </div>
-                <div className="flex-1 truncate">
-                  <p className="text-xs text-gray-400 font-medium">Pickup</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">{activeReq.pickupLocation}</p>
-                </div>
-              </div>
-              {activeReq.destination && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
+            {/* Location Details (Collapsible) */}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }} 
+                  animate={{ height: 'auto', opacity: 1 }} 
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-3 overflow-hidden"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                      <div className="w-2.5 h-2.5 rounded-sm bg-gray-800" />
+                    </div>
+                    <div className="flex-1 truncate">
+                      <p className="text-xs text-gray-400 font-medium">Pickup</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{activeReq.pickupLocation}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 truncate">
-                    <p className="text-xs text-gray-400 font-medium">Dropoff</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{activeReq.destination}</p>
-                  </div>
-                </div>
+                  {activeReq.destination && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
+                      </div>
+                      <div className="flex-1 truncate">
+                        <p className="text-xs text-gray-400 font-medium">Dropoff</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{activeReq.destination}</p>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
 
             {/* Complete action */}
             {activeReq.status === 'negotiating' && (
               <div className="space-y-3 pt-2">
                 {activeReq.agreedPrice ? (
                   <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex flex-col gap-3">
-                    <div className="flex justify-between items-center text-orange-900 font-bold mb-2">
+                    <div className="flex justify-between items-center text-orange-900 font-bold mb-1">
                       <span>Total to Pay:</span>
                       <span className="text-2xl">${activeReq.agreedPrice}</span>
                     </div>
+                    <p className="text-xs text-orange-800/80 mb-1 leading-tight">
+                      If you'd like to negotiate this price, use the chat button above to message the provider.
+                    </p>
                     <button onClick={handlePayment} disabled={isPaying}
                       className="w-full bg-orange-600 text-white font-bold py-3 rounded-xl hover:bg-orange-700 transition disabled:opacity-75">
                       {isPaying ? 'Processing...' : 'Pay Now & Continue'}

@@ -24,6 +24,35 @@ export default function ActiveJob() {
   const [proposing, setProposing] = useState(false)
   const [basePrice, setBasePrice] = useState('50')
   const [ratePerKm, setRatePerKm] = useState('2.5')
+  const [completionPhotos, setCompletionPhotos] = useState([])
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingPhotos(true)
+    try {
+      // Re-use the existing client photo upload endpoint since it accepts multipart
+      const formData = new FormData()
+      formData.append('photo', file)
+      const token = localStorage.getItem('gruas_token')
+      const res = await fetch('/api/jobs/upload', {
+        method: 'POST',
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        body: formData
+      })
+      const data = await res.json()
+      if (data?.photoUrl) setCompletionPhotos(prev => [...prev, data.photoUrl])
+    } catch (err) {
+      addNotification({ title: 'Error', message: 'Failed to upload photo', type: 'error' })
+    } finally {
+      setUploadingPhotos(false)
+    }
+  }
+
+  const removePhoto = (idx) => {
+    setCompletionPhotos(prev => prev.filter((_, i) => i !== idx))
+  }
 
   useEffect(() => {
     getActiveJob().then(j => { setJob(j); setLoaded(true) }).catch(() => setLoaded(true))
@@ -123,8 +152,13 @@ export default function ActiveJob() {
     if (!job) return
     const nextStatus = NEXT_STATUS[job.status]
     if (!nextStatus) return
+    
+    if (nextStatus === 'completed' && completionPhotos.length === 0) {
+      return alert("Please upload at least one photo of the finished work before completing the job.")
+    }
+
     try {
-      const updated = await updateJobStatus(job.id, nextStatus)
+      const updated = await updateJobStatus(job.id, nextStatus, { completionPhotos })
       if (nextStatus === 'completed') {
         addNotification({ type: 'success', title: 'Job Completed!', message: `Earned $${(job.amount * 0.95).toFixed(2)}` })
         navigate('/driver')
@@ -299,11 +333,17 @@ export default function ActiveJob() {
                   <input type="number" placeholder="Final Total Price" 
                     className="flex-1 bg-gray-700 border-none rounded-xl text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500"
                     value={proposeAmount} onChange={e => setProposeAmount(e.target.value)}
-                    disabled={job.agreedPrice > 0 || proposing} />
+                    disabled={proposing} />
                 </div>
                 {job.agreedPrice ? (
-                  <div className="text-center text-sm font-semibold text-emerald-400 bg-emerald-500/10 py-3 rounded-xl">
-                    Waiting for client to pay ${job.agreedPrice}
+                  <div className="flex flex-col gap-2">
+                    <div className="text-center text-sm font-semibold text-emerald-400 bg-emerald-500/10 py-3 rounded-xl">
+                      Waiting for client to pay ${job.agreedPrice}
+                    </div>
+                    <button onClick={handleProposePrice} disabled={proposing}
+                      className="w-full py-2 rounded-xl font-bold transition-all bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50">
+                      {proposing ? 'Updating...' : 'Update Proposed Price'}
+                    </button>
                   </div>
                 ) : (
                   <button onClick={handleProposePrice} disabled={proposing}
@@ -316,7 +356,31 @@ export default function ActiveJob() {
                 </button>
               </div>
             ) : (
-              <button onClick={advanceStage}
+              <div className="space-y-4 pt-2">
+                {stage === 4 && (
+                  <div className="bg-gray-700/40 rounded-2xl p-4 border border-gray-600/50">
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Proof of Completion (Required)</label>
+                    <div className="flex flex-wrap gap-3">
+                      {completionPhotos.map((photo, idx) => (
+                        <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden shadow-sm border border-gray-600">
+                          <img src={photo} alt="Completion" className="w-full h-full object-cover" />
+                          <button onClick={() => removePhoto(idx)} className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 shadow-sm hover:bg-red-600">
+                            <span className="text-xs px-1 font-bold">X</span>
+                          </button>
+                        </div>
+                      ))}
+                      {completionPhotos.length < 5 && (
+                        <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-500 bg-gray-800 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-emerald-500 hover:text-emerald-500 transition-colors">
+                          {uploadingPhotos ? <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /> : <span className="text-2xl">+</span>}
+                          <span className="text-[10px] mt-1">{uploadingPhotos ? 'Uploading' : 'Add Photo'}</span>
+                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhotos} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                <button onClick={advanceStage}
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2
                   ${stage < 4 ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-gray-900'}`}>
                 {stage === 1 ? <><Navigation className="w-5 h-5" /> Mark En Route</>
@@ -324,6 +388,7 @@ export default function ActiveJob() {
                  : stage === 3 ? <><Navigation className="w-5 h-5" /> Start Service</>
                  : <><CheckCircle2 className="w-5 h-5" /> Complete Job</>}
               </button>
+              </div>
             )}
 
           </div>

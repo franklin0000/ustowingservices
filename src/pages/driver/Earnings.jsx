@@ -97,7 +97,7 @@ export default function Earnings() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-100">Earnings & Payouts</h1>
-          <p className="text-sm text-gray-400 mt-1">Manage your income and request withdrawals</p>
+          <p className="text-sm text-gray-400 mt-1">Manage your net income (after 20% platform fee)</p>
         </div>
         
         <div className="bg-gray-800/80 border border-gray-700/50 p-4 rounded-2xl flex items-center gap-4">
@@ -123,9 +123,9 @@ export default function Earnings() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Earnings', value: `$${stats.totalEarnings.toFixed(0)}`, icon: DollarSign,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', badge: '+12%' },
+          { label: 'Net Earnings', value: `$${stats.totalEarnings.toFixed(0)}`, icon: DollarSign,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', badge: '+12%' },
           { label: 'Completed Jobs', value: stats.completedJobs,                  icon: TrendingUp,  color: 'text-blue-400',    bg: 'bg-blue-500/10' },
-          { label: 'Avg Per Job',    value: `$${stats.avgPerJob.toFixed(0)}`,     icon: Calendar,    color: 'text-purple-400',  bg: 'bg-purple-500/10' },
+          { label: 'Net Avg Per Job',    value: `$${stats.avgPerJob.toFixed(0)}`,     icon: Calendar,    color: 'text-purple-400',  bg: 'bg-purple-500/10' },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="bg-gray-800/80 border border-gray-700/50 rounded-2xl p-5 shadow-sm relative overflow-hidden">
@@ -151,7 +151,7 @@ export default function Earnings() {
         {/* ── Chart Section ── */}
         <div className="lg:col-span-2 bg-gray-800/80 border border-gray-700/50 rounded-3xl p-6 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-gray-100 text-sm uppercase tracking-wide">Weekly Earnings</h3>
+            <h3 className="font-bold text-gray-100 text-sm uppercase tracking-wide">Weekly Net Earnings (80%)</h3>
           </div>
           <div className="h-64 sm:h-72 w-full flex-1 min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">

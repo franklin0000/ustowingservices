@@ -40,6 +40,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+  const [method, setMethod] = useState('sms') // 'sms' or 'email'
 
   const handleRequestCode = async (e) => {
     e.preventDefault()
@@ -49,6 +50,7 @@ export default function ForgotPassword() {
       const res = await authApi.forgotPassword(email)
       if (res.success) {
         setMaskedPhone(res.maskedPhone)
+        setMethod(res.method || 'sms')
         setStep(2)
       }
     } catch (err) {
@@ -126,7 +128,9 @@ export default function ForgotPassword() {
               
               <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Recover Password</h2>
               <p className="text-gray-500 mb-8 font-medium">
-                {step === 1 ? "Enter your email to receive a secure SMS code." : `We sent a code to ${maskedPhone}.`}
+                {step === 1 
+                  ? "Enter your email to receive a secure recovery code." 
+                  : `We sent a code to your ${method === 'email' ? 'email' : 'phone'} (${maskedPhone}).`}
               </p>
 
               {error && (
@@ -152,7 +156,7 @@ export default function ForgotPassword() {
                     disabled={loading}
                     className="w-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 mt-4 disabled:opacity-70"
                   >
-                    {loading ? 'Sending Code...' : 'Send SMS Code'} <ArrowRight className="w-5 h-5" />
+                    {loading ? 'Sending Code...' : 'Send Recovery Code'} <ArrowRight className="w-5 h-5" />
                   </button>
                 </form>
               ) : (
@@ -170,7 +174,8 @@ export default function ForgotPassword() {
                     />
                     <div className="text-center mt-2">
                       <span className="text-xs text-gray-500 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
-                        <Smartphone className="w-3 h-3" /> 6-Digit SMS Code
+                        {method === 'email' ? <Mail className="w-3 h-3" /> : <Smartphone className="w-3 h-3" />}
+                        6-Digit {method === 'email' ? 'Email' : 'SMS'} Code
                       </span>
                     </div>
                   </div>

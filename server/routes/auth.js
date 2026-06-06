@@ -6,7 +6,7 @@ import { generateToken, authenticate } from '../middleware/auth.js';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
-import { sendVerificationEmail } from '../services/mailer.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/mailer.js';
 import { sendVerificationSMS, checkVerificationSMS } from '../services/sms.js';
 
 const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID || 'mock-client-id');
@@ -408,35 +408,50 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
 
-  const user = db.prepare('SELECT id, phone FROM users WHERE email = ?').get(email);
+  const user = db.prepare('SELECT id, phone, name FROM users WHERE email = ?').get(email);
   if (!user) {
     return res.status(404).json({ error: 'No account found with this email address' });
-  }
-
-  if (!user.phone) {
-    return res.status(400).json({ error: 'No phone number associated with this account. Please contact support.' });
-  }
-
-  // Format phone to E.164 for Twilio
-  let formattedPhone = user.phone.replace(/\D/g, '');
-  if (formattedPhone.length === 10) {
-    formattedPhone = '+1' + formattedPhone;
-  } else if (!formattedPhone.startsWith('+')) {
-    formattedPhone = '+' + formattedPhone;
   }
 
   // Delete any old codes for this user
   db.prepare('DELETE FROM sms_codes WHERE user_id = ?').run(user.id);
 
-  const sent = await sendVerificationSMS(formattedPhone);
-  
-  if (sent) {
-    const maskedPhone = formattedPhone.length > 7 
-      ? formattedPhone.slice(0, 3) + '****' + formattedPhone.slice(-4) 
-      : '***-****';
-    res.json({ success: true, maskedPhone });
+  if (user.phone) {
+    // Format phone to E.164 for Twilio
+    let formattedPhone = user.phone.replace(/\D/g, '');
+    if (formattedPhone.length === 10) {
+      formattedPhone = '+1' + formattedPhone;
+    } else if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+' + formattedPhone;
+    }
+
+    const sent = await sendVerificationSMS(formattedPhone);
+    
+    if (sent) {
+      const maskedPhone = formattedPhone.length > 7 
+        ? formattedPhone.slice(0, 3) + '****' + formattedPhone.slice(-4) 
+        : '***-****';
+      res.json({ success: true, maskedPhone, method: 'sms' });
+    } else {
+      res.status(500).json({ error: 'Failed to send recovery SMS. Try again later.' });
+    }
   } else {
-    res.status(500).json({ error: 'Failed to send recovery SMS. Try again later.' });
+    // Fallback to Email if no phone is associated
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    
+    // Store in sms_codes table but flag it for email
+    db.prepare(
+      'INSERT INTO sms_codes (user_id, phone, code, expires_at) VALUES (?, ?, ?, ?)'
+    ).run(user.id, email, code, expiresAt);
+    
+    const sent = await sendPasswordResetEmail(email, user.name, code);
+    
+    if (sent) {
+      res.json({ success: true, maskedPhone: email, method: 'email' });
+    } else {
+      res.status(500).json({ error: 'Failed to send recovery Email. Try again later.' });
+    }
   }
 });
 
@@ -449,9 +464,18 @@ router.post('/reset-password', authLimiter, async (req, res) => {
 
   const user = db.prepare('SELECT id, phone FROM users WHERE email = ?').get(email);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  if (!user.phone) return res.status(400).json({ error: 'No phone associated with this user' });
 
-  const isValid = await checkVerificationSMS(user.phone, code);
+  let isValid = false;
+
+  if (user.phone) {
+    isValid = await checkVerificationSMS(user.phone, code);
+  } else {
+    // Check our manual code for email verification
+    const record = db.prepare('SELECT * FROM sms_codes WHERE user_id = ? AND code = ?').get(user.id, code);
+    if (record && new Date(record.expires_at) > new Date()) {
+      isValid = true;
+    }
+  }
   
   if (!isValid) {
     return res.status(400).json({ error: 'Invalid or expired verification code' });

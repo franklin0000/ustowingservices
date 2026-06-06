@@ -21,8 +21,7 @@ export default function AdminLayout() {
         <motion.header
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="fixed top-0 left-64 right-0 z-50 bg-gray-950 border-b border-purple-900/30 h-16 px-6 flex items-center justify-between"
+          className="fixed top-0 left-64 right-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-purple-900/50 shadow-soft h-16 px-6 flex items-center justify-between"
         >
           {/* Search */}
           <div className="flex items-center gap-3 bg-gray-800/60 border border-gray-700/50 rounded-xl px-4 py-2 w-80">
@@ -49,7 +48,7 @@ export default function AdminLayout() {
             </button>
 
             <div className="flex items-center gap-3 pl-3 border-l border-gray-700">
-              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md border border-purple-400/20">
                 {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
               <div className="hidden md:block">

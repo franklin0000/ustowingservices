@@ -122,7 +122,13 @@ router.post('/create-job-checkout', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Amount not set' });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const driverProfile = db.prepare('SELECT stripe_account_id FROM driver_profiles WHERE user_id = ?').get(job.driver_id);
+    const stripeAccountId = driverProfile?.stripe_account_id;
+
+    const feePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 0.20);
+    const platformFeeCents = Math.round((finalAmount * 100) * feePercentage);
+
+    const sessionConfig = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -149,7 +155,19 @@ router.post('/create-job-checkout', authenticate, async (req, res) => {
         amount: finalAmount,
         status_at_payment: job.status
       }
-    });
+    };
+
+    // If driver is connected to Stripe Connect, securely route the payout
+    if (stripeAccountId && stripeAccountId !== 'acct_bypass_123') {
+      sessionConfig.payment_intent_data = {
+        application_fee_amount: platformFeeCents,
+        transfer_data: {
+          destination: stripeAccountId,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     res.json({ url: session.url });
   } catch (err) {
@@ -256,10 +274,13 @@ router.post('/webhook', async (req, res) => {
       const platformFee = amtNum * feePercentage;
       const driverPayout = amtNum - platformFee;
 
-      db.prepare(`
-        INSERT INTO payments (id, job_id, client_id, driver_id, amount, platform_fee, driver_payout, method, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'card', 'completed')
-      `).run(uuid(), job_id, client_id, driver_id, amtNum, platformFee, driverPayout);
+      const existingPayment = db.prepare('SELECT id FROM payments WHERE job_id = ?').get(job_id);
+      if (!existingPayment) {
+        db.prepare(`
+          INSERT INTO payments (id, job_id, client_id, driver_id, amount, platform_fee, driver_payout, method, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'card', 'completed')
+        `).run(uuid(), job_id, client_id, driver_id, amtNum, platformFee, driverPayout);
+      }
 
       if (status_at_payment === 'negotiating') {
         db.prepare(`UPDATE jobs SET status = 'en_route', updated_at = datetime('now') WHERE id = ?`).run(job_id);
@@ -285,76 +306,6 @@ router.post('/webhook', async (req, res) => {
 
   // Return a 200 response to acknowledge receipt of the event
   res.json({ received: true });
-});
-
-// ── DEV MODE BYPASS ROUTES (DISABLED STRIPE UNTIL 100% READY) ───────
-router.post('/bypass-subscription', authenticate, async (req, res) => {
-  if (req.user.role !== 'driver') return res.status(403).json({ error: 'Only drivers' });
-  
-  const { plan } = req.body;
-  const expiresAt = new Date();
-  if (plan === 'daily') expiresAt.setHours(expiresAt.getHours() + 24);
-  else expiresAt.setMonth(expiresAt.getMonth() + 1);
-  
-  const amount = plan === 'daily' ? 30.0 : 50.0;
-
-  db.prepare(`
-    INSERT INTO subscriptions (id, driver_id, plan_type, status, amount, expires_at)
-    VALUES (?, ?, ?, 'active', ?, ?)
-  `).run(uuid(), req.user.id, plan, amount, expiresAt.toISOString());
-
-  res.json({ success: true, bypassed: true });
-});
-
-router.post('/bypass-job-payment', authenticate, async (req, res) => {
-  if (req.user.role !== 'client') return res.status(403).json({ error: 'Only clients' });
-  
-  const { jobId } = req.body;
-  const job = db.prepare('SELECT * FROM jobs WHERE id = ? AND client_id = ?').get(jobId, req.user.id);
-  
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-  
-  // If already bypassed / paid, just return success
-  if (job.status === 'en_route') {
-    return res.json({ success: true, bypassed: true, nextStatus: 'en_route', message: 'Already paid' });
-  }
-
-  if (job.status !== 'completed' && job.status !== 'negotiating') return res.status(400).json({ error: 'Invalid job status' });
-
-  const amtNum = job.status === 'negotiating' ? parseFloat(job.agreed_price) : parseFloat(job.amount);
-  if (!amtNum) return res.status(400).json({ error: 'Invalid amount' });
-
-  const feePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 0.20);
-  const platformFee = amtNum * feePercentage;
-  const driverPayout = amtNum - platformFee;
-
-  db.prepare(`
-    INSERT INTO payments (id, job_id, client_id, driver_id, amount, platform_fee, driver_payout, method, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'bypass', 'completed')
-  `).run(uuid(), job.id, job.client_id, job.driver_id, amtNum, platformFee, driverPayout);
-
-  if (job.status === 'negotiating') {
-    db.prepare(`UPDATE jobs SET status = 'en_route', updated_at = datetime('now') WHERE id = ?`).run(job.id);
-    
-    // Send system chat message
-    const msgId = uuid();
-    db.prepare(`
-      INSERT INTO chat_messages (id, job_id, sender_id, receiver_id, message)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(msgId, job.id, job.client_id, job.driver_id, 'Payment completed. Service will commence now.');
-
-    // Notify Driver
-    pushEvent(job.driver_id, 'job_status', { jobId: job.id, status: 'en_route' });
-    pushEvent(job.driver_id, 'chat_message', {
-      id: msgId, jobId: job.id, senderId: job.client_id, receiverId: job.driver_id,
-      message: 'Payment completed. Service will commence now.',
-      timestamp: new Date().toISOString(),
-    });
-    
-    res.json({ success: true, bypassed: true, nextStatus: 'en_route' });
-  } else {
-    res.json({ success: true, bypassed: true });
-  }
 });
 
 export default router;

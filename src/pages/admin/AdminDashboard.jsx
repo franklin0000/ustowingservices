@@ -21,6 +21,7 @@ export default function AdminDashboard() {
     const u2 = onEvent('new_job', fetchData)
     const u3 = onEvent('job_accepted', fetchData)
     const u4 = onEvent('job_cancelled', fetchData)
+    const u6 = onEvent('price_proposed', fetchData)
     
     // Live driver GPS tracking
     const u5 = onEvent('driver_location', ({ userId, latitude, longitude }) => {
@@ -42,7 +43,7 @@ export default function AdminDashboard() {
       })
     })
 
-    return () => { u1(); u2(); u3(); u4(); u5() }
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); }
   }, [])
 
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full" /></div>
@@ -68,7 +69,14 @@ export default function AdminDashboard() {
   if (data?.activeJobsList) {
     data.activeJobsList.forEach(j => {
       // Pickup marker
-      mapMarkers.push({ lat: j.pickup_lat, lng: j.pickup_lng, type: 'client', label: `Job: ${j.service_type}`, sublabel: j.status })
+      let sublabel = j.status
+      if (j.status === 'negotiating' || j.status === 'accepted') {
+        sublabel = `${j.status.charAt(0).toUpperCase() + j.status.slice(1)}: $${j.agreed_price || j.amount}`
+      } else if (j.status !== 'pending' && j.status !== 'matched') {
+        sublabel = `${j.status} - $${j.agreed_price || j.amount}`
+      }
+      
+      mapMarkers.push({ lat: j.pickup_lat, lng: j.pickup_lng, type: 'client', label: `Job: ${j.service_type}`, sublabel })
       
       // Destination marker (if present)
       if (j.dest_lat && j.dest_lng) {

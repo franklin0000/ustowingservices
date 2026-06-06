@@ -11,8 +11,12 @@ export default function Subscriptions() {
   const handleSubscribe = async () => {
     setIsProcessing(true)
     try {
-      await stripe.bypassSubscription(selectedPlan)
-      window.location.reload()
+      const res = await stripe.createSubscriptionCheckout(selectedPlan)
+      if (res.url) {
+        window.location.href = res.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
     } catch (err) {
       alert('Failed to subscribe: ' + err.message)
       setIsProcessing(false)

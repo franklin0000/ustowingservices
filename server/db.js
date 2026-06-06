@@ -252,5 +252,10 @@ try {
 } catch (e) {
   // Ignore
 }
+try {
+  db.exec('ALTER TABLE jobs ADD COLUMN completion_photos TEXT');
+} catch (e) {
+  // Ignore
+}
 
 export default db;

@@ -20,18 +20,18 @@ export default function DriverLayout() {
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 bg-gray-900/90 backdrop-blur-md border-b border-gray-800/50 shadow-sm"
       >
         <div className="h-16 px-4 md:px-6 flex items-center justify-between max-w-screen-2xl mx-auto">
 
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md border border-emerald-400/20">
               <Truck className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm font-bold text-white leading-none">US Towing Services</p>
-              <p className="text-[11px] text-emerald-400 font-medium">Driver Portal</p>
+              <p className="text-[11px] text-emerald-400 font-bold uppercase tracking-wider">Driver Portal</p>
             </div>
           </div>
 
@@ -63,7 +63,7 @@ export default function DriverLayout() {
             </button>
 
             <div className="flex items-center gap-2 pl-2 border-l border-gray-700">
-              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden shadow-sm">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden shadow-sm border border-emerald-400/20">
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (

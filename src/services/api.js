@@ -68,7 +68,7 @@ export const jobs = {
   rate: (id, rating, review) => request('PUT', `/jobs/${id}/rate`, { rating, review }),
   available: () => request('GET', '/jobs/available'),
   accept: (id) => request('PUT', `/jobs/${id}/accept`),
-  updateStatus: (id, status) => request('PUT', `/jobs/${id}/status`, { status }),
+  updateStatus: (id, status, data={}) => request('PUT', `/jobs/${id}/status`, { status, ...data }),
   proposePrice: (id, amount) => request('POST', `/jobs/${id}/propose-price`, { amount }),
   getChat: (id) => request('GET', `/jobs/${id}/chat`),
   sendChatMessage: (id, message) => request('POST', `/jobs/${id}/chat`, { message }),
@@ -144,9 +144,6 @@ export const stripe = {
   createPortalSession: () => request('POST', '/stripe/create-portal-session'),
   connectAccount: () => request('POST', '/stripe/connect'),
   checkConnectStatus: () => request('GET', '/stripe/connect/status'),
-  // DEV BYPASS ROUTES
-  bypassSubscription: (plan) => request('POST', '/stripe/bypass-subscription', { plan }),
-  bypassJobPayment: (jobId) => request('POST', '/stripe/bypass-job-payment', { jobId }),
 };
 
 // ── Pricing ──────────────────────────────────────────────────
