@@ -205,7 +205,7 @@ export default function RequestService() {
   )
 
   return (
-    <div className="max-w-4xl mx-auto pb-24">
+    <div className="max-w-4xl mx-auto pb-40 md:pb-24">
       {/* Global Trust Banner */}
       <div className="bg-brand-50/50 border border-brand-100 rounded-xl p-3 mb-6 flex items-center justify-center gap-4 flex-wrap text-sm font-medium text-brand-800 shadow-sm backdrop-blur-sm">
         <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-500" /> 100% Verified Providers</span>
@@ -510,7 +510,7 @@ export default function RequestService() {
       </AnimatePresence>
 
       {/* Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white/90 backdrop-blur-xl border-t border-gray-200 p-4 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-[80px] md:bottom-0 left-0 right-0 lg:left-64 bg-white/90 backdrop-blur-xl border-t border-gray-200 p-4 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="max-w-4xl mx-auto flex gap-3">
           <button onClick={() => setStep(s => s - 1)} disabled={step === 0}
             className="flex items-center gap-2 px-6 py-4 rounded-2xl border border-gray-200 text-gray-700 font-bold disabled:opacity-30 transition-all hover:bg-gray-50 active:scale-95">
