@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendVerificationEmail = async (toEmail, name, token) => {
-  const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
+  const verifyUrl = `${process.env.FRONTEND_URL || 'https://ustowingservices.com'}/verify-email?token=${token}`;
   
   const mailOptions = {
     from: `"US Towing Services" <${process.env.SMTP_USER || 'noreply@gruasapp.com'}>`,

@@ -16,7 +16,7 @@ const stripe = new Stripe(stripeKey || 'sk_test_123', {
 });
 
 const router = Router();
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://ustowingservices.com';
 
 // ── CREATE PORTAL SESSION FOR CLIENT/DRIVER BILLING ────────────────────────
 router.post('/create-portal-session', authenticate, async (req, res) => {
