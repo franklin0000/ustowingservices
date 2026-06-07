@@ -453,14 +453,10 @@ router.post('/reset-password', authLimiter, async (req, res) => {
 
   let isValid = false;
 
-  if (user.phone) {
-    isValid = await checkVerificationSMS(user.phone, code);
-  } else {
-    // Check our manual code for email verification
-    const record = db.prepare('SELECT * FROM sms_codes WHERE user_id = ? AND code = ?').get(user.id, code);
-    if (record && new Date(record.expires_at) > new Date()) {
-      isValid = true;
-    }
+  // Always verify using our database code (ignoring Twilio)
+  const record = db.prepare('SELECT * FROM sms_codes WHERE user_id = ? AND code = ?').get(user.id, code);
+  if (record && new Date(record.expires_at) > new Date()) {
+    isValid = true;
   }
   
   if (!isValid) {
