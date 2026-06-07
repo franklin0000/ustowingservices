@@ -2,13 +2,13 @@ import nodemailer from 'nodemailer';
 
 // You can configure this with your actual SMTP credentials later (e.g. SendGrid, Gmail)
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 465,
-  secure: true, // true for 465, false for other ports
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   requireTLS: true,
   auth: {
-    user: process.env.SMTP_USER || 'ustowingservices@ustowingservices.com',
-    pass: process.env.SMTP_PASS || 'jdzfbgbiqggofujv',
+    user: 'ustowingservices@ustowingservices.com',
+    pass: 'jdzfbgbiqggofujv',
   },
   tls: {
     rejectUnauthorized: false
@@ -36,19 +36,9 @@ export const sendVerificationEmail = async (toEmail, name, token) => {
   };
 
   try {
-    // If SMTP credentials exist, send the real email
-    if (process.env.SMTP_USER) {
-      await transporter.sendMail(mailOptions);
-      console.log(`[MAILER] Verification email sent to ${toEmail}`);
-    } else {
-      // Mock email for local development
-      console.log('\n========================================================');
-      console.log('📧 [MOCK MAILER] EMAIL INTERCEPTED (Local Development)');
-      console.log(`To: ${toEmail}`);
-      console.log(`Subject: ${mailOptions.subject}`);
-      console.log(`\n🔗 VERIFICATION LINK: \n${verifyUrl}`);
-      console.log('========================================================\n');
-    }
+    // Always attempt to send the real email since we hardcoded the credentials
+    await transporter.sendMail(mailOptions);
+    console.log(`[MAILER] Verification email sent to ${toEmail}`);
     return true;
   } catch (error) {
     console.error('[MAILER] Error sending verification email:', error);
@@ -73,17 +63,8 @@ export const sendPasswordResetEmail = async (toEmail, name, code) => {
   };
 
   try {
-    if (process.env.SMTP_USER) {
-      await transporter.sendMail(mailOptions);
-      console.log(`[MAILER] Password reset email sent to ${toEmail}`);
-    } else {
-      console.log('\n========================================================');
-      console.log('📧 [MOCK MAILER] EMAIL INTERCEPTED (Local Development)');
-      console.log(`To: ${toEmail}`);
-      console.log(`Subject: ${mailOptions.subject}`);
-      console.log(`\n🔑 RECOVERY CODE: ${code}`);
-      console.log('========================================================\n');
-    }
+    await transporter.sendMail(mailOptions);
+    console.log(`[MAILER] Password reset email sent to ${toEmail}`);
     return true;
   } catch (error) {
     console.error('[MAILER] Error sending password reset email:', error);
