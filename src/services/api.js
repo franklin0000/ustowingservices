@@ -144,6 +144,7 @@ export const stripe = {
   createPortalSession: () => request('POST', '/stripe/create-portal-session'),
   connectAccount: () => request('POST', '/stripe/connect'),
   checkConnectStatus: () => request('GET', '/stripe/connect/status'),
+  verifySession: (sessionId) => request('GET', `/stripe/verify-session?session_id=${sessionId}`),
 };
 
 // ── Pricing ──────────────────────────────────────────────────

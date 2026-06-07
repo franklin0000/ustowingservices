@@ -144,7 +144,7 @@ router.post('/create-job-checkout', authenticate, async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: `${FRONTEND_URL}/track?payment=${isNegotiating ? 'success_negotiating' : 'success'}&job_id=${job.id}`,
+      success_url: `${FRONTEND_URL}/track?payment=${isNegotiating ? 'success_negotiating' : 'success'}&job_id=${job.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/track?payment=cancelled`,
       client_reference_id: req.user.id,
       metadata: {
@@ -234,6 +234,50 @@ router.get('/connect/status', authenticate, async (req, res) => {
     }
     
     res.json({ connected: isReady });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── VERIFY CHECKOUT SESSION MANUALLY (Fallback for Webhooks) ──────────────
+router.get('/verify-session', authenticate, async (req, res) => {
+  const { session_id } = req.query;
+  if (!session_id) return res.status(400).json({ error: 'Session ID is required' });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (session.payment_status !== 'paid') {
+      return res.json({ success: false, status: session.payment_status });
+    }
+
+    const metadata = session.metadata;
+    if (metadata?.type === 'job_payment') {
+      const { job_id, client_id, driver_id, amount, status_at_payment } = metadata;
+      
+      const existingPayment = db.prepare('SELECT id FROM payments WHERE job_id = ?').get(job_id);
+      if (!existingPayment) {
+        const amtNum = parseFloat(amount);
+        const feePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 0.20);
+        const platformFee = amtNum * feePercentage;
+        const driverPayout = amtNum - platformFee;
+
+        db.prepare(`
+          INSERT INTO payments (id, job_id, client_id, driver_id, amount, platform_fee, driver_payout, method, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'card', 'completed')
+        `).run(uuid(), job_id, client_id, driver_id, amtNum, platformFee, driverPayout);
+
+        if (status_at_payment === 'negotiating') {
+          db.prepare(`UPDATE jobs SET status = 'en_route', updated_at = datetime('now') WHERE id = ?`).run(job_id);
+          const msgId = uuid();
+          db.prepare(`
+            INSERT INTO chat_messages (id, job_id, sender_id, receiver_id, message)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(msgId, job_id, client_id, driver_id, 'Payment completed. Service will commence now.');
+        }
+      }
+    }
+
+    res.json({ success: true, payment_status: session.payment_status });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

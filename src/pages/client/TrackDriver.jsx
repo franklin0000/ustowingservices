@@ -37,41 +37,49 @@ export default function TrackDriver() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
-    // If returning from Stripe Checkout
-    const paymentStatus = searchParams.get('payment')
-    const jobId = searchParams.get('job_id')
-    
-    if (paymentStatus === 'success' || paymentStatus === 'success_negotiating') {
-      if (jobId) {
-        // Optimistically update UI so the user knows payment succeeded,
-        // but rely entirely on Stripe Webhook to update the real status in the DB.
-        setActiveReq(prev => prev && prev.id === jobId ? { ...prev, status: 'en_route' } : prev)
+    const fetchAndVerify = async () => {
+      const paymentStatus = searchParams.get('payment')
+      const sessionId = searchParams.get('session_id')
+
+      if (paymentStatus === 'success' || paymentStatus === 'success_negotiating') {
+        if (sessionId) {
+          try {
+            // Force manual verification before pulling jobs to prevent race conditions
+            await stripe.verifySession(sessionId)
+          } catch (err) {
+            console.error("Session verify failed:", err)
+          }
+        }
+        
         if (paymentStatus === 'success') setShowRating(true)
         setSearchParams({})
-      } else {
-        if (paymentStatus === 'success') setShowRating(true)
-        setSearchParams({})
+      }
+
+      try {
+        const jobs = await getMyJobs()
+        const active = jobs.find(j =>
+          ['accepted', 'negotiating', 'en_route', 'arrived', 'in_service', 'matched'].includes(j.status)
+        )
+        if (active) {
+          setActiveReq(active)
+          import('../../services/api').then(({ jobs: jobsApi }) => {
+            jobsApi.get(active.id).then(full => {
+              if (full.driver) {
+                setDriver(full.driver)
+                setDriverLoc({ lat: full.driver.latitude, lng: full.driver.longitude })
+              }
+            })
+          })
+        }
+      } catch (err) {
+        console.error("Failed to fetch active job:", err)
+      } finally {
+        setLoaded(true)
       }
     }
 
-    getMyJobs().then(jobs => {
-      const active = jobs.find(j =>
-        ['accepted', 'negotiating', 'en_route', 'arrived', 'in_service', 'matched'].includes(j.status)
-      )
-      if (active) {
-        setActiveReq(active)
-        import('../../services/api').then(({ jobs: jobsApi }) => {
-          jobsApi.get(active.id).then(full => {
-            if (full.driver) {
-              setDriver(full.driver)
-              setDriverLoc({ lat: full.driver.latitude, lng: full.driver.longitude })
-            }
-          })
-        })
-      }
-      setLoaded(true)
-    }).catch(() => setLoaded(true))
-  }, [])
+    fetchAndVerify()
+  }, [searchParams])
 
   useEffect(() => {
     const u1 = onEvent('driver_location', ({ latitude, longitude }) => setDriverLoc({ lat: latitude, lng: longitude }))
