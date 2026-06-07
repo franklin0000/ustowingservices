@@ -423,42 +423,21 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
   // Delete any old codes for this user
   db.prepare('DELETE FROM sms_codes WHERE user_id = ?').run(user.id);
 
-  if (user.phone) {
-    // Format phone to E.164 for Twilio
-    let formattedPhone = user.phone.replace(/\D/g, '');
-    if (formattedPhone.length === 10) {
-      formattedPhone = '+1' + formattedPhone;
-    } else if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+' + formattedPhone;
-    }
-
-    const sent = await sendVerificationSMS(formattedPhone);
-    
-    if (sent) {
-      const maskedPhone = formattedPhone.length > 7 
-        ? formattedPhone.slice(0, 3) + '****' + formattedPhone.slice(-4) 
-        : '***-****';
-      res.json({ success: true, maskedPhone, method: 'sms' });
-    } else {
-      res.status(500).json({ error: 'Failed to send recovery SMS. Try again later.' });
-    }
+  // Always use Email for password recovery
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  
+  // Store in sms_codes table but flag it for email
+  db.prepare(
+    'INSERT INTO sms_codes (user_id, phone, code, expires_at) VALUES (?, ?, ?, ?)'
+  ).run(user.id, email, code, expiresAt);
+  
+  const sent = await sendPasswordResetEmail(email, user.name, code);
+  
+  if (sent) {
+    res.json({ success: true, maskedPhone: email, method: 'email' });
   } else {
-    // Fallback to Email if no phone is associated
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    
-    // Store in sms_codes table but flag it for email
-    db.prepare(
-      'INSERT INTO sms_codes (user_id, phone, code, expires_at) VALUES (?, ?, ?, ?)'
-    ).run(user.id, email, code, expiresAt);
-    
-    const sent = await sendPasswordResetEmail(email, user.name, code);
-    
-    if (sent) {
-      res.json({ success: true, maskedPhone: email, method: 'email' });
-    } else {
-      res.status(500).json({ error: 'Failed to send recovery Email. Try again later.' });
-    }
+    res.status(500).json({ error: 'Failed to send recovery Email. Try again later.' });
   }
 });
 
