@@ -1,9 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs from 'node:fs'
 
 export default defineConfig({
+  build: {
+    emptyOutDir: true,
+  },
   plugins: [
+    {
+      name: 'purge-redirects',
+      closeBundle() {
+        try {
+          if (fs.existsSync('dist/_redirects')) {
+            fs.unlinkSync('dist/_redirects')
+          }
+        } catch (e) {}
+      }
+    },
     react(),
     VitePWA({
       registerType: 'autoUpdate',
