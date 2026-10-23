@@ -10,5 +10,7 @@ services:
         value: production
       - key: PORT
         value: 3001
+      - key: FRONTEND_URL
+        value: https://ustowingservices.com
       # IMPORTANT: Ensure you add your sensitive keys (JWT_SECRET, STRIPE_SECRET_KEY, etc.) 
       # directly in the Render Dashboard after deploying!

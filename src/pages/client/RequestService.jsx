@@ -14,7 +14,7 @@ export default function RequestService() {
   const [form, setForm] = useState({
     service: '', location: '', destination: '', lat: null, lng: null,
     destLat: null, destLng: null,
-    vehicleType: '', vehicleDetails: '', licensePlate: '', notes: '', photos: [], fuelType: '', propertyType: '',
+    vehicleType: '', vehicleDetails: '', licensePlate: '', notes: '', photos: [], fuelType: '', propertyType: '', glassDamage: '',
   })
   const [quote, setQuote] = useState(null)
   const [loadingQuote, setLoadingQuote] = useState(false)
@@ -26,7 +26,7 @@ export default function RequestService() {
   const navigate = useNavigate()
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
 
-  const requiresVehicle = ['tow', 'mechanic', 'fuel', 'lockout', 'jumpstart', 'tire'].includes(form.service)
+  const requiresVehicle = ['tow', 'mechanic', 'fuel', 'lockout', 'jumpstart', 'tire', 'windshield'].includes(form.service)
   
   const steps = [
     { label: 'Service', icon: Wrench },
@@ -120,6 +120,7 @@ export default function RequestService() {
       if (requiresVehicle && !form.vehicleType) return alert("Please select a vehicle type.")
       if (form.service === 'fuel' && !form.fuelType) return alert("Please select a fuel type (Gasoline or Diesel).")
       if (form.service === 'cleaning' && !form.propertyType) return alert("Please specify the type of property to clean.")
+      if (form.service === 'windshield' && !form.glassDamage) return alert("Please select the type of windshield damage.")
       setLoadingQuote(true)
       try {
         const q = await getQuote({
@@ -141,6 +142,7 @@ export default function RequestService() {
       let finalDetails = form.vehicleDetails ? `${form.vehicleDetails} - ${form.licensePlate}` : form.notes
       if (form.service === 'fuel') finalDetails = `Fuel Type: ${form.fuelType} | ${finalDetails}`
       if (form.service === 'cleaning') finalDetails = `Property: ${form.propertyType} | ${finalDetails}`
+      if (form.service === 'windshield') finalDetails = `Glass Damage: ${form.glassDamage} | ${finalDetails}`
 
       await createJob({
         serviceType:     form.service,
@@ -239,23 +241,35 @@ export default function RequestService() {
                 <p className="text-gray-500 mt-1">Select a service to dispatch a verified professional immediately.</p>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {SERVICE_TYPES.map(s => (
-                  <button key={s.id} onClick={() => setForm({ ...form, service: s.id })}
-                    className={`relative p-6 rounded-3xl border-2 text-left transition-all duration-300 overflow-hidden group
-                      ${form.service === s.id ? 'border-transparent shadow-lg scale-[1.02]' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'}`}>
-                    
-                    {/* Background active state */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${s.color} transition-opacity duration-300 ${form.service === s.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-5'}`} />
-                    
-                      <div className="flex flex-col items-center text-center">
-                        <div className={`text-3xl p-3 rounded-2xl bg-white shadow-sm mb-2 ${form.service === s.id ? 'shadow-md scale-110 transition-transform' : ''}`}>
-                          {s.icon}
-                        </div>
-                        <h3 className={`text-sm font-bold ${form.service === s.id ? 'text-white' : 'text-gray-900'}`}>{s.label}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                {SERVICE_TYPES.map(s => {
+                  const selected = form.service === s.id
+                  return (
+                    <button key={s.id} id={`service-${s.id}`} type="button" aria-pressed={selected}
+                      onClick={() => setForm({ ...form, service: s.id })}
+                      className={`relative aspect-[4/3] rounded-3xl overflow-hidden text-left group transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/60
+                        ${selected ? 'ring-4 ring-brand-500 ring-offset-2 shadow-xl scale-[1.02]' : 'ring-1 ring-gray-200 hover:shadow-lg hover:-translate-y-0.5'}`}>
+
+                      <img src={s.image} alt={s.label} loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${s.color} mix-blend-multiply transition-opacity duration-300 ${selected ? 'opacity-50' : 'opacity-0'}`} />
+
+                      {selected && (
+                        <span className="absolute top-3 right-3 bg-white text-brand-600 rounded-full p-1 shadow-md">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </span>
+                      )}
+
+                      <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4">
+                        <h3 className="text-sm sm:text-base font-bold text-white leading-tight drop-shadow">
+                          <span className="mr-1">{s.icon}</span>{s.label}
+                        </h3>
+                        <p className="hidden sm:block text-xs text-white/80 mt-0.5 line-clamp-1">{s.description}</p>
                       </div>
-                  </button>
-                ))}
+                    </button>
+                  )
+                })}
               </div>
 
               {/* Live Map Preview */}
@@ -384,6 +398,20 @@ export default function RequestService() {
                         <button key={pt} onClick={() => setForm({ ...form, propertyType: pt })}
                           className={`p-3 rounded-xl border-2 font-bold transition-all text-sm ${form.propertyType === pt ? 'border-brand-600 bg-brand-50 text-brand-700 shadow-sm' : 'border-gray-200 bg-white text-gray-600 hover:border-brand-300'}`}>
                           {pt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {form.service === 'windshield' && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Windshield Damage</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['Chip', 'Crack', 'Full Replacement'].map(d => (
+                        <button key={d} onClick={() => setForm({ ...form, glassDamage: d })}
+                          className={`p-3 rounded-xl border-2 font-bold transition-all text-sm ${form.glassDamage === d ? 'border-brand-600 bg-brand-50 text-brand-700 shadow-sm' : 'border-gray-200 bg-white text-gray-600 hover:border-brand-300'}`}>
+                          {d}
                         </button>
                       ))}
                     </div>

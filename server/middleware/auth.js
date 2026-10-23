@@ -4,6 +4,10 @@ import db from '../db.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'gruas-secret-key-change-in-production';
 const JWT_EXPIRES = '24h';
 
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'gruas-secret-key-change-in-production')) {
+  console.error('\x1b[31m[SECURITY CRITICAL] JWT_SECRET is not configured or using default fallback in production!\x1b[0m');
+}
+
 // Generate a JWT for a user
 export function generateToken(user) {
   return jwt.sign(

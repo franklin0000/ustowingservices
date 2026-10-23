@@ -35,9 +35,19 @@ app.use(helmet({
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 300, // limit each IP to 300 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: { error: 'Too many requests, please try again later.' }
 });
 app.use('/api', globalLimiter);
+
+// Strict rate limiting for sensitive authentication endpoints (anti-brute-force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // max 20 attempts per IP per window
+  message: { error: 'Too many authentication attempts. Please try again in 15 minutes.' }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 // Prevent HTTP Parameter Pollution
 app.use(hpp());
@@ -46,8 +56,18 @@ app.use(hpp());
 app.use(xss());
 
 // ── General Middleware ─────────────────────────────────────────
+const allowedOrigins = [
+  'https://ustowingservices.com',
+  'https://www.ustowingservices.com',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
+  origin: (origin, callback) => {
+    if (!origin || process.env.NODE_ENV !== 'production') return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -64,7 +84,12 @@ app.use((req, res, next) => {
 });
 
 // ── API Routes ──────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(process.cwd(), 'server', 'uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'server', 'uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+  }
+}));
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/drivers', driverRoutes);
@@ -91,8 +116,11 @@ app.get('*', (req, res) => {
 
 // ── Error handler ───────────────────────────────────────────
 app.use((err, req, res, next) => {
+  if (err.name === 'MulterError' || (err.message && (err.message.includes('permitted') || err.message.includes('Invalid file type')))) {
+    return res.status(400).json({ error: err.message });
+  }
   console.error('  Server error:', err.message);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message });
 });
 
 // ── Start ───────────────────────────────────────────────────

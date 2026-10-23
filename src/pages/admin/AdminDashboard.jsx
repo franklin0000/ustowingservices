@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import MapView from '../../components/MapView'
 import { onEvent } from '../../services/websocket'
 
-const SERVICE_COLORS = { tow: '#2563eb', jumpstart: '#eab308', tire: '#16a34a', fuel: '#dc2626', lockout: '#9333ea' }
+const SERVICE_COLORS = { tow: '#2563eb', jumpstart: '#eab308', tire: '#16a34a', fuel: '#dc2626', lockout: '#9333ea', windshield: '#0ea5e9' }
 
 export default function AdminDashboard() {
   const { getAdminDashboard } = useApp()

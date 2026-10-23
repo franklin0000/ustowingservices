@@ -83,6 +83,13 @@ export default function TrackDriver() {
 
   useEffect(() => {
     const u1 = onEvent('driver_location', ({ latitude, longitude }) => setDriverLoc({ lat: latitude, lng: longitude }))
+    const uTelemetry = onEvent('job_telemetry', ({ telemetry }) => {
+      if (telemetry?.geometry?.coordinates) {
+        const [lng, lat] = telemetry.geometry.coordinates;
+        setDriverLoc({ lat, lng });
+        if (telemetry.properties?.etaMinutes != null) setEta(telemetry.properties.etaMinutes);
+      }
+    })
     const u2 = onEvent('job_status',      ({ status }) => {
       setActiveReq(prev => prev ? { ...prev, status } : null)
       if (status === 'completed') setShowRating(true)
@@ -94,7 +101,7 @@ export default function TrackDriver() {
     const u4 = onEvent('price_proposed',  ({ amount }) => {
       setActiveReq(prev => prev ? { ...prev, agreedPrice: amount } : null)
     })
-    return () => { u1(); u2(); u3(); u4(); }
+    return () => { u1(); uTelemetry(); u2(); u3(); u4(); }
   }, [])
 
   useEffect(() => {

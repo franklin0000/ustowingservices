@@ -28,15 +28,30 @@ router.get('/nearby-drivers', clientOnly, (req, res) => {
 import multer from 'multer';
 import path from 'path';
 
-// Multer storage config for job photos
+// Multer storage config for job photos with strict file validation
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'server/uploads/'),
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'job-' + uniqueSuffix + path.extname(file.originalname));
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, 'job-' + uniqueSuffix + ext);
   }
 });
-const upload = multer({ storage });
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedMimes.includes(file.mimetype) && allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG and WebP images are permitted.'));
+    }
+  }
+});
 
 // ── CLIENT & DRIVER: Upload job photo ───────────────────────
 router.post('/upload', authorize('client', 'driver'), upload.single('photo'), (req, res) => {

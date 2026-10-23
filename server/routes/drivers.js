@@ -5,6 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 import { driverOnly } from '../middleware/roles.js';
 import { updateDriverLocation } from '../services/geo.js';
 import { pushEvent, broadcastToRole } from '../services/notifications.js';
+import { processDriverTelemetry } from '../services/realtimeTracker.js';
 
 const router = Router();
 router.use(authenticate);
@@ -58,7 +59,7 @@ router.put('/location', (req, res) => {
 
   // If driver has an active job, push location to the client
   const activeJob = db.prepare(`
-    SELECT id, client_id FROM jobs
+    SELECT id, client_id, dest_lat, dest_lng FROM jobs
     WHERE driver_id = ? AND status IN ('accepted','negotiating','en_route','arrived','in_service')
   `).get(req.user.id);
 
@@ -68,6 +69,16 @@ router.put('/location', (req, res) => {
       latitude, longitude,
     });
   }
+
+  // Synchronize with Geo-Sharding & Real-Time Tracking engine
+  processDriverTelemetry({
+    driverId: req.user.id,
+    lat: latitude,
+    lng: longitude,
+    activeJobId: activeJob?.id,
+    destLat: activeJob?.dest_lat,
+    destLng: activeJob?.dest_lng,
+  });
 
   // Also broadcast to all clients for real-time interactive map
   broadcastToRole('client', {

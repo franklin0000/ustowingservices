@@ -257,15 +257,30 @@ router.post('/verify-sms', authenticate, authLimiter, async (req, res) => {
 import multer from 'multer';
 import path from 'path';
 
-// Multer storage config
+// Multer storage config with strict file validation
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'server/uploads/'),
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, 'avatar-' + uniqueSuffix + ext);
   }
 });
-const upload = multer({ storage });
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedMimes.includes(file.mimetype) && allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG and WebP images are permitted for avatars.'));
+    }
+  }
+});
 
 // GET /api/auth/me  — return current user profile
 router.get('/me', authenticate, (req, res) => {
