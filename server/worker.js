@@ -281,9 +281,13 @@ export default {
       return handleApiRequest(request, url, env, secret, origin);
     }
 
-    // If static assets binding is configured, serve static assets
+    // If static assets binding is configured, serve static assets with SPA fallback
     if (env?.ASSETS) {
-      return env.ASSETS.fetch(request);
+      let res = await env.ASSETS.fetch(request);
+      if (res.status === 404 && request.method === 'GET' && !url.pathname.includes('.')) {
+        res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
+      }
+      return res;
     }
 
     return new Response('Not Found', { status: 404 });

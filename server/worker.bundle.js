@@ -2097,7 +2097,11 @@ var worker_default = {
       return handleApiRequest(request, url, env, secret, origin);
     }
     if (env?.ASSETS) {
-      return env.ASSETS.fetch(request);
+      let res = await env.ASSETS.fetch(request);
+      if (res.status === 404 && request.method === "GET" && !url.pathname.includes(".")) {
+        res = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
+      }
+      return res;
     }
     return new Response("Not Found", { status: 404 });
   }
