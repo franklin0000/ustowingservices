@@ -12,10 +12,12 @@ import './index.css'
 // Register PWA service worker
 registerSW({ immediate: true })
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '568574805136-l54avvs7tem537hsai3s768i227mul5s.apps.googleusercontent.com'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'mock-client-id'}>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <AuthProvider>
           <AppProvider>
             <NotificationProvider>

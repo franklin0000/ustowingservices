@@ -9,7 +9,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/mailer.js';
 import { sendVerificationSMS, checkVerificationSMS } from '../services/sms.js';
 
-const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID || 'mock-client-id');
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '568574805136-l54avvs7tem537hsai3s768i227mul5s.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Increased limit to avoid blocking during development
@@ -151,7 +152,7 @@ router.post('/google', authLimiter, async (req, res) => {
     } else {
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
-        audience: process.env.VITE_GOOGLE_CLIENT_ID,
+        audience: GOOGLE_CLIENT_ID,
       });
       payload = ticket.getPayload();
     }
