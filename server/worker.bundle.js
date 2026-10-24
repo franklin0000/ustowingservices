@@ -1983,8 +1983,212 @@ var MEMORY_DB = {
       longitude: -80.195
     }
   ],
-  jobs: [],
-  payments: [],
+  jobs: [
+    {
+      id: "job-101",
+      client_id: "acff7013-a97a-40e1-b8fd-4dafbe6e31ae",
+      driver_id: "99df741a-2495-4dad-9718-cbab7d71baf5",
+      client_name: "Client User",
+      client_phone: "+1 800-555-0102",
+      driver_name: "Carlos Rivera",
+      service_type: "tow",
+      vehicle_type: "Sedan",
+      vehicle_details: "Toyota Corolla 2020 (White)",
+      pickup_location: "100 Biscayne Blvd, Miami, FL",
+      pickup_lat: 25.7743,
+      pickup_lng: -80.1937,
+      destination: "2200 SW 8th St, Miami, FL",
+      dest_lat: 25.765,
+      dest_lng: -80.22,
+      amount: 125,
+      agreed_price: 125,
+      status: "completed",
+      rating: 5,
+      notes: "Car won't start, front tire locked",
+      created_at: new Date(Date.now() - 36e5 * 5).toISOString(),
+      completed_at: new Date(Date.now() - 36e5 * 4).toISOString()
+    },
+    {
+      id: "job-102",
+      client_id: "client-demo-id",
+      driver_id: "328b395e-cb35-42b8-949e-c38ee6115e58",
+      client_name: "Juan Perez",
+      client_phone: "+1 800-555-0103",
+      driver_name: "Driver US Towing",
+      service_type: "jumpstart",
+      vehicle_type: "SUV",
+      vehicle_details: "Honda CR-V 2019 (Black)",
+      pickup_location: "801 Brickell Ave, Miami, FL",
+      pickup_lat: 25.7648,
+      pickup_lng: -80.1908,
+      destination: null,
+      dest_lat: null,
+      dest_lng: null,
+      amount: 75,
+      agreed_price: 75,
+      status: "completed",
+      rating: 5,
+      notes: "Dead battery in underground parking level P2",
+      created_at: new Date(Date.now() - 36e5 * 8).toISOString(),
+      completed_at: new Date(Date.now() - 36e5 * 7).toISOString()
+    },
+    {
+      id: "job-103",
+      client_id: "acff7013-a97a-40e1-b8fd-4dafbe6e31ae",
+      driver_id: "99df741a-2495-4dad-9718-cbab7d71baf5",
+      client_name: "Client User",
+      client_phone: "+1 800-555-0102",
+      driver_name: "Carlos Rivera",
+      service_type: "tire",
+      vehicle_type: "Sedan",
+      vehicle_details: "BMW 330i 2022 (Blue)",
+      pickup_location: "280 Miracle Mile, Coral Gables, FL",
+      pickup_lat: 25.7495,
+      pickup_lng: -80.2605,
+      destination: null,
+      dest_lat: null,
+      dest_lng: null,
+      amount: 95,
+      agreed_price: 95,
+      status: "in_service",
+      rating: null,
+      notes: "Flat rear tire, spare in trunk",
+      created_at: new Date(Date.now() - 36e5 * 2).toISOString(),
+      completed_at: null
+    },
+    {
+      id: "job-104",
+      client_id: "client-demo-id",
+      driver_id: null,
+      client_name: "Juan Perez",
+      client_phone: "+1 800-555-0103",
+      driver_name: null,
+      service_type: "lockout",
+      vehicle_type: "Truck",
+      vehicle_details: "Ford F-150 (Silver)",
+      pickup_location: "Ocean Dr & 10th St, Miami Beach, FL",
+      pickup_lat: 25.7806,
+      pickup_lng: -80.1313,
+      destination: null,
+      dest_lat: null,
+      dest_lng: null,
+      amount: 85,
+      agreed_price: 85,
+      status: "pending",
+      rating: null,
+      notes: "Keys locked inside running engine",
+      created_at: new Date(Date.now() - 18e5).toISOString(),
+      completed_at: null
+    },
+    {
+      id: "job-105",
+      client_id: "acff7013-a97a-40e1-b8fd-4dafbe6e31ae",
+      driver_id: "driver-demo-id",
+      client_name: "Client User",
+      client_phone: "+1 800-555-0102",
+      driver_name: "Carlos Driver Demo",
+      service_type: "fuel",
+      vehicle_type: "Sedan",
+      vehicle_details: "Nissan Altima 2018 (Grey)",
+      pickup_location: "I-95 Exit 4A, Miami, FL",
+      pickup_lat: 25.795,
+      pickup_lng: -80.201,
+      destination: null,
+      dest_lat: null,
+      dest_lng: null,
+      amount: 65,
+      agreed_price: 65,
+      status: "accepted",
+      rating: null,
+      notes: "Ran out of gas on shoulder, hazard lights on",
+      created_at: new Date(Date.now() - 9e5).toISOString(),
+      completed_at: null
+    }
+  ],
+  payments: [
+    {
+      id: "pay-201",
+      job_id: "job-101",
+      client_id: "acff7013-a97a-40e1-b8fd-4dafbe6e31ae",
+      driver_id: "99df741a-2495-4dad-9718-cbab7d71baf5",
+      service_type: "tow",
+      amount: 125,
+      platform_fee: 25,
+      driver_payout: 100,
+      method: "card",
+      card_last4: "4242",
+      status: "completed",
+      created_at: new Date(Date.now() - 36e5 * 4).toISOString()
+    },
+    {
+      id: "pay-202",
+      job_id: "job-102",
+      client_id: "client-demo-id",
+      driver_id: "328b395e-cb35-42b8-949e-c38ee6115e58",
+      service_type: "jumpstart",
+      amount: 75,
+      platform_fee: 15,
+      driver_payout: 60,
+      method: "card",
+      card_last4: "1881",
+      status: "completed",
+      created_at: new Date(Date.now() - 36e5 * 7).toISOString()
+    },
+    {
+      id: "pay-203",
+      job_id: "job-099",
+      client_id: "acff7013-a97a-40e1-b8fd-4dafbe6e31ae",
+      driver_id: "driver-demo-id",
+      service_type: "tow",
+      amount: 180,
+      platform_fee: 36,
+      driver_payout: 144,
+      method: "card",
+      card_last4: "4242",
+      status: "completed",
+      created_at: new Date(Date.now() - 36e5 * 24).toISOString()
+    }
+  ],
+  payouts: [
+    {
+      id: "payout-301",
+      driver_id: "99df741a-2495-4dad-9718-cbab7d71baf5",
+      driver_name: "Carlos Rivera",
+      driver_email: "carlos@email.com",
+      amount: 350,
+      status: "completed",
+      stripe_account_id: "acct_1N987654321",
+      created_at: new Date(Date.now() - 36e5 * 48).toISOString()
+    },
+    {
+      id: "payout-302",
+      driver_id: "328b395e-cb35-42b8-949e-c38ee6115e58",
+      driver_name: "Driver US Towing",
+      driver_email: "ustowingservices@ustowingservices.com",
+      amount: 420,
+      status: "pending",
+      stripe_account_id: "acct_1N987654322",
+      created_at: new Date(Date.now() - 36e5 * 12).toISOString()
+    }
+  ],
+  platform_settings: {
+    platform_name: "US Towing Services",
+    platform_fee_pct: "20",
+    max_search_radius_km: "25",
+    currency: "USD",
+    auto_assign: "true",
+    notify_drivers: "true",
+    notify_clients: "true",
+    require_rating: "true",
+    min_driver_rating: "4.5",
+    max_active_jobs_per_driver: "2"
+  },
+  job_chats: {
+    "job-101": [
+      { id: "chat-1", jobId: "job-101", senderId: "acff7013-a97a-40e1-b8fd-4dafbe6e31ae", senderName: "Client User", message: "Hello, I am near the main entrance.", createdAt: new Date(Date.now() - 36e5 * 5).toISOString() },
+      { id: "chat-2", jobId: "job-101", senderId: "99df741a-2495-4dad-9718-cbab7d71baf5", senderName: "Carlos Rivera", message: "Got it, on my way! Arriving in 10 minutes.", createdAt: new Date(Date.now() - 36e5 * 5 + 6e4).toISOString() }
+    ]
+  },
   notifications: []
 };
 async function createJWT(payload, secretStr) {
@@ -2480,30 +2684,278 @@ async function handleApiRequest(request, url, env, secret, origin) {
       weeklyRevenue
     }, 200, origin);
   }
-  if (path === "/api/admin/settings") {
+  if (path === "/api/admin/analytics" && method === "GET") {
     return jsonResponse({
-      platformName: "US Towing Services",
-      platformFee: 20,
-      currency: "USD",
-      maxRadius: 25,
-      autoAssign: true,
-      notifyDrivers: true,
-      notifyClients: true,
-      minDriverRating: 4.5,
-      maxActiveJobs: 2
+      completionRate: 95.8,
+      avgRating: 4.9,
+      avgResponseTime: 8,
+      activeCoverage: 94,
+      hourlyDistribution: [
+        { hour: 0, requests: 2 },
+        { hour: 2, requests: 1 },
+        { hour: 4, requests: 3 },
+        { hour: 6, requests: 7 },
+        { hour: 8, requests: 15 },
+        { hour: 10, requests: 22 },
+        { hour: 12, requests: 28 },
+        { hour: 14, requests: 24 },
+        { hour: 16, requests: 31 },
+        { hour: 18, requests: 36 },
+        { hour: 20, requests: 25 },
+        { hour: 22, requests: 12 }
+      ],
+      monthlyStats: [
+        { month: "2026-06", jobs: 28, revenue: 3200 },
+        { month: "2026-07", jobs: 35, revenue: 4100 },
+        { month: "2026-08", jobs: 42, revenue: 4900 },
+        { month: "2026-09", jobs: 51, revenue: 5800 },
+        { month: "2026-10", jobs: 64, revenue: 7350 }
+      ],
+      topRegions: [
+        { name: "Miami Downtown", value: 34 },
+        { name: "Brickell", value: 26 },
+        { name: "Miami Beach", value: 18 },
+        { name: "Coral Gables", value: 12 },
+        { name: "Wynwood", value: 10 }
+      ]
     }, 200, origin);
   }
-  if (path === "/api/admin/drivers") {
-    return jsonResponse(MEMORY_DB.driver_profiles, 200, origin);
+  if (path === "/api/admin/settings") {
+    if (method === "GET") {
+      return jsonResponse(MEMORY_DB.platform_settings, 200, origin);
+    }
+    if (method === "PUT") {
+      try {
+        const body = await request.json();
+        Object.assign(MEMORY_DB.platform_settings, body);
+      } catch (e) {
+      }
+      return jsonResponse({ success: true, settings: MEMORY_DB.platform_settings }, 200, origin);
+    }
   }
-  if (path === "/api/admin/users") {
-    return jsonResponse(MEMORY_DB.users.map(({ password, ...u }) => u), 200, origin);
+  if (path === "/api/admin/drivers" && method === "GET") {
+    const drivers = MEMORY_DB.driver_profiles.map((dp) => {
+      const u = MEMORY_DB.users.find((usr) => usr.id === dp.user_id) || {};
+      return {
+        id: dp.user_id,
+        name: u.name || "Driver",
+        email: u.email || "driver@example.com",
+        phone: u.phone || "+1 800-555-0100",
+        status: u.status || "active",
+        vehicle: dp.vehicle || "Flatbed Tow Truck",
+        licensePlate: dp.license_plate || "TOW-777",
+        available: !!dp.available,
+        rating: dp.rating || 5,
+        totalRatings: dp.total_ratings || 25,
+        completedJobs: dp.completed_jobs || 148,
+        totalEarnings: dp.total_earnings || 12450,
+        kycStatus: dp.kyc_status || "approved",
+        idDocument: dp.id_document || null,
+        insuranceDoc: dp.insurance_doc || null,
+        location: { lat: dp.latitude || 25.7617, lng: dp.longitude || -80.1918 }
+      };
+    });
+    return jsonResponse(drivers, 200, origin);
   }
-  if (path === "/api/admin/jobs") {
-    return jsonResponse(MEMORY_DB.jobs, 200, origin);
+  if (path.startsWith("/api/admin/drivers/") && path.endsWith("/availability") && method === "PUT") {
+    const parts = path.split("/");
+    const driverId = parts[4];
+    try {
+      const { available } = await request.json();
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === driverId);
+      if (dp) dp.available = available ? 1 : 0;
+    } catch (e) {
+    }
+    return jsonResponse({ success: true }, 200, origin);
   }
-  if (path === "/api/admin/payments") {
-    return jsonResponse(MEMORY_DB.payments, 200, origin);
+  if (path.startsWith("/api/admin/drivers/") && path.endsWith("/kyc") && method === "PUT") {
+    const parts = path.split("/");
+    const driverId = parts[4];
+    let kycStatus = "approved";
+    try {
+      const body = await request.json();
+      if (body.kycStatus) kycStatus = body.kycStatus;
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === driverId);
+      if (dp) dp.kyc_status = kycStatus;
+    } catch (e) {
+    }
+    return jsonResponse({ success: true, id: driverId, kycStatus }, 200, origin);
+  }
+  if (path === "/api/admin/users" && method === "GET") {
+    const search = url.searchParams.get("search")?.toLowerCase() || "";
+    const clients = MEMORY_DB.users.filter((u) => u.role === "client").filter((u) => !search || u.name && u.name.toLowerCase().includes(search) || u.email && u.email.toLowerCase().includes(search)).map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      status: u.status || "active",
+      createdAt: u.created_at || (/* @__PURE__ */ new Date()).toISOString(),
+      requestCount: MEMORY_DB.jobs.filter((j) => j.client_id === u.id).length || 3
+    }));
+    return jsonResponse(clients, 200, origin);
+  }
+  if (path.startsWith("/api/admin/users/") && path.endsWith("/status") && method === "PUT") {
+    const parts = path.split("/");
+    const userId = parts[4];
+    try {
+      const { status } = await request.json();
+      const u = MEMORY_DB.users.find((usr) => usr.id === userId);
+      if (u) u.status = status;
+    } catch (e) {
+    }
+    return jsonResponse({ success: true, id: userId }, 200, origin);
+  }
+  if (path === "/api/admin/jobs" && method === "GET") {
+    const filterStatus = url.searchParams.get("status");
+    const search = url.searchParams.get("search")?.toLowerCase();
+    let list = MEMORY_DB.jobs;
+    if (filterStatus && filterStatus !== "all") {
+      list = list.filter((j) => j.status === filterStatus);
+    }
+    if (search) {
+      list = list.filter(
+        (j) => j.client_name && j.client_name.toLowerCase().includes(search) || j.pickup_location && j.pickup_location.toLowerCase().includes(search) || j.id && j.id.toLowerCase().includes(search)
+      );
+    }
+    return jsonResponse({
+      total: list.length,
+      jobs: list.map((j) => ({
+        id: j.id,
+        clientName: j.client_name || "Client User",
+        clientPhone: j.client_phone || "+1 800-555-0102",
+        driverName: j.driver_name || (j.driver_id ? "Carlos Rivera" : null),
+        serviceType: j.service_type,
+        vehicleType: j.vehicle_type || "Sedan",
+        vehicleDetails: j.vehicle_details || "Toyota Corolla 2020",
+        pickupLocation: j.pickup_location,
+        destination: j.destination,
+        status: j.status,
+        amount: j.amount,
+        agreedPrice: j.agreed_price || j.amount,
+        rating: j.rating || 5,
+        createdAt: j.created_at,
+        completedAt: j.completed_at
+      }))
+    }, 200, origin);
+  }
+  if (path === "/api/admin/jobs" && method === "POST") {
+    try {
+      const body = await request.json();
+      const newJob = {
+        id: "job-" + Date.now(),
+        client_id: "client-demo-id",
+        client_name: body.clientName || "Guest Client",
+        client_phone: body.clientPhone || "+1 800-555-0199",
+        driver_id: body.driverId || null,
+        driver_name: body.driverId ? MEMORY_DB.users.find((u) => u.id === body.driverId)?.name || "Assigned Driver" : null,
+        service_type: body.serviceType || "tow",
+        vehicle_type: body.vehicleType || "Sedan",
+        vehicle_details: body.vehicleDetails || "Standard",
+        pickup_location: body.pickupLocation,
+        pickup_lat: body.pickupLat || 25.7617,
+        pickup_lng: body.pickupLng || -80.1918,
+        destination: body.destination || null,
+        dest_lat: body.destLat || null,
+        dest_lng: body.destLng || null,
+        amount: Number(body.amount) || 75,
+        agreed_price: Number(body.amount) || 75,
+        status: body.driverId ? "accepted" : "pending",
+        rating: null,
+        notes: body.notes || null,
+        created_at: (/* @__PURE__ */ new Date()).toISOString(),
+        completed_at: null
+      };
+      MEMORY_DB.jobs.unshift(newJob);
+      return jsonResponse({ success: true, job: newJob }, 201, origin);
+    } catch (e) {
+      return jsonResponse({ error: "Failed to create job dispatch" }, 400, origin);
+    }
+  }
+  if (path.startsWith("/api/admin/jobs/") && path.endsWith("/cancel") && method === "PUT") {
+    const parts = path.split("/");
+    const jobId = parts[4];
+    const j = MEMORY_DB.jobs.find((x) => x.id === jobId);
+    if (j) j.status = "cancelled";
+    return jsonResponse({ success: true }, 200, origin);
+  }
+  if (path.startsWith("/api/admin/jobs/") && path.endsWith("/assign") && method === "PUT") {
+    const parts = path.split("/");
+    const jobId = parts[4];
+    try {
+      const { driverId } = await request.json();
+      const j = MEMORY_DB.jobs.find((x) => x.id === jobId);
+      if (j) {
+        j.driver_id = driverId;
+        j.driver_name = MEMORY_DB.users.find((u) => u.id === driverId)?.name || "Assigned Driver";
+        j.status = "accepted";
+      }
+    } catch (e) {
+    }
+    return jsonResponse({ success: true }, 200, origin);
+  }
+  if (path.startsWith("/api/jobs/") && path.endsWith("/chat")) {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    if (method === "GET") {
+      return jsonResponse(MEMORY_DB.job_chats[jobId] || [], 200, origin);
+    }
+    if (method === "POST") {
+      try {
+        const { message, senderId, senderName } = await request.json();
+        const chatMsg = {
+          id: "chat-" + Date.now(),
+          jobId,
+          senderId: senderId || "admin",
+          senderName: senderName || "Admin Dispatch",
+          message,
+          createdAt: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        if (!MEMORY_DB.job_chats[jobId]) MEMORY_DB.job_chats[jobId] = [];
+        MEMORY_DB.job_chats[jobId].push(chatMsg);
+        return jsonResponse({ success: true, message: chatMsg }, 201, origin);
+      } catch (e) {
+        return jsonResponse({ error: "Failed to send message" }, 400, origin);
+      }
+    }
+  }
+  if (path === "/api/admin/payments" && method === "GET") {
+    const totalRevenue = MEMORY_DB.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const platformFees = MEMORY_DB.payments.reduce((sum, p) => sum + (p.platform_fee || 0), 0);
+    const driverPayouts = MEMORY_DB.payments.reduce((sum, p) => sum + (p.driver_payout || 0), 0);
+    const formattedPayments = MEMORY_DB.payments.map((p) => {
+      const uc = MEMORY_DB.users.find((u) => u.id === p.client_id) || {};
+      const ud = MEMORY_DB.users.find((u) => u.id === p.driver_id) || {};
+      return {
+        id: p.id,
+        jobId: p.job_id,
+        clientName: uc.name || "Client User",
+        driverName: ud.name || "Carlos Rivera",
+        serviceType: p.service_type || "tow",
+        amount: p.amount,
+        platformFee: p.platform_fee,
+        driverPayout: p.driver_payout,
+        method: p.method || "card",
+        cardLast4: p.card_last4 || "4242",
+        status: p.status || "completed",
+        date: p.created_at || (/* @__PURE__ */ new Date()).toISOString()
+      };
+    });
+    return jsonResponse({
+      total_revenue: totalRevenue,
+      platform_fees: platformFees,
+      driver_payouts: driverPayouts,
+      payments: formattedPayments
+    }, 200, origin);
+  }
+  if (path === "/api/admin/payouts" && method === "GET") {
+    return jsonResponse(MEMORY_DB.payouts, 200, origin);
+  }
+  if (path.startsWith("/api/admin/payouts/") && path.endsWith("/process") && method === "PUT") {
+    const parts = path.split("/");
+    const payoutId = parts[4];
+    const p = MEMORY_DB.payouts.find((x) => x.id === payoutId);
+    if (p) p.status = "completed";
+    return jsonResponse({ success: true, transfer_id: "tr_demo_" + Date.now() }, 200, origin);
   }
   return jsonResponse({ message: "OK", path, timestamp: (/* @__PURE__ */ new Date()).toISOString() }, 200, origin);
 }

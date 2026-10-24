@@ -25,11 +25,18 @@ export default function AdminRequests() {
     const params = {}
     if (filter !== 'all') params.status = filter
     if (search) params.search = search
-    getAdminJobs(params).then(d => { setJobs(d.jobs); setTotal(d.total) }).catch(() => {})
+    getAdminJobs(params).then(d => {
+      const list = Array.isArray(d) ? d : (d?.jobs || [])
+      setJobs(list)
+      setTotal(d?.total ?? list.length)
+    }).catch(() => {})
   }
 
   const loadDrivers = () => {
-    getAdminDrivers().then(d => setActiveDrivers(d.filter(x => x.available && x.kycStatus === 'approved'))).catch(()=>{})
+    getAdminDrivers().then(d => {
+      const list = Array.isArray(d) ? d : (d?.drivers || [])
+      setActiveDrivers(list.filter(x => x.available && x.kycStatus === 'approved'))
+    }).catch(()=>{})
   }
 
   useEffect(() => { 
@@ -130,7 +137,7 @@ export default function AdminRequests() {
           <th className="text-left text-xs font-semibold text-gray-400 uppercase py-3 px-4">Status</th>
           <th className="text-left text-xs font-semibold text-gray-400 uppercase py-3 px-4">Actions</th>
         </tr></thead><tbody>
-          {jobs.map(req => {
+          {(jobs || []).map(req => {
             const service = SERVICE_TYPES.find(s => s.id === req.serviceType)
             return (
               <tr key={req.id} className="border-b border-gray-50 hover:bg-gray-50 transition">

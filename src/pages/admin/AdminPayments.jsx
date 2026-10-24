@@ -12,9 +12,15 @@ export default function AdminPayments() {
   const [processing, setProcessing] = useState(false)
 
   const loadAll = () => {
-    getAdminPayments().then(setData).catch(() => {})
-    getAdminPayouts().then(setPayouts).catch(() => {})
-    getAdminSettings().then(s => setFee(Number(s.platform_fee_pct))).catch(() => {})
+    getAdminPayments().then(res => {
+      if (Array.isArray(res)) {
+        setData({ payments: res, total_revenue: 0, platform_fees: 0, driver_payouts: 0 })
+      } else {
+        setData(res || { payments: [], total_revenue: 0, platform_fees: 0, driver_payouts: 0 })
+      }
+    }).catch(() => setData({ payments: [], total_revenue: 0, platform_fees: 0, driver_payouts: 0 }))
+    getAdminPayouts().then(p => setPayouts(Array.isArray(p) ? p : [])).catch(() => setPayouts([]))
+    getAdminSettings().then(s => setFee(s?.platform_fee_pct ? Number(s.platform_fee_pct) : 20)).catch(() => {})
   }
 
   useEffect(() => { loadAll() }, [])
@@ -33,8 +39,8 @@ export default function AdminPayments() {
 
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full" /></div>
 
-  const filteredTx = data.payments.filter(p => !search || p.clientName?.toLowerCase().includes(search.toLowerCase()) || p.cardLast4?.includes(search))
-  const filteredPayouts = payouts.filter(p => !search || p.driver_name?.toLowerCase().includes(search.toLowerCase()))
+  const filteredTx = (data.payments || []).filter(p => !search || p.clientName?.toLowerCase().includes(search.toLowerCase()) || p.cardLast4?.includes(search))
+  const filteredPayouts = (payouts || []).filter(p => !search || (p.driver_name || '').toLowerCase().includes(search.toLowerCase()))
 
   return (
     <div>
@@ -47,9 +53,9 @@ export default function AdminPayments() {
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center"><DollarSign className="w-6 h-6 text-blue-600" /></div><div><p className="text-sm text-gray-500">Total Revenue</p><p className="text-2xl font-bold text-gray-900">${data.total_revenue.toFixed(2)}</p></div></div></div>
-        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center"><TrendingUp className="w-6 h-6 text-emerald-600" /></div><div><p className="text-sm text-gray-500">Platform Fees {fee !== null ? `(${fee}%)` : ''}</p><p className="text-2xl font-bold text-emerald-600">${data.platform_fees.toFixed(2)}</p></div></div></div>
-        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center"><Wallet className="w-6 h-6 text-purple-600" /></div><div><p className="text-sm text-gray-500">Driver Earnings {fee !== null ? `(${100 - fee}%)` : ''}</p><p className="text-2xl font-bold text-gray-900">${data.driver_payouts.toFixed(2)}</p></div></div></div>
+        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center"><DollarSign className="w-6 h-6 text-blue-600" /></div><div><p className="text-sm text-gray-500">Total Revenue</p><p className="text-2xl font-bold text-gray-900">${(data.total_revenue ?? 0).toFixed(2)}</p></div></div></div>
+        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center"><TrendingUp className="w-6 h-6 text-emerald-600" /></div><div><p className="text-sm text-gray-500">Platform Fees {fee !== null ? `(${fee}%)` : ''}</p><p className="text-2xl font-bold text-emerald-600">${(data.platform_fees ?? 0).toFixed(2)}</p></div></div></div>
+        <div className="stat-card"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center"><Wallet className="w-6 h-6 text-purple-600" /></div><div><p className="text-sm text-gray-500">Driver Earnings {fee !== null ? `(${100 - fee}%)` : ''}</p><p className="text-2xl font-bold text-gray-900">${(data.driver_payouts ?? 0).toFixed(2)}</p></div></div></div>
       </div>
 
       <div className="card">
@@ -75,11 +81,11 @@ export default function AdminPayments() {
           </tr></thead><tbody>
             {filteredTx.map(p => (
               <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
-                <td className="py-3 px-4 text-sm">{new Date(p.date).toLocaleDateString()}</td>
+                <td className="py-3 px-4 text-sm">{new Date(p.date || Date.now()).toLocaleDateString()}</td>
                 <td className="py-3 px-4 text-sm font-medium">{p.clientName}</td>
                 <td className="py-3 px-4 text-sm">{p.driverName}</td>
-                <td className="py-3 px-4 text-sm font-bold text-right">${p.amount.toFixed(2)}</td>
-                <td className="py-3 px-4 text-sm font-semibold text-emerald-600 text-right">${p.platformFee.toFixed(2)}</td>
+                <td className="py-3 px-4 text-sm font-bold text-right">${(p.amount ?? 0).toFixed(2)}</td>
+                <td className="py-3 px-4 text-sm font-semibold text-emerald-600 text-right">${(p.platformFee ?? 0).toFixed(2)}</td>
                 <td className="py-3 px-4"><span className={p.status === 'completed' ? 'badge-success' : 'badge-warning'}>{p.status === 'completed' ? 'Completed' : 'Pending'}</span></td>
               </tr>
             ))}
@@ -97,10 +103,10 @@ export default function AdminPayments() {
           </tr></thead><tbody>
             {filteredPayouts.map(p => (
               <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
-                <td className="py-3 px-4 text-sm">{new Date(p.created_at).toLocaleDateString()}</td>
+                <td className="py-3 px-4 text-sm">{new Date(p.created_at || Date.now()).toLocaleDateString()}</td>
                 <td className="py-3 px-4 text-sm font-medium">{p.driver_name} <p className="text-xs text-gray-400">{p.driver_email}</p></td>
                 <td className="py-3 px-4 text-sm font-mono text-gray-500">{p.stripe_account_id || 'Not Connected'}</td>
-                <td className="py-3 px-4 text-sm font-bold text-right">${p.amount.toFixed(2)}</td>
+                <td className="py-3 px-4 text-sm font-bold text-right">${(p.amount ?? 0).toFixed(2)}</td>
                 <td className="py-3 px-4 text-center">
                   <span className={p.status === 'completed' ? 'badge-success' : p.status === 'failed' ? 'badge-danger' : 'badge-warning'}>{p.status}</span>
                 </td>

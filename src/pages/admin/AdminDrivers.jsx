@@ -10,12 +10,17 @@ export default function AdminDrivers() {
   const [tab, setTab] = useState('active') // 'active' | 'pending'
   const [docModal, setDocModal] = useState({ open: false, title: '', src: null })
 
-  useEffect(() => { getAdminDrivers().then(setDrivers).catch(() => {}) }, [])
+  useEffect(() => { 
+    getAdminDrivers().then(d => setDrivers(Array.isArray(d) ? d : [])).catch(() => {}) 
+  }, [])
 
-  const filtered = drivers.filter(d => {
-    const matchesSearch = !search || d.name.toLowerCase().includes(search.toLowerCase()) || d.vehicle.toLowerCase().includes(search.toLowerCase())
-    if (tab === 'active') return matchesSearch && d.kycStatus === 'approved'
-    return matchesSearch && d.kycStatus === 'pending'
+  const filtered = (drivers || []).filter(d => {
+    const dName = d.name || 'Driver'
+    const dVehicle = d.vehicle || 'Vehicle'
+    const matchesSearch = !search || dName.toLowerCase().includes(search.toLowerCase()) || dVehicle.toLowerCase().includes(search.toLowerCase())
+    const kyc = d.kycStatus || d.kyc_status || 'approved'
+    if (tab === 'active') return matchesSearch && kyc === 'approved'
+    return matchesSearch && kyc === 'pending'
   })
 
   const toggleAvailability = async (id, current) => {
@@ -32,14 +37,14 @@ export default function AdminDrivers() {
     }
   }
 
-  const pendingCount = drivers.filter(d => d.kycStatus === 'pending').length
+  const pendingCount = (drivers || []).filter(d => (d.kycStatus || d.kyc_status) === 'pending').length
 
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Driver Management</h1>
-          <p className="text-gray-500 mt-1">{drivers.length} total registered drivers</p>
+          <p className="text-gray-500 mt-1">{(drivers || []).length} total registered drivers</p>
         </div>
         <div className="flex bg-gray-100 p-1 rounded-xl">
           <button onClick={() => setTab('active')} className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -63,13 +68,13 @@ export default function AdminDrivers() {
         {filtered.map(driver => (
           <div key={driver.id} className="card hover:shadow-md transition-shadow flex flex-col justify-between">
             <div className="flex items-start gap-4">
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${driver.available && driver.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                {driver.name.split(' ').map(n => n[0]).join('')}
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${driver.available && (driver.kycStatus || driver.kyc_status) === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                {(driver.name || 'Driver').split(' ').map(n => n[0]).join('')}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-bold text-gray-900 truncate">{driver.name}</h3>
-                  {driver.kycStatus === 'approved' ? (
+                  <h3 className="font-bold text-gray-900 truncate">{driver.name || 'Driver'}</h3>
+                  {(driver.kycStatus || driver.kyc_status) === 'approved' ? (
                     <button onClick={() => toggleAvailability(driver.id, driver.available)} className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium transition shrink-0 ${driver.available ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                       {driver.available ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}{driver.available ? 'Online' : 'Offline'}
                     </button>
@@ -77,13 +82,13 @@ export default function AdminDrivers() {
                     <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm font-bold shrink-0">Pending KYC</span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 truncate"><Truck className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{driver.vehicle}</span></div>
+                <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 truncate"><Truck className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{driver.vehicle || 'Tow Truck'}</span></div>
                 
                 {tab === 'active' ? (
                   <div className="grid grid-cols-3 gap-4 mt-4 pt-3 border-t border-gray-100">
-                    <div><p className="text-xs text-gray-400">Rating</p><p className="font-semibold flex items-center gap-1"><Star className="w-4 h-4 text-amber-500 fill-amber-500" /> {driver.rating}</p></div>
-                    <div><p className="text-xs text-gray-400">Jobs</p><p className="font-semibold">{driver.completedJobs}</p></div>
-                    <div><p className="text-xs text-gray-400">Earnings</p><p className="font-semibold text-emerald-600">${driver.totalEarnings.toLocaleString()}</p></div>
+                    <div><p className="text-xs text-gray-400">Rating</p><p className="font-semibold flex items-center gap-1"><Star className="w-4 h-4 text-amber-500 fill-amber-500" /> {driver.rating ?? 5.0}</p></div>
+                    <div><p className="text-xs text-gray-400">Jobs</p><p className="font-semibold">{driver.completedJobs ?? 0}</p></div>
+                    <div><p className="text-xs text-gray-400">Earnings</p><p className="font-semibold text-emerald-600">${(driver.totalEarnings ?? 0).toLocaleString()}</p></div>
                   </div>
                 ) : (
                   <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
