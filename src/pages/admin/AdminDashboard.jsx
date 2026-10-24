@@ -49,13 +49,13 @@ export default function AdminDashboard() {
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full" /></div>
 
   const stats = [
-    { label: 'Platform Revenue', value: `$${data.totalRevenue.toFixed(0)}`, change: '+18%', icon: DollarSign, color: 'bg-emerald-100 text-emerald-600', up: true },
-    { label: 'Total Requests', value: data.totalRequests, change: '+12%', icon: FileText, color: 'bg-blue-100 text-blue-600', up: true },
-    { label: 'Active Drivers', value: `${data.activeDrivers}/${data.totalDrivers}`, change: `${data.activeDrivers} online`, icon: Truck, color: 'bg-purple-100 text-purple-600', up: true },
-    { label: 'Pending Requests', value: data.pendingRequests, change: data.pendingRequests > 0 ? 'Needs attention' : 'All clear', icon: Clock, color: 'bg-amber-100 text-amber-600', up: data.pendingRequests === 0 },
+    { label: 'Platform Revenue', value: `$${(data.totalRevenue ?? 0).toFixed(0)}`, change: '+18%', icon: DollarSign, color: 'bg-emerald-100 text-emerald-600', up: true },
+    { label: 'Total Requests', value: data.totalRequests ?? 0, change: '+12%', icon: FileText, color: 'bg-blue-100 text-blue-600', up: true },
+    { label: 'Active Drivers', value: `${data.activeDrivers ?? 0}/${data.totalDrivers ?? 0}`, change: `${data.activeDrivers ?? 0} online`, icon: Truck, color: 'bg-purple-100 text-purple-600', up: true },
+    { label: 'Pending Requests', value: data.pendingRequests ?? 0, change: (data.pendingRequests ?? 0) > 0 ? 'Needs attention' : 'All clear', icon: Clock, color: 'bg-amber-100 text-amber-600', up: (data.pendingRequests ?? 0) === 0 },
   ]
 
-  const pieData = data.serviceDistribution.map(s => ({ name: s.service_type, value: s.count, color: SERVICE_COLORS[s.service_type] || '#6b7280' }))
+  const pieData = (data.serviceDistribution || []).map(s => ({ name: s.service_type || s.name, value: s.count ?? s.value ?? 0, color: SERVICE_COLORS[s.service_type || s.name] || '#6b7280' }))
 
   const mapMarkers = []
   const mapConnections = []
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
         </div>
         <div className="card">
           <h3 className="font-bold text-gray-900 mb-4">Recent Requests</h3>
-          <div className="space-y-3">{data.recentRequests.map(req => (
+          <div className="space-y-3">{(data.recentRequests || []).map(req => (
             <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${req.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : req.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
                 {req.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : req.status === 'pending' ? <Clock className="w-5 h-5" /> : <Truck className="w-5 h-5" />}

@@ -2419,13 +2419,65 @@ async function handleApiRequest(request, url, env, secret, origin) {
     return jsonResponse([], 200, origin);
   }
   if (path === "/api/admin/dashboard" && method === "GET") {
+    const activeDriversList = MEMORY_DB.driver_profiles.map((dp) => {
+      const u = MEMORY_DB.users.find((usr) => usr.id === dp.user_id) || {};
+      return {
+        id: dp.user_id,
+        name: u.name || "Driver",
+        vehicle: dp.vehicle,
+        latitude: dp.latitude,
+        longitude: dp.longitude
+      };
+    });
+    const activeJobsList = [
+      { id: "job-103", client_id: "client-demo-id", driver_id: "99df741a-2495-4dad-9718-cbab7d71baf5", pickup_lat: 25.75, pickup_lng: -80.2, dest_lat: 25.78, dest_lng: -80.18, status: "en_route", service_type: "tow", amount: 145, agreed_price: 145 }
+    ];
+    const monthlyStats = [
+      { month: "2026-06", jobs: 28, revenue: 3200 },
+      { month: "2026-07", jobs: 35, revenue: 4100 },
+      { month: "2026-08", jobs: 42, revenue: 4900 },
+      { month: "2026-09", jobs: 51, revenue: 5800 },
+      { month: "2026-10", jobs: 64, revenue: 7350 }
+    ];
+    const serviceDistribution = [
+      { name: "tow", service_type: "tow", count: 58, value: 41 },
+      { name: "jumpstart", service_type: "jumpstart", count: 32, value: 23 },
+      { name: "tire", service_type: "tire", count: 24, value: 17 },
+      { name: "fuel", service_type: "fuel", count: 16, value: 11 },
+      { name: "lockout", service_type: "lockout", count: 12, value: 8 }
+    ];
+    const weeklyRevenue = [
+      { day: "Mon", revenue: 950, jobs: 8 },
+      { day: "Tue", revenue: 1200, jobs: 11 },
+      { day: "Wed", revenue: 850, jobs: 7 },
+      { day: "Thu", revenue: 1400, jobs: 13 },
+      { day: "Fri", revenue: 1850, jobs: 16 },
+      { day: "Sat", revenue: 2100, jobs: 19 },
+      { day: "Sun", revenue: 1600, jobs: 14 }
+    ];
+    const recentRequests = [
+      { id: "job-101", clientName: "Client User", serviceType: "tow", pickupLocation: "Downtown Miami, FL", status: "completed", amount: 125, createdAt: (/* @__PURE__ */ new Date()).toISOString() },
+      { id: "job-102", clientName: "Juan Perez", serviceType: "jumpstart", pickupLocation: "Brickell Ave, Miami, FL", status: "completed", amount: 75, createdAt: (/* @__PURE__ */ new Date()).toISOString() },
+      { id: "job-103", clientName: "Maria Rodriguez", serviceType: "tire", pickupLocation: "Coral Gables, FL", status: "in_service", amount: 95, createdAt: (/* @__PURE__ */ new Date()).toISOString() }
+    ];
     return jsonResponse({
-      totalJobs: 142,
+      totalRequests: 142,
+      pendingRequests: 2,
+      completedRequests: 137,
       activeJobs: 3,
-      totalDrivers: 12,
-      activeDrivers: 8,
+      totalDrivers: MEMORY_DB.driver_profiles.length,
+      activeDrivers: MEMORY_DB.driver_profiles.filter((d) => d.available).length,
+      totalUsers: MEMORY_DB.users.length,
       totalRevenue: 14850,
-      platformFeeEarnings: 2970
+      totalPayments: 14850,
+      driverPayouts: 11880,
+      platformFeeEarnings: 2970,
+      recentRequests,
+      monthlyStats,
+      serviceDistribution,
+      activeDriversList,
+      activeJobsList,
+      weeklyRevenue
     }, 200, origin);
   }
   if (path === "/api/admin/settings") {
