@@ -1,7 +1,7 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ustowingservices",
-  "main": "server/worker.bundle.js",
+  "main": "./server/worker.bundle.js",
   "compatibility_date": "2024-11-01",
   "compatibility_flags": [
     "nodejs_compat"
