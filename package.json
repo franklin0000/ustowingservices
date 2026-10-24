@@ -8,7 +8,7 @@
     "server": "node --env-file=.env server/index.js",
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "prebuild": "node --input-type=module -e \"import fs from 'node:fs'; try { fs.rmSync('dist', { recursive: true, force: true }); } catch {}\"",
-    "build": "vite build",
+    "build": "node --input-type=module -e \"import fs from 'node:fs'; try { fs.rmSync('dist', { recursive: true, force: true }); } catch {}\" && vite build",
     "preview": "vite preview",
     "start": "node server/init_prod.js && node server/index.js",
     "seed": "node --env-file=.env server/seed.js"
