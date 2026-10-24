@@ -10,3 +10,4 @@ server/uploads/
 temp_AdminRequests.jsx
 debug.log
 comfy_history.json
+worker-configuration.d.ts

@@ -14,7 +14,7 @@ const MEMORY_DB = {
     {
       id: 'bc397bee-7d4e-4a9a-bf75-b04c16ffa854',
       email: 'familiafabian@yandex.com',
-      password: bcrypt.hashSync('Abrahana02@', 10),
+      password: '$2a$10$5LOibrYvktkVm9nqkwqieuXYUGuu7IzPIOiIGTsxc829zwSkszp1G',
       name: 'Super Admin',
       phone: '+1 800-555-0199',
       role: 'admin',
@@ -27,7 +27,7 @@ const MEMORY_DB = {
     {
       id: '99df741a-2495-4dad-9718-cbab7d71baf5',
       email: 'ustowingservices@ustowingservices.com',
-      password: bcrypt.hashSync('Abrahana02@', 10),
+      password: '$2a$10$5LOibrYvktkVm9nqkwqieuXYUGuu7IzPIOiIGTsxc829zwSkszp1G',
       name: 'Frank Familia',
       phone: '+1 800-555-0100',
       role: 'driver',
@@ -40,7 +40,7 @@ const MEMORY_DB = {
     {
       id: '328b395e-cb35-42b8-949e-c38ee6115e58',
       email: 'familiababyapple@gmail.com',
-      password: bcrypt.hashSync('Abrahana02@', 10),
+      password: '$2a$10$5LOibrYvktkVm9nqkwqieuXYUGuu7IzPIOiIGTsxc829zwSkszp1G',
       name: 'Fran FF',
       phone: '+1 800-555-0101',
       role: 'driver',
@@ -53,7 +53,7 @@ const MEMORY_DB = {
     {
       id: 'admin-demo-id',
       email: 'admin@gruas.com',
-      password: bcrypt.hashSync('admin123', 10),
+      password: '$2a$10$vqKZf2/9MOMiyahRhhPCLOkJmQPvy4smCeZf0kY557FQP8mSfIVaS',
       name: 'Admin Fabian',
       phone: '+1 800-555-0199',
       role: 'admin',
@@ -66,7 +66,7 @@ const MEMORY_DB = {
     {
       id: 'driver-demo-id',
       email: 'carlos@email.com',
-      password: bcrypt.hashSync('password', 10),
+      password: '$2a$10$YOQzH47FSiSgQsvOYXF5Y.TKIO9ZAmxYkUWobuRFhhoUCvKCXnCrC',
       name: 'Carlos Rivera',
       phone: '+1 800-555-0100',
       role: 'driver',
@@ -79,7 +79,7 @@ const MEMORY_DB = {
     {
       id: 'acff7013-a97a-40e1-b8fd-4dafbe6e31ae',
       email: 'firetourdr@gmail.com',
-      password: bcrypt.hashSync('Abrahana02@', 10),
+      password: '$2a$10$5LOibrYvktkVm9nqkwqieuXYUGuu7IzPIOiIGTsxc829zwSkszp1G',
       name: 'Client User',
       phone: '+1 800-555-0102',
       role: 'client',
@@ -92,7 +92,7 @@ const MEMORY_DB = {
     {
       id: 'client-demo-id',
       email: 'juan@email.com',
-      password: bcrypt.hashSync('password', 10),
+      password: '$2a$10$YOQzH47FSiSgQsvOYXF5Y.TKIO9ZAmxYkUWobuRFhhoUCvKCXnCrC',
       name: 'Juan Perez',
       phone: '+1 800-555-0103',
       role: 'client',
