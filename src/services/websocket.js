@@ -8,9 +8,10 @@ export function connectWS() {
   const token = getToken();
   if (!token || ws?.readyState === WebSocket.OPEN) return;
 
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
-  ws = new WebSocket(`${protocol}//${host}/ws?token=${token}`);
+  const defaultWs = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
+  const wsEndpoint = import.meta.env.VITE_WS_URL || defaultWs;
+  const separator = wsEndpoint.includes('?') ? '&' : '?';
+  ws = new WebSocket(`${wsEndpoint}${separator}token=${token}`);
 
   ws.onopen = () => {
     console.log('[WS] Connected');
