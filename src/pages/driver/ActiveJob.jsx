@@ -57,7 +57,9 @@ export default function ActiveJob() {
   useEffect(() => {
     getActiveJob().then(j => { setJob(j); setLoaded(true) }).catch(() => setLoaded(true))
     // Fetch last known profile location, but we'll override it with live GPS ASAP
-    getDriverProfile().then(p => setDriverLoc({ lat: p.latitude, lng: p.longitude })).catch(() => {})
+    getDriverProfile().then(p => {
+      if (p?.latitude && p?.longitude) setDriverLoc({ lat: p.latitude, lng: p.longitude })
+    }).catch(() => {})
 
     // Listen if the client cancels the job
     const unsubCancel = onEvent('job_cancelled', ({ jobId }) => {

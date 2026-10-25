@@ -17,13 +17,18 @@ export default function Earnings() {
 
   const loadData = async () => {
     try {
-      const statusRes = await checkDriverStripeStatus();
-      if (statusRes && statusRes.connected && user?.kycStatus !== 'approved') {
-        setUser(prev => ({ ...prev, kycStatus: 'approved' }));
-      }
-      const [s, p] = await Promise.all([getEarnings(), getDriverPayouts()]);
-      setStats(s);
-      setPayoutData(p);
+      try {
+        const statusRes = await checkDriverStripeStatus();
+        if (statusRes && statusRes.connected && user?.kycStatus !== 'approved') {
+          setUser(prev => ({ ...prev, kycStatus: 'approved' }));
+        }
+      } catch (e) {}
+      const [s, p] = await Promise.all([
+        getEarnings().catch(() => ({ totalEarnings: 0, completedJobs: 0, avgPerJob: 0, weeklyRevenue: [] })),
+        getDriverPayouts().catch(() => ({ payouts: [], available_balance: 0, stripe_account_id: null }))
+      ]);
+      setStats(s || { totalEarnings: 0, completedJobs: 0, avgPerJob: 0, weeklyRevenue: [] });
+      setPayoutData(p || { payouts: [], available_balance: 0, stripe_account_id: null });
     } catch (err) {
       console.error(err);
     }
@@ -55,7 +60,7 @@ export default function Earnings() {
     if (user?.kycStatus !== 'approved') {
       return setError('Your identity must be verified by Stripe to request payouts.')
     }
-    if (payoutData.available_balance < 50) {
+    if ((payoutData?.available_balance || 0) < 50) {
       return setError('Minimum payout is $50')
     }
     setLoadingPayout(true)
@@ -76,14 +81,14 @@ export default function Earnings() {
     </div>
   )
 
-  const earningsData = (stats.weeklyRevenue || []).map(d => ({ ...d, earnings: d.revenue }))
+  const earningsData = (stats.weeklyRevenue || []).map(d => ({ ...d, earnings: d.revenue || 0 }))
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-gray-800 border border-gray-700 p-3 rounded-xl shadow-xl">
           <p className="text-gray-400 text-xs font-bold mb-1 uppercase tracking-wider">{label}</p>
-          <p className="text-emerald-400 font-black text-lg">${payload[0].value.toFixed(2)}</p>
+          <p className="text-emerald-400 font-black text-lg">${(payload[0].value || 0).toFixed(2)}</p>
         </div>
       )
     }
@@ -103,7 +108,7 @@ export default function Earnings() {
         <div className="bg-gray-800/80 border border-gray-700/50 p-4 rounded-2xl flex items-center gap-4">
           <div>
             <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Available to Payout</p>
-            <p className="text-2xl font-black text-emerald-400">${payoutData.available_balance.toFixed(2)}</p>
+            <p className="text-2xl font-black text-emerald-400">${Number(payoutData.available_balance || 0).toFixed(2)}</p>
           </div>
           
           {!payoutData.stripe_account_id ? (
@@ -111,7 +116,7 @@ export default function Earnings() {
               {loadingConnect ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CreditCard className="w-5 h-5" /> Connect Stripe</>}
             </button>
           ) : (
-            <button onClick={handleRequestPayout} disabled={loadingPayout || payoutData.available_balance < 50} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-900/20 disabled:opacity-50 transition">
+            <button onClick={handleRequestPayout} disabled={loadingPayout || (payoutData.available_balance || 0) < 50} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-900/20 disabled:opacity-50 transition">
               {loadingPayout ? <Loader2 className="w-5 h-5 animate-spin" /> : <><DollarSign className="w-5 h-5" /> Withdraw</>}
             </button>
           )}
@@ -123,9 +128,9 @@ export default function Earnings() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Net Earnings', value: `$${stats.totalEarnings.toFixed(0)}`, icon: DollarSign,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', badge: '+12%' },
-          { label: 'Completed Jobs', value: stats.completedJobs,                  icon: TrendingUp,  color: 'text-blue-400',    bg: 'bg-blue-500/10' },
-          { label: 'Net Avg Per Job',    value: `$${stats.avgPerJob.toFixed(0)}`,     icon: Calendar,    color: 'text-purple-400',  bg: 'bg-purple-500/10' },
+          { label: 'Net Earnings', value: `$${Number(stats.totalEarnings || 0).toFixed(0)}`, icon: DollarSign,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', badge: '+12%' },
+          { label: 'Completed Jobs', value: stats.completedJobs || 0,                         icon: TrendingUp,  color: 'text-blue-400',    bg: 'bg-blue-500/10' },
+          { label: 'Net Avg Per Job',    value: `$${Number(stats.avgPerJob || 0).toFixed(0)}`,    icon: Calendar,    color: 'text-purple-400',  bg: 'bg-purple-500/10' },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="bg-gray-800/80 border border-gray-700/50 rounded-2xl p-5 shadow-sm relative overflow-hidden">
@@ -172,10 +177,10 @@ export default function Earnings() {
             <h3 className="font-bold text-gray-100 text-sm uppercase tracking-wide">Payout History</h3>
           </div>
           <div className="space-y-3 flex-1 overflow-y-auto">
-            {payoutData.payouts.length === 0 ? (
+            {(!payoutData.payouts || payoutData.payouts.length === 0) ? (
               <p className="text-gray-500 text-sm text-center py-10">No payouts yet</p>
-            ) : payoutData.payouts.map((p, i) => (
-              <motion.div key={p.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+            ) : (payoutData.payouts || []).map((p, i) => (
+              <motion.div key={p.id || i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                 className="flex items-center justify-between p-3 rounded-2xl bg-gray-900/50 border border-gray-800 transition group">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
@@ -185,14 +190,14 @@ export default function Earnings() {
                     <DollarSign className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-200 capitalize">{p.status}</p>
+                    <p className="text-sm font-bold text-gray-200 capitalize">{p.status || 'pending'}</p>
                     <p className="text-[10px] uppercase font-bold tracking-widest text-gray-500 mt-0.5">
-                      {new Date(p.created_at).toLocaleDateString()}
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Recent'}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-black text-gray-200">${p.amount.toFixed(2)}</span>
+                  <span className="font-black text-gray-200">${Number(p.amount || 0).toFixed(2)}</span>
                 </div>
               </motion.div>
             ))}

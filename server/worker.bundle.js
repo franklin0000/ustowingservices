@@ -425,7 +425,7 @@ var require_bcrypt = __commonJS({
           res.push(rs[off].charCodeAt(0));
         return res;
       }
-      var utfx = (function() {
+      var utfx = function() {
         "use strict";
         var utfx2 = {};
         utfx2.MAX_CODEPOINT = 1114111;
@@ -527,7 +527,7 @@ var require_bcrypt = __commonJS({
           return [n, l];
         };
         return utfx2;
-      })();
+      }();
       Date.now = Date.now || function() {
         return +/* @__PURE__ */ new Date();
       };
@@ -2313,6 +2313,18 @@ var worker_default = {
 async function handleApiRequest(request, url, env, secret, origin) {
   const path = url.pathname;
   const method = request.method;
+  let authUser = null;
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    try {
+      const decoded = await verifyJWT(token, secret);
+      if (decoded) {
+        authUser = MEMORY_DB.users.find((u) => u.id === decoded.id || u.email.toLowerCase() === decoded.email?.toLowerCase()) || null;
+      }
+    } catch (e) {
+    }
+  }
   if (path === "/api/health") {
     return jsonResponse({
       status: "ok",
@@ -2322,8 +2334,8 @@ async function handleApiRequest(request, url, env, secret, origin) {
     }, 200, origin);
   }
   if (path === "/api/auth/me" && method === "GET") {
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    const authHeader2 = request.headers.get("Authorization");
+    const token = authHeader2?.replace("Bearer ", "");
     if (!token) return jsonResponse({ error: "No token provided" }, 401, origin);
     const decoded = await verifyJWT(token, secret);
     if (!decoded) return jsonResponse({ error: "Invalid or expired token" }, 401, origin);
@@ -2582,26 +2594,190 @@ async function handleApiRequest(request, url, env, secret, origin) {
     return jsonResponse(drivers, 200, origin);
   }
   if (path === "/api/drivers/profile") {
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver") || MEMORY_DB.users[0];
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0] || {};
     return jsonResponse({
-      vehicle: "Flatbed Tow Truck",
-      license_plate: "TOW-777",
-      available: true,
-      rating: 5,
-      completedJobs: 148,
-      totalEarnings: 12450
+      id: u?.id || dp.user_id,
+      name: u?.name || "Carlos Rivera",
+      email: u?.email || "carlos@email.com",
+      phone: u?.phone || "+1 800-555-0100",
+      avatar: u?.avatar || null,
+      vehicle: dp.vehicle || "Flatbed Tow Truck",
+      licensePlate: dp.license_plate || "TOW-777",
+      license_plate: dp.license_plate || "TOW-777",
+      latitude: dp.latitude || 25.7617,
+      longitude: dp.longitude || -80.1918,
+      available: dp.available !== false,
+      rating: dp.rating || 5,
+      totalRatings: dp.total_ratings || 42,
+      completedJobs: dp.completed_jobs || 148,
+      totalEarnings: dp.total_earnings || 12450
     }, 200, origin);
   }
-  if (path === "/api/drivers/availability" && method === "PUT") {
-    return jsonResponse({ success: true, available: true }, 200, origin);
+  if (path.startsWith("/api/drivers/") && path.endsWith("/public-profile") && method === "GET") {
+    const parts = path.split("/");
+    const driverId = parts[3];
+    const u = MEMORY_DB.users.find((usr) => usr.id === driverId) || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0];
+    return jsonResponse({
+      id: driverId,
+      name: u?.name || "Carlos Rivera",
+      avatar: u?.avatar || null,
+      vehicle: dp?.vehicle || "Flatbed Tow Truck",
+      licensePlate: dp?.license_plate || "TOW-777",
+      rating: dp?.rating || 5,
+      totalRatings: dp?.total_ratings || 42,
+      completedJobs: dp?.completed_jobs || 148,
+      reviews: [
+        { rating: 5, review: "Super fast arrival!", clientName: "Sarah J.", date: (/* @__PURE__ */ new Date()).toISOString() }
+      ]
+    }, 200, origin);
+  }
+  if (path === "/api/drivers/availability" && (method === "PUT" || method === "POST")) {
+    let avail = true;
+    try {
+      const b = await request.json();
+      if (b.available !== void 0) avail = !!b.available;
+    } catch (e) {
+    }
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0];
+    if (dp) dp.available = avail ? 1 : 0;
+    return jsonResponse({ success: true, available: avail }, 200, origin);
+  }
+  if (path === "/api/drivers/location" && method === "PUT") {
+    try {
+      const { latitude, longitude } = await request.json();
+      const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0];
+      if (dp) {
+        dp.latitude = latitude;
+        dp.longitude = longitude;
+      }
+    } catch (e) {
+    }
+    return jsonResponse({ success: true }, 200, origin);
   }
   if (path === "/api/drivers/active-job") {
     return jsonResponse(null, 200, origin);
   }
   if (path === "/api/drivers/earnings") {
-    return jsonResponse({ today: 240, thisWeek: 1450, total: 12450 }, 200, origin);
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0] || {};
+    const totalEarnings = dp.total_earnings || 12450;
+    const completedJobs = dp.completed_jobs || 148;
+    return jsonResponse({
+      today: 240,
+      thisWeek: 1450,
+      total: totalEarnings,
+      totalEarnings,
+      completedJobs,
+      avgPerJob: completedJobs > 0 ? totalEarnings / completedJobs : 84.12,
+      recentPayouts: [
+        { id: "pay_1", amount: 120, serviceType: "tow", clientName: "Sarah Jenkins", date: new Date(Date.now() - 864e5).toISOString() },
+        { id: "pay_2", amount: 95, serviceType: "jumpstart", clientName: "Michael Brown", date: new Date(Date.now() - 1728e5).toISOString() }
+      ],
+      weeklyRevenue: [
+        { day: "Mon", revenue: 180, jobs: 2 },
+        { day: "Tue", revenue: 240, jobs: 3 },
+        { day: "Wed", revenue: 310, jobs: 4 },
+        { day: "Thu", revenue: 150, jobs: 2 },
+        { day: "Fri", revenue: 420, jobs: 5 },
+        { day: "Sat", revenue: 380, jobs: 4 },
+        { day: "Sun", revenue: 240, jobs: 3 }
+      ]
+    }, 200, origin);
+  }
+  if (path === "/api/drivers/ratings") {
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0] || {};
+    return jsonResponse({
+      avgRating: dp.rating || 5,
+      totalRatings: dp.total_ratings || 42,
+      distribution: [
+        { star: 5, count: 36 },
+        { star: 4, count: 5 },
+        { star: 3, count: 1 },
+        { star: 2, count: 0 },
+        { star: 1, count: 0 }
+      ],
+      reviews: [
+        { rating: 5, review: "Super fast arrival and very careful with my vehicle!", clientName: "Sarah Jenkins", date: new Date(Date.now() - 864e5).toISOString() },
+        { rating: 5, review: "Professional and courteous technician.", clientName: "Michael Brown", date: new Date(Date.now() - 2592e5).toISOString() },
+        { rating: 4, review: "Arrived within 25 minutes, great service.", clientName: "Jessica Taylor", date: new Date(Date.now() - 5e8).toISOString() }
+      ]
+    }, 200, origin);
   }
   if (path === "/api/drivers/history") {
-    return jsonResponse([], 200, origin);
+    return jsonResponse([
+      { id: "job-101", clientName: "Client User", serviceType: "tow", pickupLocation: "Downtown Miami, FL", status: "completed", amount: 125, rating: 5, createdAt: new Date(Date.now() - 864e5).toISOString(), completedAt: new Date(Date.now() - 828e5).toISOString() },
+      { id: "job-102", clientName: "Juan Perez", serviceType: "jumpstart", pickupLocation: "Brickell Ave, Miami, FL", status: "completed", amount: 75, rating: 5, createdAt: new Date(Date.now() - 1728e5).toISOString(), completedAt: new Date(Date.now() - 17e7).toISOString() }
+    ], 200, origin);
+  }
+  if (path === "/api/drivers/payouts") {
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0] || {};
+    return jsonResponse({
+      payouts: MEMORY_DB.payouts || [],
+      stripe_account_id: "acct_demo123",
+      total_earnings: dp.total_earnings || 12450,
+      available_balance: 1450
+    }, 200, origin);
+  }
+  if (path === "/api/drivers/payout" && method === "POST") {
+    let amount = 100;
+    try {
+      const b = await request.json();
+      if (b.amount) amount = Number(b.amount);
+    } catch (e) {
+    }
+    const newPayout = {
+      id: "payout-" + Date.now(),
+      driver_id: authUser?.id || "99df741a-2495-4dad-9718-cbab7d71baf5",
+      driver_name: authUser?.name || "Carlos Rivera",
+      amount,
+      status: "pending",
+      created_at: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    if (!MEMORY_DB.payouts) MEMORY_DB.payouts = [];
+    MEMORY_DB.payouts.unshift(newPayout);
+    return jsonResponse({ success: true, payout: newPayout }, 201, origin);
+  }
+  if (path === "/api/stripe/connect/status") {
+    return jsonResponse({ connected: true, charges_enabled: true, payouts_enabled: true }, 200, origin);
+  }
+  if (path === "/api/stripe/connect") {
+    return jsonResponse({ url: "/driver/earnings" }, 200, origin);
+  }
+  if (path === "/api/stripe/create-subscription-checkout") {
+    return jsonResponse({ url: "/driver/dashboard" }, 200, origin);
+  }
+  if (path === "/api/auth/profile" && method === "PUT") {
+    try {
+      const body = await request.json();
+      const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+      if (u) {
+        if (body.name) u.name = body.name;
+        if (body.email) u.email = body.email;
+        if (body.phone) u.phone = body.phone;
+      }
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id);
+      if (dp) {
+        if (body.vehicle) dp.vehicle = body.vehicle;
+        if (body.licensePlate) dp.license_plate = body.licensePlate;
+      }
+      return jsonResponse({ success: true, user: u }, 200, origin);
+    } catch (e) {
+      return jsonResponse({ error: "Failed to update profile" }, 400, origin);
+    }
+  }
+  if (path === "/api/auth/bypass-kyc" && method === "POST") {
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    if (u) {
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u.id);
+      if (dp) dp.kyc_status = "approved";
+    }
+    return jsonResponse({ success: true, kycStatus: "approved" }, 200, origin);
   }
   if (path === "/api/jobs/my" && method === "GET") {
     return jsonResponse([], 200, origin);

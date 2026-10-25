@@ -17,7 +17,7 @@ export default function AvailableJobs() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    getAvailableJobs().then(j => { setJobs(j); setLoaded(true) }).catch(() => setLoaded(true))
+    getAvailableJobs().then(j => { setJobs(Array.isArray(j) ? j : []); setLoaded(true) }).catch(() => setLoaded(true))
     
     // Get real GPS location
     if ('geolocation' in navigator) {
@@ -26,7 +26,7 @@ export default function AvailableJobs() {
         () => {
           // Fallback to profile if GPS fails
           getDriverProfile().then(p => {
-            if (p.latitude && p.longitude) {
+            if (p?.latitude && p?.longitude) {
               setDriverLoc({ lat: p.latitude, lng: p.longitude })
             }
           }).catch(() => {})
@@ -34,12 +34,12 @@ export default function AvailableJobs() {
       )
     } else {
       getDriverProfile().then(p => {
-        if (p.latitude && p.longitude) setDriverLoc({ lat: p.latitude, lng: p.longitude })
+        if (p?.latitude && p?.longitude) setDriverLoc({ lat: p.latitude, lng: p.longitude })
       }).catch(() => {})
     }
 
     const unsub = onEvent('new_job', () => {
-      getAvailableJobs().then(setJobs).catch(() => {})
+      getAvailableJobs().then(j => setJobs(Array.isArray(j) ? j : [])).catch(() => {})
     })
     return unsub
   }, [])

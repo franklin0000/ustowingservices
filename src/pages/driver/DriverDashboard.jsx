@@ -18,7 +18,7 @@ export default function DriverDashboard() {
     getDriverProfile().then(setProfile).catch(() => {})
     getActiveJob().then(setActiveJob).catch(() => {})
     getDriverHistory().then(setHistory).catch(() => {})
-    getAvailableJobs().then(j => setPendingCount(j.length)).catch(() => {})
+    getAvailableJobs().then(j => setPendingCount(Array.isArray(j) ? j.length : 0)).catch(() => {})
   }
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function DriverDashboard() {
               <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xl">
-                {profile.name.charAt(0)}
+                {(profile.name || 'Driver').charAt(0)}
               </div>
             )}
             <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
@@ -70,7 +70,7 @@ export default function DriverDashboard() {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-100">Driver Dashboard</h1>
-            <p className="text-sm text-gray-400 mt-1">Welcome back, {profile.name}</p>
+            <p className="text-sm text-gray-400 mt-1">Welcome back, {profile.name || 'Driver'}</p>
           </div>
         </div>
         <div className={`px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 border shadow-sm

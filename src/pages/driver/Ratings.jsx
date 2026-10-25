@@ -7,7 +7,11 @@ export default function Ratings() {
   const { getRatings } = useApp()
   const [data, setData] = useState(null)
 
-  useEffect(() => { getRatings().then(setData).catch(() => {}) }, [])
+  useEffect(() => {
+    getRatings()
+      .then(d => setData(d || { avgRating: 5.0, totalRatings: 0, distribution: [], reviews: [] }))
+      .catch(() => setData({ avgRating: 5.0, totalRatings: 0, distribution: [], reviews: [] }))
+  }, [])
 
   if (!data) return (
     <div className="flex justify-center py-20">
@@ -15,7 +19,9 @@ export default function Ratings() {
     </div>
   )
 
-  const totalForPct = data.distribution.reduce((s, d) => s + d.count, 0) || 1
+  const distribution = data.distribution || []
+  const totalForPct = distribution.reduce((s, d) => s + (d.count || 0), 0) || 1
+  const avgRatingNum = Number(data.avgRating || 5.0)
 
   return (
     <div className="space-y-6">
@@ -31,14 +37,14 @@ export default function Ratings() {
         {/* Avg Rating Card */}
         <div className="bg-gray-800/80 border border-gray-700/50 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
           <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2">Overall Rating</p>
-          <div className="text-6xl font-black text-gray-100 mb-3">{data.avgRating.toFixed(1)}</div>
+          <div className="text-6xl font-black text-gray-100 mb-3">{avgRatingNum.toFixed(1)}</div>
           <div className="flex items-center justify-center gap-1 mb-3">
             {[1, 2, 3, 4, 5].map(s => (
-              <Star key={s} className={`w-6 h-6 ${s <= Math.round(data.avgRating) ? 'text-amber-400 fill-amber-400 drop-shadow-md' : 'text-gray-600'}`} />
+              <Star key={s} className={`w-6 h-6 ${s <= Math.round(avgRatingNum) ? 'text-amber-400 fill-amber-400 drop-shadow-md' : 'text-gray-600'}`} />
             ))}
           </div>
           <p className="text-gray-400 text-sm font-semibold bg-gray-700/30 px-4 py-1.5 rounded-full border border-gray-700">
-            {data.totalRatings} Total Ratings
+            {data.totalRatings || 0} Total Ratings
           </p>
         </div>
 
@@ -46,7 +52,7 @@ export default function Ratings() {
         <div className="bg-gray-800/80 border border-gray-700/50 rounded-3xl p-6 shadow-sm lg:col-span-2">
           <h3 className="font-bold text-gray-100 mb-5 text-sm uppercase tracking-wide">Rating Distribution</h3>
           <div className="space-y-4">
-            {data.distribution.map(d => (
+            {distribution.map(d => (
               <div key={d.star} className="flex items-center gap-4">
                 <span className="text-sm font-bold text-gray-300 w-8 flex items-center gap-1">
                   {d.star} <Star className="w-3.5 h-3.5 fill-gray-500 text-gray-500" />
@@ -54,13 +60,13 @@ export default function Ratings() {
                 <div className="flex-1 bg-gray-900 rounded-full h-3.5 overflow-hidden border border-gray-700 shadow-inner">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${(d.count / totalForPct) * 100}%` }}
+                    animate={{ width: `${((d.count || 0) / totalForPct) * 100}%` }}
                     transition={{ duration: 1, ease: 'easeOut' }}
                     className="bg-amber-400 h-full rounded-full shadow-lg"
                   />
                 </div>
                 <span className="text-xs font-semibold text-gray-400 w-16 text-right">
-                  {d.count} <span className="text-gray-600">({((d.count / totalForPct) * 100).toFixed(0)}%)</span>
+                  {d.count || 0} <span className="text-gray-600">({(((d.count || 0) / totalForPct) * 100).toFixed(0)}%)</span>
                 </span>
               </div>
             ))}
@@ -74,26 +80,26 @@ export default function Ratings() {
           <MessageSquare className="w-5 h-5 text-emerald-400" /> Client Reviews
         </h3>
         <div className="space-y-4">
-          {data.reviews.length === 0 ? (
+          {(!data.reviews || data.reviews.length === 0) ? (
             <div className="text-center py-10 bg-gray-900/50 rounded-2xl border border-dashed border-gray-700">
               <MessageSquare className="w-10 h-10 text-gray-600 mx-auto mb-3" />
               <p className="text-gray-400 font-semibold">No reviews yet</p>
               <p className="text-xs text-gray-500 mt-1">Keep providing great service to earn reviews.</p>
             </div>
           ) : (
-            data.reviews.map((r, i) => (
+            (data.reviews || []).map((r, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 className="p-5 rounded-2xl bg-gray-900/50 border border-gray-700/50 hover:bg-gray-900 transition">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center font-bold text-sm border border-blue-500/20">
-                      {r.clientName?.split(' ').map(n => n[0]).join('')}
+                      {r.clientName ? r.clientName.split(' ').map(n => n[0]).join('') : 'C'}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-200">{r.clientName}</p>
+                      <p className="font-bold text-gray-200">{r.clientName || 'Client'}</p>
                       <div className="flex items-center gap-1 mt-0.5">
                         {[1, 2, 3, 4, 5].map(s => (
-                          <Star key={s} className={`w-3 h-3 ${s <= r.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-700'}`} />
+                          <Star key={s} className={`w-3 h-3 ${s <= (r.rating || 5) ? 'text-amber-400 fill-amber-400' : 'text-gray-700'}`} />
                         ))}
                       </div>
                     </div>
