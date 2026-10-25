@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
-import { jobs as jobsApi, drivers as driversApi, admin as adminApi, pricing as pricingApi, stripe as stripeApi } from '../services/api'
+import { jobs as jobsApi, drivers as driversApi, admin as adminApi, pricing as pricingApi, stripe as stripeApi, payments as paymentsApi } from '../services/api'
 
 const AppContext = createContext(null)
 
@@ -33,10 +33,7 @@ export function AppProvider({ children }) {
   const cancelJob = useCallback((id) => apiCall(() => jobsApi.cancel(id)), [apiCall])
   const rateJob = useCallback((id, rating, review) => apiCall(() => jobsApi.rate(id, rating, review)), [apiCall])
   const getJobChat = useCallback((id) => apiCall(() => jobsApi.getChat(id)), [apiCall])
-  const getMyPayments = useCallback(() => apiCall(() => {
-    // Dynamic import to get the correct module
-    return import('../services/api').then(mod => mod.payments.my())
-  }), [apiCall])
+  const getMyPayments = useCallback(() => apiCall(() => paymentsApi.my()), [apiCall])
   
   const getQuote = useCallback((params) => apiCall(() => pricingApi.getQuote(params)), [apiCall])
   const geocode = useCallback((query) => apiCall(() => pricingApi.geocode(query)), [apiCall])

@@ -11,7 +11,11 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
 var __commonJS = (cb, mod) => function __require2() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -425,7 +429,7 @@ var require_bcrypt = __commonJS({
           res.push(rs[off].charCodeAt(0));
         return res;
       }
-      var utfx = function() {
+      var utfx = (function() {
         "use strict";
         var utfx2 = {};
         utfx2.MAX_CODEPOINT = 1114111;
@@ -527,7 +531,7 @@ var require_bcrypt = __commonJS({
           return [n, l];
         };
         return utfx2;
-      }();
+      })();
       Date.now = Date.now || function() {
         return +/* @__PURE__ */ new Date();
       };

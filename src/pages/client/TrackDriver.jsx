@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext'
 import MapView from '../../components/MapView'
 import { onEvent } from '../../services/websocket'
 import { motion, AnimatePresence } from 'framer-motion'
-import { stripe } from '../../services/api'
+import { stripe, jobs as jobsApi } from '../../services/api'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import LiveChat from '../../components/LiveChat'
 import DriverProfileModal from '../../components/DriverProfileModal'
@@ -62,14 +62,12 @@ export default function TrackDriver() {
         )
         if (active) {
           setActiveReq(active)
-          import('../../services/api').then(({ jobs: jobsApi }) => {
-            jobsApi.get(active.id).then(full => {
-              if (full.driver) {
-                setDriver(full.driver)
-                setDriverLoc({ lat: full.driver.latitude, lng: full.driver.longitude })
-              }
-            })
-          })
+          jobsApi.get(active.id).then(full => {
+            if (full.driver) {
+              setDriver(full.driver)
+              setDriverLoc({ lat: full.driver.latitude, lng: full.driver.longitude })
+            }
+          }).catch(() => {})
         }
       } catch (err) {
         console.error("Failed to fetch active job:", err)

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { onEvent } from '../../services/websocket'
+import { auth } from '../../services/api'
 
 export default function DriverDashboard() {
   const { getDriverProfile, getActiveJob, getDriverHistory, getAvailableJobs } = useApp()
@@ -58,7 +59,6 @@ export default function DriverDashboard() {
               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                 if (e.target.files[0]) {
                   try {
-                    const { auth } = await import('../../services/api');
                     const res = await auth.uploadAvatar(e.target.files[0]);
                     setProfile(prev => ({ ...prev, avatar: res.avatarUrl }));
                   } catch (err) {

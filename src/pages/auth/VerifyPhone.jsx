@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ArrowRight, Lock, CheckCircle2, RefreshCw } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { auth as authApi } from '../../services/api'
 
 export default function VerifyPhone() {
   const { user, verifyPhone, logout } = useAuth()
@@ -36,7 +37,6 @@ export default function VerifyPhone() {
   const triggerSendSms = async () => {
     try {
       setSendingSms(true)
-      const { auth: authApi } = await import('../../services/api')
       await authApi.sendSms(user.phone)
     } catch (err) {
       console.error('Failed to send SMS:', err)
