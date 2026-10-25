@@ -457,8 +457,8 @@ export default {
     }
 
     // Handle WebSocket endpoint /ws
-    if (url.pathname === '/ws') {
-      const upgradeHeader = request.headers.get('Upgrade');
+    if (url.pathname === '/ws' || url.pathname.startsWith('/ws')) {
+      const upgradeHeader = (request.headers.get('Upgrade') || '').toLowerCase();
       if (upgradeHeader === 'websocket') {
         const webSocketPair = new WebSocketPair();
         const [client, server] = Object.values(webSocketPair);
