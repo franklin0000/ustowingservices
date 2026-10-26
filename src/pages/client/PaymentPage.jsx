@@ -58,7 +58,8 @@ export default function PaymentPage() {
     }
   }
 
-  const filtered = data.payments.filter(p => filter === 'all' || p.status === filter)
+  const paymentsList = Array.isArray(data?.payments) ? data.payments : []
+  const filtered = paymentsList.filter(p => filter === 'all' || p.status === filter)
 
   if (!loaded) return (
     <div className="flex justify-center py-20">

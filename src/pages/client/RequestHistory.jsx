@@ -24,10 +24,20 @@ export default function RequestHistory() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    getMyJobs().then(data => { setJobs(data); setLoaded(true) }).catch(() => setLoaded(true))
+    getMyJobs()
+      .then(data => {
+        setJobs(Array.isArray(data) ? data : (Array.isArray(data?.jobs) ? data.jobs : []))
+        setLoaded(true)
+      })
+      .catch(() => {
+        setJobs([])
+        setLoaded(true)
+      })
   }, [])
 
-  const filtered = jobs.filter(r => {
+  const jobList = Array.isArray(jobs) ? jobs : (Array.isArray(jobs?.jobs) ? jobs.jobs : [])
+
+  const filtered = jobList.filter(r => {
     const matchFilter = filter === 'all' || r.status === filter ||
       (filter === 'pending' && ['pending', 'accepted', 'en_route', 'arrived', 'in_service'].includes(r.status))
     const matchSearch = !search || (r.pickupLocation || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -75,9 +85,9 @@ export default function RequestHistory() {
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'Total', value: jobs.length, color: 'text-blue-600' },
-          { label: 'Done', value: jobs.filter(j => j.status === 'completed').length, color: 'text-emerald-600' },
-          { label: 'Active', value: jobs.filter(j => ['accepted', 'en_route', 'arrived', 'in_service', 'pending'].includes(j.status)).length, color: 'text-amber-600' },
+          { label: 'Total', value: jobList.length, color: 'text-blue-600' },
+          { label: 'Done', value: jobList.filter(j => j.status === 'completed').length, color: 'text-emerald-600' },
+          { label: 'Active', value: jobList.filter(j => ['accepted', 'en_route', 'arrived', 'in_service', 'pending'].includes(j.status)).length, color: 'text-amber-600' },
         ].map(stat => (
           <div key={stat.label} className="bg-white border border-gray-100 rounded-2xl py-3 px-3 text-center shadow-sm">
             <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -143,10 +153,10 @@ export default function RequestHistory() {
           <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide mb-4">Overview</h3>
           <div className="space-y-3">
             {[
-              { label: 'Total', value: jobs.length, color: 'text-blue-600', bg: 'bg-blue-50' },
-              { label: 'Completed', value: jobs.filter(j => j.status === 'completed').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { label: 'Active', value: jobs.filter(j => ['accepted','en_route','arrived','in_service','pending'].includes(j.status)).length, color: 'text-amber-600', bg: 'bg-amber-50' },
-              { label: 'Cancelled', value: jobs.filter(j => j.status === 'cancelled').length, color: 'text-red-500', bg: 'bg-red-50' },
+              { label: 'Total', value: jobList.length, color: 'text-blue-600', bg: 'bg-blue-50' },
+              { label: 'Completed', value: jobList.filter(j => j.status === 'completed').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'Active', value: jobList.filter(j => ['accepted','en_route','arrived','in_service','pending'].includes(j.status)).length, color: 'text-amber-600', bg: 'bg-amber-50' },
+              { label: 'Cancelled', value: jobList.filter(j => j.status === 'cancelled').length, color: 'text-red-500', bg: 'bg-red-50' },
             ].map(stat => (
               <div key={stat.label} className={`${stat.bg} rounded-xl px-4 py-3 flex items-center justify-between`}>
                 <span className="text-sm font-medium text-gray-700">{stat.label}</span>

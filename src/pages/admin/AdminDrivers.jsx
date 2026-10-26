@@ -14,7 +14,9 @@ export default function AdminDrivers() {
     getAdminDrivers().then(d => setDrivers(Array.isArray(d) ? d : [])).catch(() => {}) 
   }, [])
 
-  const filtered = (drivers || []).filter(d => {
+  const driversList = Array.isArray(drivers) ? drivers : []
+
+  const filtered = driversList.filter(d => {
     const dName = d.name || 'Driver'
     const dVehicle = d.vehicle || 'Vehicle'
     const matchesSearch = !search || dName.toLowerCase().includes(search.toLowerCase()) || dVehicle.toLowerCase().includes(search.toLowerCase())
@@ -25,19 +27,19 @@ export default function AdminDrivers() {
 
   const toggleAvailability = async (id, current) => {
     await updateDriverAvailability(id, !current)
-    setDrivers(prev => prev.map(d => d.id === id ? { ...d, available: !current } : d))
+    setDrivers(prev => (Array.isArray(prev) ? prev : []).map(d => d.id === id ? { ...d, available: !current } : d))
   }
 
   const handleKyc = async (id, status) => {
     try {
       await admin.updateKycStatus(id, status)
-      setDrivers(prev => prev.map(d => d.id === id ? { ...d, kycStatus: status } : d))
+      setDrivers(prev => (Array.isArray(prev) ? prev : []).map(d => d.id === id ? { ...d, kycStatus: status } : d))
     } catch (err) {
       alert('Failed to update KYC status: ' + err.message)
     }
   }
 
-  const pendingCount = (drivers || []).filter(d => (d.kycStatus || d.kyc_status) === 'pending').length
+  const pendingCount = driversList.filter(d => (d.kycStatus || d.kyc_status) === 'pending').length
 
   return (
     <div>

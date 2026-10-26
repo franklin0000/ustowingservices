@@ -80,7 +80,12 @@ export default function RequestService() {
   // Fetch nearby drivers whenever lat/lng exist
   useEffect(() => {
     if (form.lat && form.lng) {
-      fetchNearbyDrivers(form.lat, form.lng).then(d => setNearbyDrivers(d || []))
+      fetchNearbyDrivers(form.lat, form.lng)
+        .then(d => {
+          const list = Array.isArray(d) ? d : (Array.isArray(d?.drivers) ? d.drivers : []);
+          setNearbyDrivers(list);
+        })
+        .catch(() => setNearbyDrivers([]));
     }
   }, [form.lat, form.lng, fetchNearbyDrivers])
 
@@ -199,7 +204,7 @@ export default function RequestService() {
           center={form.lat && form.lng ? [Number(form.lat), Number(form.lng)] : [25.7617, -80.1918]}
           markers={[
             ...(form.lat && form.lng ? [{ lat: Number(form.lat), lng: Number(form.lng), type: 'client', label: 'Tú' }] : []),
-            ...nearbyDrivers
+            ...(Array.isArray(nearbyDrivers) ? nearbyDrivers : (Array.isArray(nearbyDrivers?.drivers) ? nearbyDrivers.drivers : []))
               .filter(d => d && !isNaN(d.latitude) && !isNaN(d.longitude))
               .map(d => ({ lat: Number(d.latitude), lng: Number(d.longitude), type: 'nearby_driver', label: d.name }))
           ]}
@@ -282,7 +287,7 @@ export default function RequestService() {
                   center={form.lat && form.lng ? [Number(form.lat), Number(form.lng)] : [25.7617, -80.1918]}
                   markers={[
                     ...(form.lat && form.lng ? [{ lat: Number(form.lat), lng: Number(form.lng), type: 'client', label: 'Tú' }] : []),
-                    ...nearbyDrivers
+                    ...(Array.isArray(nearbyDrivers) ? nearbyDrivers : (Array.isArray(nearbyDrivers?.drivers) ? nearbyDrivers.drivers : []))
                       .filter(d => d && !isNaN(d.latitude) && !isNaN(d.longitude))
                       .map(d => ({ lat: Number(d.latitude), lng: Number(d.longitude), type: 'nearby_driver', label: d.name }))
                   ]}
@@ -294,7 +299,7 @@ export default function RequestService() {
                     <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shrink-0" />
                     <div>
                       <p className="font-bold text-gray-900 text-xs sm:text-sm">Live Provider Network</p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">{nearbyDrivers.length || 12} verified pros nearby</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{(Array.isArray(nearbyDrivers) ? nearbyDrivers.length : 12) || 12} verified pros nearby</p>
                     </div>
                   </div>
                   <div className="flex -space-x-2">

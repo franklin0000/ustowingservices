@@ -1157,6 +1157,29 @@ async function handleApiRequest(request, url, env, secret, origin) {
     }
     return jsonResponse({ error: 'Job not found' }, 404, origin);
   }
+  // Jobs: GET /api/jobs/nearby-drivers
+  if ((path === '/api/jobs/nearby-drivers' || path.startsWith('/api/jobs/nearby-drivers')) && method === 'GET') {
+    const lat = parseFloat(url.searchParams.get('lat') || '25.7617');
+    const lng = parseFloat(url.searchParams.get('lng') || '-80.1918');
+
+    const list = MEMORY_DB.driver_profiles
+      .filter(dp => dp && dp.latitude != null && dp.longitude != null)
+      .map(dp => {
+        const u = MEMORY_DB.users.find(usr => usr.id === dp.user_id) || {};
+        return {
+          id: dp.user_id,
+          name: u.name || 'Conductor Certificado',
+          latitude: Number(dp.latitude),
+          longitude: Number(dp.longitude),
+          vehicle: dp.vehicle || 'Grua de plataforma',
+          rating: dp.rating || 5.0,
+          phone: u.phone || '+1 800-555-0100'
+        };
+      });
+
+    return jsonResponse(list, 200, origin);
+  }
+
   if (path.startsWith('/api/jobs/') && method === 'GET' && !path.endsWith('/available') && !path.endsWith('/my') && !path.endsWith('/nearby-drivers')) {
     const parts = path.split('/');
     const jobId = parts[3];

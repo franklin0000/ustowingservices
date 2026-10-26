@@ -62,7 +62,7 @@ export default function AdminPayments() {
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 border-b border-gray-100 pb-4">
           <div className="flex gap-4">
             <button onClick={() => setTab('transactions')} className={`font-bold pb-2 border-b-2 transition ${tab === 'transactions' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-900'}`}>Transactions</button>
-            <button onClick={() => setTab('payouts')} className={`font-bold pb-2 border-b-2 transition ${tab === 'payouts' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-900'}`}>Payout Requests {payouts.filter(p => p.status==='pending').length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-1">{payouts.filter(p => p.status==='pending').length}</span>}</button>
+            <button onClick={() => setTab('payouts')} className={`font-bold pb-2 border-b-2 transition ${tab === 'payouts' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-900'}`}>Payout Requests {(Array.isArray(payouts) ? payouts : []).filter(p => p.status==='pending').length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-1">{(Array.isArray(payouts) ? payouts : []).filter(p => p.status==='pending').length}</span>}</button>
           </div>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

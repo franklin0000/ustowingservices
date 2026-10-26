@@ -122,7 +122,7 @@ function FitBounds({ markers, enabled = true }) {
   const hasFittedRef = useRef(false)
 
   useEffect(() => {
-    if (!enabled || !markers || markers.length === 0) return
+    if (!enabled || !Array.isArray(markers) || markers.length === 0) return
     if (hasFittedRef.current) return
 
     try {
@@ -281,7 +281,7 @@ export default function MapView({
   ) ? center : DEFAULT_CENTER
 
   // Sanitize markers to guarantee Leaflet never receives null/undefined/NaN
-  const validMarkers = (markers || [])
+  const validMarkers = (Array.isArray(markers) ? markers : [])
     .filter(m => m && 
       typeof m.lat === 'number' && !isNaN(m.lat) && isFinite(m.lat) &&
       typeof m.lng === 'number' && !isNaN(m.lng) && isFinite(m.lng)
@@ -392,7 +392,7 @@ export default function MapView({
   }, [validMarkers, disableRouting])
 
   // Sanitize connections: ensure every connection is an array of valid [lat, lng] pairs
-  const validConnections = (connections || []).filter(pts => 
+  const validConnections = (Array.isArray(connections) ? connections : []).filter(pts => 
     Array.isArray(pts) && pts.length >= 2 && pts.every(pt => 
       Array.isArray(pt) && pt.length >= 2 &&
       typeof pt[0] === 'number' && !isNaN(pt[0]) && isFinite(pt[0]) &&

@@ -82,7 +82,7 @@ export default function AvailableJobs() {
     ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng)
       ? [{ lat: Number(driverLoc.lat), lng: Number(driverLoc.lng), heading: driverLoc.heading || 0, type: 'driver', label: 'Tú (Conductor)' }]
       : []),
-    ...jobs
+    ...(Array.isArray(jobs) ? jobs : [])
       .filter(j => j && !isNaN(j.pickupLat || j.pickup_lat) && !isNaN(j.pickupLng || j.pickup_lng))
       .map(j => ({
         lat: Number(j.pickupLat || j.pickup_lat),
