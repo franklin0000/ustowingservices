@@ -87,10 +87,10 @@ export default function DriverDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Today\'s Earnings', value: `$${todayEarnings.toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Completed Jobs', value: profile.completedJobs, icon: CheckCircle2, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-          { label: 'Avg Rating', value: profile.rating, icon: Star, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-          { label: 'Nearby Requests', value: pendingCount, icon: Clock, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+          { label: 'Today\'s Earnings', value: `$${Number(todayEarnings || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: 'Completed Jobs', value: profile.completedJobs || 0, icon: CheckCircle2, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          { label: 'Avg Rating', value: Number(profile.rating || 5).toFixed(1), icon: Star, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+          { label: 'Nearby Requests', value: pendingCount || 0, icon: Clock, color: 'text-purple-400', bg: 'bg-purple-500/10' },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="bg-gray-800/80 border border-gray-700/50 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
@@ -133,7 +133,7 @@ export default function DriverDashboard() {
               <div className="flex justify-between items-end pt-4 border-t border-emerald-500/20">
                 <div>
                   <p className="text-[10px] text-emerald-500/80 uppercase font-bold tracking-widest mb-1">Estimated Payout</p>
-                  <span className="font-black text-3xl text-emerald-400">${(activeJob.amount * 0.8).toFixed(2)}</span>
+                  <span className="font-black text-3xl text-emerald-400">${(Number(activeJob.amount || 0) * 0.8).toFixed(2)}</span>
                 </div>
                 <Link to="/driver/active" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition shadow-lg shadow-emerald-900/50">
                   View <ArrowRight className="w-4 h-4" />
@@ -172,7 +172,7 @@ export default function DriverDashboard() {
                   <p className="text-xs text-gray-500 truncate mt-0.5">{job.pickupLocation}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-black text-emerald-400">${(job.amount * 0.8).toFixed(0)}</p>
+                  <p className="text-sm font-black text-emerald-400">${(Number(job.amount || 0) * 0.8).toFixed(0)}</p>
                   {job.rating && (
                     <p className="text-[11px] font-bold text-amber-400 flex items-center justify-end gap-0.5 mt-0.5">
                       <Star className="w-3 h-3 fill-amber-400" /> {job.rating}

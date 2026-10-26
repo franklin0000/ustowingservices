@@ -24,20 +24,26 @@ export default function AdminDashboard() {
     const u6 = onEvent('price_proposed', fetchData)
     
     // Live driver GPS tracking
-    const u5 = onEvent('driver_location', ({ userId, latitude, longitude }) => {
+    const u5 = onEvent('driver_location', (payload) => {
+      if (!payload) return
+      const id = payload.driverId || payload.userId || payload.id
+      const lat = payload.latitude != null ? Number(payload.latitude) : null
+      const lng = payload.longitude != null ? Number(payload.longitude) : null
+      if (!id || lat == null || lng == null || isNaN(lat) || isNaN(lng)) return
+
       setData(prev => {
         if (!prev) return prev
-        const exists = prev.activeDriversList.find(d => d.id === userId)
+        const list = Array.isArray(prev.activeDriversList) ? prev.activeDriversList : []
+        const exists = list.find(d => d && d.id === id)
         if (exists) {
-          const updatedDrivers = prev.activeDriversList.map(d => 
-            d.id === userId ? { ...d, latitude, longitude } : d
+          const updatedDrivers = list.map(d => 
+            d && d.id === id ? { ...d, latitude: lat, longitude: lng } : d
           )
           return { ...prev, activeDriversList: updatedDrivers }
         } else {
-          // Add them dynamically so they pop up immediately on the map!
           return {
             ...prev,
-            activeDriversList: [...prev.activeDriversList, { id: userId, name: 'Active Driver', latitude, longitude, vehicle: 'Vehicle' }]
+            activeDriversList: [...list, { id, name: 'Active Driver', latitude: lat, longitude: lng, vehicle: 'Tow Truck' }]
           }
         }
       })
@@ -49,26 +55,39 @@ export default function AdminDashboard() {
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full" /></div>
 
   const stats = [
-    { label: 'Platform Revenue', value: `$${(data.totalRevenue ?? 0).toFixed(0)}`, change: '+18%', icon: DollarSign, color: 'bg-emerald-100 text-emerald-600', up: true },
+    { label: 'Platform Revenue', value: `$${Number(data.totalRevenue || 0).toFixed(0)}`, change: '+18%', icon: DollarSign, color: 'bg-emerald-100 text-emerald-600', up: true },
     { label: 'Total Requests', value: data.totalRequests ?? 0, change: '+12%', icon: FileText, color: 'bg-blue-100 text-blue-600', up: true },
     { label: 'Active Drivers', value: `${data.activeDrivers ?? 0}/${data.totalDrivers ?? 0}`, change: `${data.activeDrivers ?? 0} online`, icon: Truck, color: 'bg-purple-100 text-purple-600', up: true },
     { label: 'Pending Requests', value: data.pendingRequests ?? 0, change: (data.pendingRequests ?? 0) > 0 ? 'Needs attention' : 'All clear', icon: Clock, color: 'bg-amber-100 text-amber-600', up: (data.pendingRequests ?? 0) === 0 },
   ]
 
-  const pieData = (data.serviceDistribution || []).map(s => ({ name: s.service_type || s.name, value: s.count ?? s.value ?? 0, color: SERVICE_COLORS[s.service_type || s.name] || '#6b7280' }))
+  const pieData = (data.serviceDistribution || []).map(s => ({
+    name: s.service_type || s.name || 'Service',
+    value: Number(s.count ?? s.value ?? 0),
+    color: SERVICE_COLORS[s.service_type || s.name] || '#6b7280'
+  }))
 
   const mapMarkers = []
   const mapConnections = []
 
-  if (data?.activeDriversList) {
+  if (Array.isArray(data?.activeDriversList)) {
     data.activeDriversList.forEach(d => {
-      mapMarkers.push({ lat: d.latitude, lng: d.longitude, type: 'driver', label: d.name, sublabel: d.vehicle, id: d.id })
+      if (d && d.latitude != null && d.longitude != null && !isNaN(d.latitude) && !isNaN(d.longitude)) {
+        mapMarkers.push({
+          lat: Number(d.latitude),
+          lng: Number(d.longitude),
+          type: 'driver',
+          label: d.name || 'Conductor',
+          sublabel: d.vehicle || 'Vehículo',
+          id: d.id
+        })
+      }
     })
   }
 
-  if (data?.activeJobsList) {
+  if (Array.isArray(data?.activeJobsList)) {
     data.activeJobsList.forEach(j => {
-      // Pickup marker
+      if (!j) return
       let sublabel = j.status
       if (j.status === 'negotiating' || j.status === 'accepted') {
         sublabel = `${j.status.charAt(0).toUpperCase() + j.status.slice(1)}: $${j.agreed_price || j.amount}`
@@ -76,22 +95,37 @@ export default function AdminDashboard() {
         sublabel = `${j.status} - $${j.agreed_price || j.amount}`
       }
       
-      mapMarkers.push({ lat: j.pickup_lat, lng: j.pickup_lng, type: 'client', label: `Job: ${j.service_type}`, sublabel })
+      if (j.pickup_lat != null && j.pickup_lng != null && !isNaN(j.pickup_lat) && !isNaN(j.pickup_lng)) {
+        mapMarkers.push({
+          lat: Number(j.pickup_lat),
+          lng: Number(j.pickup_lng),
+          type: 'client',
+          label: `Job: ${j.service_type || 'tow'}`,
+          sublabel
+        })
+      }
       
-      // Destination marker (if present)
-      if (j.dest_lat && j.dest_lng) {
-        mapMarkers.push({ lat: j.dest_lat, lng: j.dest_lng, type: 'destination', label: `Dropoff`, sublabel: j.service_type })
+      if (j.dest_lat != null && j.dest_lng != null && !isNaN(j.dest_lat) && !isNaN(j.dest_lng)) {
+        mapMarkers.push({
+          lat: Number(j.dest_lat),
+          lng: Number(j.dest_lng),
+          type: 'destination',
+          label: 'Dropoff',
+          sublabel: j.service_type || 'tow'
+        })
       }
 
-      // Draw lines if a driver is assigned
-      if (j.driver_id) {
-        const driver = data.activeDriversList?.find(d => d.id === j.driver_id)
-        if (driver) {
+      // Draw lines if a driver is assigned and all coordinates are valid
+      if (j.driver_id && Array.isArray(data.activeDriversList)) {
+        const driver = data.activeDriversList.find(d => d && d.id === j.driver_id)
+        if (driver &&
+            driver.latitude != null && driver.longitude != null && !isNaN(driver.latitude) && !isNaN(driver.longitude) &&
+            j.pickup_lat != null && j.pickup_lng != null && !isNaN(j.pickup_lat) && !isNaN(j.pickup_lng)) {
           // Driver to Pickup
-          mapConnections.push([[driver.latitude, driver.longitude], [j.pickup_lat, j.pickup_lng]])
+          mapConnections.push([[Number(driver.latitude), Number(driver.longitude)], [Number(j.pickup_lat), Number(j.pickup_lng)]])
           // Pickup to Destination
-          if (j.dest_lat && j.dest_lng) {
-            mapConnections.push([[j.pickup_lat, j.pickup_lng], [j.dest_lat, j.dest_lng]])
+          if (j.dest_lat != null && j.dest_lng != null && !isNaN(j.dest_lat) && !isNaN(j.dest_lng)) {
+            mapConnections.push([[Number(j.pickup_lat), Number(j.pickup_lng)], [Number(j.dest_lat), Number(j.dest_lng)]])
           }
         }
       }

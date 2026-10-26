@@ -49,7 +49,11 @@ export default function AdminLayout() {
 
             <div className="flex items-center gap-3 pl-3 border-l border-gray-700">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md border border-purple-400/20">
-                {(user?.name || 'Admin').split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {(user?.name || 'Admin')
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .slice(0, 2)}
               </div>
               <div className="hidden md:block">
                 <p className="text-sm font-semibold text-gray-200">{user?.name}</p>
@@ -57,7 +61,11 @@ export default function AdminLayout() {
                   <Shield className="w-2.5 h-2.5" /> Administrator
                 </p>
               </div>
-              <button onClick={logout} className="p-2 rounded-xl hover:bg-white/5 transition" title="Logout">
+              <button
+                onClick={logout}
+                className="p-2 rounded-xl hover:bg-white/5 transition"
+                title="Logout"
+              >
                 <LogOut className="w-4 h-4 text-gray-500" />
               </button>
             </div>

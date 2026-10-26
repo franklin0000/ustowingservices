@@ -391,6 +391,15 @@ export default function MapView({
     }
   }, [validMarkers, disableRouting])
 
+  // Sanitize connections: ensure every connection is an array of valid [lat, lng] pairs
+  const validConnections = (connections || []).filter(pts => 
+    Array.isArray(pts) && pts.length >= 2 && pts.every(pt => 
+      Array.isArray(pt) && pt.length >= 2 &&
+      typeof pt[0] === 'number' && !isNaN(pt[0]) && isFinite(pt[0]) &&
+      typeof pt[1] === 'number' && !isNaN(pt[1]) && isFinite(pt[1])
+    )
+  )
+
   // Combine user GPS marker if available and not already marked
   const allDisplayMarkers = [...validMarkers]
   if (userGps && !allDisplayMarkers.some(m => m.type === 'driver' || m.type === 'client')) {
@@ -443,7 +452,7 @@ export default function MapView({
         )}
 
         {/* Custom manual connections */}
-        {connections.length > 0 && connections.map((pts, idx) => (
+        {validConnections.length > 0 && validConnections.map((pts, idx) => (
           <Polyline 
             key={`conn-${idx}`} 
             positions={pts} 
