@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Phone, MessageSquare, Navigation, MapPin, CheckCircle2, Clock, Star } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import MapView from '../../components/MapView'
-import { onEvent } from '../../services/websocket'
+import { onEvent, sendMessage } from '../../services/websocket'
 import { motion, AnimatePresence } from 'framer-motion'
 import { stripe, jobs as jobsApi } from '../../services/api'
 import { useSearchParams, useNavigate } from 'react-router-dom'
@@ -79,12 +79,25 @@ export default function TrackDriver() {
     fetchAndVerify()
   }, [searchParams])
 
+  // Subscribe to live job room for WebSocket streaming telemetry
   useEffect(() => {
-    const u1 = onEvent('driver_location', ({ latitude, longitude }) => setDriverLoc({ lat: latitude, lng: longitude }))
+    if (!activeReq?.id) return
+    sendMessage({ type: 'subscribe_job', jobId: activeReq.id })
+    return () => {
+      sendMessage({ type: 'unsubscribe_job', jobId: activeReq.id })
+    }
+  }, [activeReq?.id])
+
+  useEffect(() => {
+    const u1 = onEvent('driver_location', ({ latitude, longitude, heading, speed }) => {
+      setDriverLoc({ lat: latitude, lng: longitude, heading: heading || 0, speed: speed || 0 })
+    })
     const uTelemetry = onEvent('job_telemetry', ({ telemetry }) => {
       if (telemetry?.geometry?.coordinates) {
         const [lng, lat] = telemetry.geometry.coordinates;
-        setDriverLoc({ lat, lng });
+        const heading = telemetry.properties?.heading || 0;
+        const speed = telemetry.properties?.speed || 0;
+        setDriverLoc({ lat, lng, heading, speed });
         if (telemetry.properties?.etaMinutes != null) setEta(telemetry.properties.etaMinutes);
       }
     })
@@ -93,7 +106,7 @@ export default function TrackDriver() {
       if (status === 'completed') setShowRating(true)
     })
     const u3 = onEvent('job_accepted',    ({ driver: d, eta: e }) => {
-      setDriver(d); setDriverLoc({ lat: d.lat, lng: d.lng }); setEta(e)
+      setDriver(d); setDriverLoc({ lat: d.lat, lng: d.lng, heading: d.heading || 0 }); setEta(e)
       setActiveReq(prev => prev ? { ...prev, status: 'accepted', driverId: d.id } : null)
     })
     const u4 = onEvent('price_proposed',  ({ amount }) => {
@@ -101,6 +114,35 @@ export default function TrackDriver() {
     })
     return () => { u1(); uTelemetry(); u2(); u3(); u4(); }
   }, [])
+
+  // 100% Real-time driver GPS tracking loop (fallback & instant sync every 2.0s)
+  useEffect(() => {
+    if (!activeReq?.id) return
+
+    let isMounted = true
+    const fetchLatestDriverLocation = async () => {
+      try {
+        const full = await jobsApi.get(activeReq.id)
+        if (!isMounted || !full?.driver) return
+        const d = full.driver
+        if (d.latitude != null && d.longitude != null && !isNaN(d.latitude) && !isNaN(d.longitude)) {
+          setDriverLoc({
+            lat: Number(d.latitude),
+            lng: Number(d.longitude),
+            heading: Number(d.heading || 0),
+            speed: Number(d.speed || 0)
+          })
+          setDriver(prev => ({ ...(prev || {}), ...d }))
+        }
+      } catch (err) {}
+    }
+
+    const interval = setInterval(fetchLatestDriverLocation, 2000)
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [activeReq?.id])
 
   useEffect(() => {
     if (eta > 0 && activeReq) {
@@ -171,6 +213,7 @@ export default function TrackDriver() {
     ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng) ? [{
       lat: Number(driverLoc.lat),
       lng: Number(driverLoc.lng),
+      heading: driverLoc.heading || 0,
       type: 'driver',
       label: driver?.name || 'Conductor'
     }] : []),
@@ -195,8 +238,10 @@ export default function TrackDriver() {
         <MapView
           markers={markers}
           center={trackCenter}
+          autoFollow={true}
+          followTarget={driverLoc}
           className="w-full h-full !rounded-none !border-none"
-          zoom={14}
+          zoom={15}
         />
       </div>
 

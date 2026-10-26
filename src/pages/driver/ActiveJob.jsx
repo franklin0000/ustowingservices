@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext'
 import { useNotifications } from '../../context/NotificationContext'
 import { SERVICE_TYPES } from '../../data/mockData'
 import { useNavigate } from 'react-router-dom'
-import { onEvent } from '../../services/websocket'
+import { onEvent, sendMessage } from '../../services/websocket'
 import MapView from '../../components/MapView'
 import LiveChat from '../../components/LiveChat'
 
@@ -89,30 +89,70 @@ export default function ActiveJob() {
     }
   }, [])
 
-  // Use real-time GPS tracking via HTML5 Geolocation API
+  // Listen to background driver_live_gps events dispatched by DriverLayout
   useEffect(() => {
-    if (!job || job.status === 'completed' || job.status === 'in_service') return
+    const handleLiveGps = (e) => {
+      if (e.detail?.lat && e.detail?.lng) {
+        setDriverLoc({
+          lat: e.detail.lat,
+          lng: e.detail.lng,
+          heading: e.detail.heading || 0,
+          speed: e.detail.speed || 0
+        });
+      }
+    };
+    window.addEventListener('driver_live_gps', handleLiveGps);
+    return () => window.removeEventListener('driver_live_gps', handleLiveGps);
+  }, []);
+
+  // Use real-time continuous GPS tracking via HTML5 Geolocation API
+  useEffect(() => {
+    if (!job || job.status === 'completed') return
 
     let watchId;
     if ('geolocation' in navigator) {
+      const handlePosition = (position) => {
+        const newLat = position.coords.latitude;
+        const newLng = position.coords.longitude;
+        const heading = position.coords.heading || 0;
+        const speed = position.coords.speed || 0;
+
+        setDriverLoc({ lat: newLat, lng: newLng, heading, speed });
+        
+        // 1. Send to server via API
+        updateLocation(newLat, newLng, heading, speed).catch(() => {});
+
+        // 2. Stream to WebSocket server so clients track in 100% real-time
+        sendMessage({
+          type: 'telemetry',
+          lat: newLat,
+          lng: newLng,
+          heading,
+          speed,
+          jobId: job.id,
+          destLat: job.destLat || job.dest_lat,
+          destLng: job.destLng || job.dest_lng,
+          timestamp: Date.now()
+        });
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        handlePosition,
+        (err) => console.warn('Initial GPS lock:', err.message),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 1000 }
+      );
+
       watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const newLat = position.coords.latitude;
-          const newLng = position.coords.longitude;
-          setDriverLoc({ lat: newLat, lng: newLng });
-          
-          // Send to server so client gets real-time map updates
-          updateLocation(newLat, newLng).catch(() => {});
-        },
-        (error) => console.error("GPS Error:", error),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+        handlePosition,
+        (error) => console.error('GPS Watch Error:', error),
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 1000 }
       );
     }
 
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [job, updateLocation])
+  }, [job?.id, job?.status, updateLocation]);
 
   // Also listen for job status changes in case client pays and it goes to en_route
   useEffect(() => {
@@ -210,6 +250,7 @@ export default function ActiveJob() {
             ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng) ? [{
               lat: Number(driverLoc.lat),
               lng: Number(driverLoc.lng),
+              heading: driverLoc.heading || 0,
               type: 'driver',
               label: 'Tú'
             }] : []),
@@ -222,9 +263,11 @@ export default function ActiveJob() {
             }] : [])
           ]}
           center={driverLoc ? [driverLoc.lat, driverLoc.lng] : (job?.pickupLat ? [Number(job.pickupLat), Number(job.pickupLng)] : undefined)}
+          autoFollow={true}
+          followTarget={driverLoc}
           onLocationFound={(coords) => setDriverLoc(coords)}
           className="h-full w-full !border-none !rounded-none"
-          zoom={14}
+          zoom={15}
         />
       </div>
 

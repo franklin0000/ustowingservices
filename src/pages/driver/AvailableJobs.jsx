@@ -51,6 +51,17 @@ export default function AvailableJobs() {
     return unsub
   }, [])
 
+  // Listen to real-time live GPS telemetry from background watcher
+  useEffect(() => {
+    const handleLiveGps = (e) => {
+      if (e.detail?.lat && e.detail?.lng) {
+        setDriverLoc({ lat: e.detail.lat, lng: e.detail.lng, heading: e.detail.heading || 0 })
+      }
+    }
+    window.addEventListener('driver_live_gps', handleLiveGps)
+    return () => window.removeEventListener('driver_live_gps', handleLiveGps)
+  }, [])
+
   const handleAccept = async (jobId) => {
     try {
       await acceptJob(jobId)
@@ -69,7 +80,7 @@ export default function AvailableJobs() {
 
   const mapMarkers = [
     ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng)
-      ? [{ lat: Number(driverLoc.lat), lng: Number(driverLoc.lng), type: 'driver', label: 'Tú (Conductor)' }]
+      ? [{ lat: Number(driverLoc.lat), lng: Number(driverLoc.lng), heading: driverLoc.heading || 0, type: 'driver', label: 'Tú (Conductor)' }]
       : []),
     ...jobs
       .filter(j => j && !isNaN(j.pickupLat || j.pickup_lat) && !isNaN(j.pickupLng || j.pickup_lng))

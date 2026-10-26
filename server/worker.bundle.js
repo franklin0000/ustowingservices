@@ -2286,11 +2286,33 @@ var worker_default = {
         const webSocketPair = new WebSocketPair();
         const [client, server] = Object.values(webSocketPair);
         server.accept();
+        server.send(JSON.stringify({ event: "connected", payload: { time: Date.now() } }));
         server.addEventListener("message", (event) => {
           try {
             const data = JSON.parse(event.data);
             if (data.type === "ping") {
-              server.send(JSON.stringify({ type: "pong" }));
+              server.send(JSON.stringify({ event: "pong", payload: { time: Date.now() } }));
+            } else if (data.type === "telemetry") {
+              const u = MEMORY_DB.users.find((usr) => usr.role === "driver");
+              const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === (data.driverId || u?.id)) || MEMORY_DB.driver_profiles[0];
+              if (dp && typeof data.lat === "number" && typeof data.lng === "number") {
+                dp.latitude = data.lat;
+                dp.longitude = data.lng;
+                if (data.heading != null) dp.heading = data.heading;
+                if (data.speed != null) dp.speed = data.speed;
+                dp.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+              }
+              server.send(JSON.stringify({
+                event: "driver_location",
+                payload: {
+                  driverId: dp?.user_id,
+                  latitude: data.lat,
+                  longitude: data.lng,
+                  heading: data.heading || 0,
+                  speed: data.speed || 0,
+                  updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+                }
+              }));
             }
           } catch (e) {
           }
@@ -2651,16 +2673,32 @@ async function handleApiRequest(request, url, env, secret, origin) {
   }
   if (path === "/api/drivers/location" && method === "PUT") {
     try {
-      const { latitude, longitude } = await request.json();
+      const { latitude, longitude, heading, speed } = await request.json();
       const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
       const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === u?.id) || MEMORY_DB.driver_profiles[0];
       if (dp) {
-        dp.latitude = latitude;
-        dp.longitude = longitude;
+        dp.latitude = Number(latitude);
+        dp.longitude = Number(longitude);
+        if (heading != null) dp.heading = Number(heading);
+        if (speed != null) dp.speed = Number(speed);
+        dp.updated_at = (/* @__PURE__ */ new Date()).toISOString();
       }
     } catch (e) {
     }
     return jsonResponse({ success: true }, 200, origin);
+  }
+  if (path.startsWith("/api/drivers/") && path.endsWith("/location") && method === "GET") {
+    const parts = path.split("/");
+    const driverId = parts[3];
+    const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === driverId) || MEMORY_DB.driver_profiles[0];
+    return jsonResponse({
+      driverId: dp?.user_id,
+      latitude: dp?.latitude || 25.7617,
+      longitude: dp?.longitude || -80.1918,
+      heading: dp?.heading || 0,
+      speed: dp?.speed || 0,
+      updatedAt: dp?.updated_at || (/* @__PURE__ */ new Date()).toISOString()
+    }, 200, origin);
   }
   if (path === "/api/drivers/active-job") {
     const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
@@ -2858,6 +2896,46 @@ async function handleApiRequest(request, url, env, secret, origin) {
       }, 200, origin);
     }
     return jsonResponse({ error: "Job not found" }, 404, origin);
+  }
+  if (path.startsWith("/api/jobs/") && method === "GET" && !path.endsWith("/available") && !path.endsWith("/my") && !path.endsWith("/nearby-drivers")) {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    const job = MEMORY_DB.jobs.find((j) => j.id === jobId) || MEMORY_DB.jobs[0];
+    if (!job) return jsonResponse({ error: "Job not found" }, 404, origin);
+    const driverUser = job.driver_id ? MEMORY_DB.users.find((u) => u.id === job.driver_id) : null;
+    const driverProfile = job.driver_id ? MEMORY_DB.driver_profiles.find((dp) => dp.user_id === job.driver_id) : null;
+    return jsonResponse({
+      id: job.id,
+      clientId: job.client_id,
+      driverId: job.driver_id,
+      serviceType: job.service_type,
+      vehicleType: job.vehicle_type,
+      vehicleDetails: job.vehicle_details,
+      pickupLocation: job.pickup_location,
+      pickupLat: job.pickup_lat,
+      pickupLng: job.pickup_lng,
+      destination: job.destination,
+      destLat: job.dest_lat,
+      destLng: job.dest_lng,
+      status: job.status,
+      amount: job.amount,
+      agreedPrice: job.agreed_price,
+      notes: job.notes,
+      createdAt: job.created_at,
+      driver: driverProfile ? {
+        id: driverProfile.user_id,
+        name: driverUser?.name || "Carlos Rivera",
+        phone: driverUser?.phone || "+1 800-555-0100",
+        avatar: driverUser?.avatar || null,
+        vehicle: driverProfile.vehicle || "Flatbed Tow Truck",
+        licensePlate: driverProfile.license_plate || "TOW-777",
+        latitude: driverProfile.latitude || 25.7617,
+        longitude: driverProfile.longitude || -80.1918,
+        heading: driverProfile.heading || 0,
+        speed: driverProfile.speed || 0,
+        rating: driverProfile.rating || 5
+      } : null
+    }, 200, origin);
   }
   if (path.startsWith("/api/jobs/") && path.endsWith("/status") && (method === "PUT" || method === "POST")) {
     const parts = path.split("/");

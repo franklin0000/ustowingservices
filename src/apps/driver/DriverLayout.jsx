@@ -1,16 +1,72 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
-import { Bell, LogOut, Truck, Wifi, WifiOff } from 'lucide-react'
+import { Bell, LogOut, Truck, Wifi, WifiOff, Radio } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
 import { motion } from 'framer-motion'
 import DriverNav from './DriverNav'
 import NotificationPanel from '../../components/NotificationPanel'
+import { drivers } from '../../services/api'
+import { sendMessage } from '../../services/websocket'
 
 export default function DriverLayout() {
   const { user, logout } = useAuth()
   const { unreadCount, setShowPanel } = useNotifications()
   const [isOnline, setIsOnline] = useState(true)
+  const [lastGpsTime, setLastGpsTime] = useState(null)
+
+  // Real-time 100% continuous driver GPS background telemetry
+  useEffect(() => {
+    if (!isOnline || !('geolocation' in navigator)) return
+
+    let watchId = null
+
+    const handlePosition = (position) => {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      const heading = position.coords.heading || 0
+      const speed = position.coords.speed || 0
+
+      setLastGpsTime(Date.now())
+
+      // 1. Send to server via HTTP
+      drivers.updateLocation(lat, lng, heading, speed).catch(() => {})
+
+      // 2. Stream to WebSocket server if connected
+      sendMessage({
+        type: 'telemetry',
+        lat,
+        lng,
+        heading,
+        speed,
+        driverId: user?.id,
+        timestamp: Date.now()
+      })
+
+      // 3. Dispatch to local map instances immediately
+      window.dispatchEvent(new CustomEvent('driver_live_gps', {
+        detail: { lat, lng, heading, speed }
+      }))
+    }
+
+    // Immediate fix
+    navigator.geolocation.getCurrentPosition(
+      handlePosition,
+      (err) => console.warn('[GPS Initial]', err.message),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    )
+
+    // Continuous watch
+    watchId = navigator.geolocation.watchPosition(
+      handlePosition,
+      (err) => console.warn('[GPS Watch]', err.message),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 1000 }
+    )
+
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId)
+    }
+  }, [isOnline, user?.id])
 
   return (
     <div className="driver-app min-h-screen bg-gray-900 text-gray-100">
@@ -36,7 +92,16 @@ export default function DriverLayout() {
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Live GPS Telemetry Indicator */}
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-sm" title="GPS 100% en tiempo real activo">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              </span>
+              <span>GPS 100%</span>
+            </div>
+
             {/* Online toggle */}
             <button
               onClick={() => setIsOnline(v => !v)}
