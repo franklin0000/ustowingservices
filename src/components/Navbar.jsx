@@ -1,4 +1,5 @@
 import { Bell, LogOut, Truck, ChevronDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../context/NotificationContext'
 import { useState } from 'react'
@@ -34,7 +35,7 @@ export default function Navbar() {
               <div className="fixed inset-0 z-40" onClick={() => setShowRoleMenu(false)} />
               <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-44 z-50">
                 <div className="px-3 py-1.5 text-xs text-gray-400 font-medium uppercase">Switch View</div>
-                {['client', 'driver', 'admin'].map(role => (
+                {['client', 'driver'].map(role => (
                   <button
                     key={role}
                     onClick={() => { switchRole(role); setShowRoleMenu(false) }}
@@ -44,6 +45,16 @@ export default function Navbar() {
                     {role.charAt(0).toUpperCase() + role.slice(1)} View
                   </button>
                 ))}
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setShowRoleMenu(false)}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition flex items-center gap-2 font-semibold text-purple-700 border-t border-gray-100"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-purple-600" />
+                    Admin Panel
+                  </Link>
+                )}
               </div>
             </>
           )}

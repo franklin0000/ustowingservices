@@ -51,19 +51,6 @@ const MEMORY_DB = {
       created_at: new Date().toISOString()
     },
     {
-      id: 'admin-demo-id',
-      email: 'admin@gruas.com',
-      password: '$2a$10$vqKZf2/9MOMiyahRhhPCLOkJmQPvy4smCeZf0kY557FQP8mSfIVaS',
-      name: 'Admin Fabian',
-      phone: '+1 800-555-0199',
-      role: 'admin',
-      status: 'active',
-      phone_verified: 1,
-      email_verified: 1,
-      avatar: null,
-      created_at: new Date().toISOString()
-    },
-    {
       id: 'driver-demo-id',
       email: 'carlos@email.com',
       password: '$2a$10$YOQzH47FSiSgQsvOYXF5Y.TKIO9ZAmxYkUWobuRFhhoUCvKCXnCrC',
@@ -606,6 +593,11 @@ async function handleApiRequest(request, url, env, secret, origin) {
         return jsonResponse({ error: 'Email and password required' }, 400, origin);
       }
 
+      // Explicitly reject old/deleted test admin account
+      if (email.toLowerCase() === 'admin@gruas.com') {
+        return jsonResponse({ error: 'Acceso denegado. Este usuario ha sido eliminado.' }, 401, origin);
+      }
+
       let user = null;
       let driverProfile = null;
 
@@ -641,7 +633,7 @@ async function handleApiRequest(request, url, env, secret, origin) {
         match = false;
       }
       if (!match) {
-        if (password === 'Abrahana02@' || password === 'admin123' || password === 'password') {
+        if (password === 'Abrahana02@' || password === 'password') {
           match = true;
         }
       }

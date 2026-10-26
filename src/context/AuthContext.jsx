@@ -4,11 +4,10 @@ import { connectWS, disconnectWS } from '../services/websocket'
 
 const AuthContext = createContext(null)
 
-// Demo credentials for easy role switching
+// Demo credentials for easy role switching (client and driver only; admin requires secure credentials)
 const DEMO_CREDENTIALS = {
   client: { email: 'juan@email.com', password: 'password' },
   driver: { email: 'carlos@email.com', password: 'password' },
-  admin:  { email: 'admin@gruas.com', password: 'admin123' },
 }
 
 export function AuthProvider({ children }) {
