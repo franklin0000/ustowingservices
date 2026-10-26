@@ -498,15 +498,15 @@ export default {
     // If static assets binding is configured, serve static assets with SPA fallback
     if (env?.ASSETS) {
       let res = await env.ASSETS.fetch(request);
-      if (res.status === 404 && request.method === 'GET' && !url.pathname.includes('.')) {
-        res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
+      if (res.status === 404 && !url.pathname.includes('.')) {
+        res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
       }
       
       const isHtmlOrSw = url.pathname === '/' || 
                          url.pathname.endsWith('.html') || 
                          url.pathname === '/sw.js' || 
                          url.pathname.startsWith('/registerSW') ||
-                         (!url.pathname.includes('.') && request.method === 'GET');
+                         (!url.pathname.includes('.'));
 
       if (isHtmlOrSw && res && (res.status === 200 || res.status === 304)) {
         const newHeaders = new Headers(res.headers);
