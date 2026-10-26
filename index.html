@@ -17,21 +17,17 @@
     />
     <script>
       (function() {
-        const CURRENT_VERSION = 'v2.3.0-safe-map';
+        const CURRENT_VERSION = 'v2.3.1-stable';
         const stored = localStorage.getItem('app_pwa_version_tag');
         if (stored && stored !== CURRENT_VERSION) {
-          if ('caches' in window) {
-            caches.keys().then(function(keys) {
-              for (let k of keys) caches.delete(k);
-            });
-          }
+          localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (let r of regs) r.unregister();
-            });
+              for (var i = 0; i < regs.length; i++) {
+                regs[i].update();
+              }
+            }).catch(function() {});
           }
-          localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
-          window.location.reload(true);
         } else {
           localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
         }

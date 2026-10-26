@@ -497,29 +497,41 @@ export default {
 
     // If static assets binding is configured, serve static assets with SPA fallback
     if (env?.ASSETS) {
-      let res = await env.ASSETS.fetch(request);
-      if (res.status === 404 && !url.pathname.includes('.')) {
-        res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
-      }
-      
-      const isHtmlOrSw = url.pathname === '/' || 
-                         url.pathname.endsWith('.html') || 
-                         url.pathname === '/sw.js' || 
-                         url.pathname.startsWith('/registerSW') ||
-                         (!url.pathname.includes('.'));
+      try {
+        let res = await env.ASSETS.fetch(request);
+        if (res.status === 404 && !url.pathname.includes('.')) {
+          res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), {
+            method: 'GET',
+            headers: { 'Accept': 'text/html' }
+          }));
+        }
+        
+        if (res && res.status === 304) {
+          return res;
+        }
 
-      if (isHtmlOrSw && res && (res.status === 200 || res.status === 304)) {
-        const newHeaders = new Headers(res.headers);
-        newHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-        newHeaders.set('Pragma', 'no-cache');
-        newHeaders.set('Expires', '0');
-        return new Response(res.body, {
-          status: res.status,
-          statusText: res.statusText,
-          headers: newHeaders
-        });
+        const isHtmlOrSw = url.pathname === '/' || 
+                           url.pathname.endsWith('.html') || 
+                           url.pathname === '/sw.js' || 
+                           url.pathname.startsWith('/registerSW') ||
+                           (!url.pathname.includes('.'));
+
+        if (isHtmlOrSw && res && res.status === 200) {
+          const newHeaders = new Headers(res.headers);
+          newHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+          newHeaders.set('Pragma', 'no-cache');
+          newHeaders.set('Expires', '0');
+          return new Response(res.body, {
+            status: 200,
+            statusText: 'OK',
+            headers: newHeaders
+          });
+        }
+        return res;
+      } catch (err) {
+        console.error('ASSETS handling error:', err);
+        return new Response('Server Error', { status: 500 });
       }
-      return res;
     }
 
     return new Response('Not Found', { status: 404 });
@@ -1111,23 +1123,24 @@ async function handleApiRequest(request, url, env, secret, origin) {
   if (path === '/api/jobs/available' && method === 'GET') {
     const available = MEMORY_DB.jobs.filter(j => j.status === 'pending' || !j.driver_id).map(j => ({
       id: j.id,
-      clientId: j.client_id,
-      clientName: j.client_name,
-      clientPhone: j.client_phone,
-      serviceType: j.service_type,
-      vehicleType: j.vehicle_type,
-      vehicleDetails: j.vehicle_details,
-      pickupLocation: j.pickup_location,
-      pickupLat: j.pickup_lat,
-      pickupLng: j.pickup_lng,
-      destination: j.destination,
-      destLat: j.dest_lat,
-      destLng: j.dest_lng,
-      amount: j.amount,
-      agreedPrice: j.agreed_price,
-      status: j.status,
-      notes: j.notes,
-      createdAt: j.created_at
+      clientId: j.client_id || j.clientId || 'client-demo-id',
+      clientName: j.client_name || j.clientName || 'Cliente',
+      clientPhone: j.client_phone || j.clientPhone || '+1 800-555-0102',
+      serviceType: j.service_type || j.serviceType || 'tow',
+      vehicleType: j.vehicle_type || j.vehicleType || 'Sedan',
+      vehicleDetails: j.vehicle_details || j.vehicleDetails || 'Vehículo Estándar',
+      pickupLocation: j.pickup_location || j.pickupLocation || 'Miami, FL',
+      pickupLat: Number(j.pickup_lat || j.pickupLat || 25.7617),
+      pickupLng: Number(j.pickup_lng || j.pickupLng || -80.1918),
+      destination: j.destination || null,
+      destLat: j.dest_lat || j.destLat || null,
+      destLng: j.dest_lng || j.destLng || null,
+      amount: Number(j.amount || 75),
+      agreedPrice: Number(j.agreed_price || j.agreedPrice || j.amount || 75),
+      status: j.status || 'pending',
+      notes: j.notes || null,
+      photos: Array.isArray(j.photos) ? j.photos : [],
+      createdAt: j.created_at || j.createdAt || new Date().toISOString()
     }));
     return jsonResponse(available, 200, origin);
   }

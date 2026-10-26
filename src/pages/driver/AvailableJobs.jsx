@@ -141,14 +141,14 @@ export default function AvailableJobs() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-gray-100 text-sm truncate">{service?.label || job.serviceType}</h3>
+                        <h3 className="font-bold text-gray-100 text-sm truncate">{service?.label || job.serviceType || 'Roadside Assistance'}</h3>
                         <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md">To Negotiate</span>
                       </div>
-                      <p className="text-xs text-gray-400 mb-3 truncate">{job.clientName} · {job.vehicleDetails}</p>
+                      <p className="text-xs text-gray-400 mb-3 truncate">{job.clientName || 'Cliente'} · {job.vehicleDetails || 'Standard Vehicle'}</p>
 
-                      {job.photos && job.photos.length > 0 && (
+                      {Array.isArray(job.photos) && job.photos.length > 0 && (
                         <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-                          {job.photos.map((url, idx) => (
+                          {(Array.isArray(job.photos) ? job.photos : []).map((url, idx) => (
                             <img key={idx} src={url} alt="Job" onClick={() => window.open(url, '_blank')}
                               className="w-16 h-16 object-cover rounded-lg border border-gray-700/50 cursor-pointer hover:opacity-80 transition" title="Click to enlarge" />
                           ))}
@@ -160,7 +160,7 @@ export default function AvailableJobs() {
                           <MapPin className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0" />
                           <div>
                             <p className="text-[10px] uppercase font-bold tracking-wider text-gray-500">Pickup</p>
-                            <p className="text-xs font-medium text-gray-300 truncate">{job.pickupLocation}</p>
+                            <p className="text-xs font-medium text-gray-300 truncate">{job.pickupLocation || 'Current Location'}</p>
                           </div>
                         </div>
                         {job.destination && (
