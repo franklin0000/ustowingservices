@@ -14,7 +14,7 @@ export default function AdminUsers() {
   const toggleStatus = async (id, current) => {
     const newStatus = current === 'active' ? 'suspended' : 'active'
     await updateUserStatus(id, newStatus)
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u))
+    setUsers(prev => (Array.isArray(prev) ? prev : []).map(u => u.id === id ? { ...u, status: newStatus } : u))
   }
 
   const userList = Array.isArray(users) ? users : []

@@ -24,9 +24,13 @@ export function NotificationProvider({ children }) {
     if (!isAuthenticated) return
     try {
       const data = await notifApi.list()
-      setNotifications(data.notifications)
-      setUnreadCount(data.unreadCount)
-    } catch { /* ignore */ }
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.notifications) ? data.notifications : [])
+      setNotifications(list)
+      setUnreadCount(typeof data?.unreadCount === 'number' ? data.unreadCount : list.filter(n => !n.read).length)
+    } catch {
+      setNotifications([])
+      setUnreadCount(0)
+    }
   }, [isAuthenticated])
 
   useEffect(() => {
@@ -69,7 +73,7 @@ export function NotificationProvider({ children }) {
   const markAsRead = useCallback(async (id) => {
     try {
       await notifApi.markRead(id)
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+      setNotifications(prev => (Array.isArray(prev) ? prev : []).map(n => n.id === id ? { ...n, read: true } : n))
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch { /* ignore */ }
   }, [])
@@ -77,7 +81,7 @@ export function NotificationProvider({ children }) {
   const markAllRead = useCallback(async () => {
     try {
       await notifApi.markAllRead()
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+      setNotifications(prev => (Array.isArray(prev) ? prev : []).map(n => ({ ...n, read: true })))
       setUnreadCount(0)
     } catch { /* ignore */ }
   }, [])

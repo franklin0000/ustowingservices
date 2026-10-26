@@ -81,7 +81,7 @@ export default function Earnings() {
     </div>
   )
 
-  const earningsData = (stats.weeklyRevenue || []).map(d => ({ ...d, earnings: d.revenue || 0 }))
+  const earningsData = (Array.isArray(stats?.weeklyRevenue) ? stats.weeklyRevenue : []).map(d => ({ ...d, earnings: d.revenue || 0 }))
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -177,9 +177,9 @@ export default function Earnings() {
             <h3 className="font-bold text-gray-100 text-sm uppercase tracking-wide">Payout History</h3>
           </div>
           <div className="space-y-3 flex-1 overflow-y-auto">
-            {(!payoutData.payouts || payoutData.payouts.length === 0) ? (
+            {(!Array.isArray(payoutData?.payouts) || payoutData.payouts.length === 0) ? (
               <p className="text-gray-500 text-sm text-center py-10">No payouts yet</p>
-            ) : (payoutData.payouts || []).map((p, i) => (
+            ) : (Array.isArray(payoutData?.payouts) ? payoutData.payouts : []).map((p, i) => (
               <motion.div key={p.id || i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                 className="flex items-center justify-between p-3 rounded-2xl bg-gray-900/50 border border-gray-800 transition group">
                 <div className="flex items-center gap-3">

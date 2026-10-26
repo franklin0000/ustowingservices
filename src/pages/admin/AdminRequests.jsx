@@ -59,7 +59,9 @@ export default function AdminRequests() {
   // Load chat history when detail modal is opened
   useEffect(() => {
     if (detail) {
-      getJobChat(detail.id).then(setChats).catch(() => {})
+      getJobChat(detail.id)
+        .then(res => setChats(Array.isArray(res) ? res : (Array.isArray(res?.messages) ? res.messages : [])))
+        .catch(() => setChats([]))
     } else {
       setChats([])
     }
@@ -137,7 +139,7 @@ export default function AdminRequests() {
           <th className="text-left text-xs font-semibold text-gray-400 uppercase py-3 px-4">Status</th>
           <th className="text-left text-xs font-semibold text-gray-400 uppercase py-3 px-4">Actions</th>
         </tr></thead><tbody>
-          {(jobs || []).map(req => {
+          {(Array.isArray(jobs) ? jobs : []).map(req => {
             const service = SERVICE_TYPES.find(s => s.id === req.serviceType)
             return (
               <tr key={req.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
@@ -206,10 +208,10 @@ export default function AdminRequests() {
             <div className="w-full md:w-[400px] border-l border-gray-100 md:pl-6 flex flex-col h-[400px] md:h-auto">
               <h3 className="text-lg font-bold mb-4">Live Negotiation & Chat</h3>
               <div className="flex-1 bg-gray-50 rounded-xl p-4 overflow-y-auto mb-4 flex flex-col gap-3">
-                {chats.length === 0 ? (
+                {(!Array.isArray(chats) || chats.length === 0) ? (
                   <p className="text-center text-gray-400 text-sm mt-10">No messages yet.</p>
                 ) : (
-                  chats.map(msg => {
+                  (Array.isArray(chats) ? chats : []).map(msg => {
                     const isSystem = msg.message.includes('proposed a final price')
                     return (
                       <div key={msg.id} className={`flex flex-col ${isSystem ? 'items-center' : (msg.senderId === detail.clientId ? 'items-start' : 'items-end')}`}>

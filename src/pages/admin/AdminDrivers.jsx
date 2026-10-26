@@ -67,7 +67,7 @@ export default function AdminDrivers() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map(driver => (
+        {(Array.isArray(filtered) ? filtered : []).map(driver => (
           <div key={driver.id} className="card hover:shadow-md transition-shadow flex flex-col justify-between">
             <div className="flex items-start gap-4">
               <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${driver.available && (driver.kycStatus || driver.kyc_status) === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>

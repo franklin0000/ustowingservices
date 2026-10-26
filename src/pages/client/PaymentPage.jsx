@@ -58,8 +58,11 @@ export default function PaymentPage() {
     }
   }
 
-  const paymentsList = Array.isArray(data?.payments) ? data.payments : []
+  const paymentsList = Array.isArray(data?.payments) ? data.payments : (Array.isArray(data) ? data : [])
   const filtered = paymentsList.filter(p => filter === 'all' || p.status === filter)
+  const totalSpent = Number(data?.totalSpent || 0)
+  const completedCount = Number(data?.completedCount ?? (filtered.filter(p => p.status === 'completed').length))
+  const pendingCount = Number(data?.pendingCount ?? (filtered.filter(p => p.status === 'pending').length))
 
   if (!loaded) return (
     <div className="flex justify-center py-20">
@@ -81,7 +84,7 @@ export default function PaymentPage() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <p className="text-blue-200 text-xs uppercase tracking-widest font-semibold">Total Spent</p>
-            <p className="text-4xl font-black mt-1">${data.totalSpent.toFixed(2)}</p>
+            <p className="text-4xl font-black mt-1">${totalSpent.toFixed(2)}</p>
           </div>
           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
             <DollarSign className="w-7 h-7 text-white" />
@@ -92,14 +95,14 @@ export default function PaymentPage() {
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <div>
               <p className="text-xs text-blue-200">Paid</p>
-              <p className="font-bold text-white">{data.completedCount}</p>
+              <p className="font-bold text-white">{completedCount}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-amber-400" />
             <div>
               <p className="text-xs text-blue-200">Pending</p>
-              <p className="font-bold text-white">{data.pendingCount}</p>
+              <p className="font-bold text-white">{pendingCount}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 ml-auto">
@@ -141,14 +144,14 @@ export default function PaymentPage() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {(!Array.isArray(filtered) || filtered.length === 0) ? (
           <div className="text-center py-10">
             <CreditCard className="w-10 h-10 text-gray-200 mx-auto mb-2" />
             <p className="text-sm text-gray-500">No transactions found</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {filtered.map((p, i) => (
+            {(Array.isArray(filtered) ? filtered : []).map((p, i) => (
               <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                 className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.status === 'completed' ? 'bg-emerald-100' : 'bg-amber-100'}`}>

@@ -161,7 +161,7 @@ export default function DriverDashboard() {
             <Link to="/driver/history" className="text-sm text-emerald-400 font-semibold hover:text-emerald-300 transition">View all</Link>
           </div>
           <div className="space-y-3">
-            {history.slice(0, 5).map(job => (
+            {(Array.isArray(history) ? history.slice(0, 5) : []).map(job => (
               <div key={job.id} className="flex items-center gap-4 p-3 rounded-2xl bg-gray-800 border border-gray-700 hover:border-gray-600 transition">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0
                   ${job.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>

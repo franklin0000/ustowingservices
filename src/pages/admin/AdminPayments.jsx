@@ -79,7 +79,7 @@ export default function AdminPayments() {
             <th className="text-right text-xs font-semibold text-gray-400 uppercase py-3 px-4">Fee</th>
             <th className="text-left text-xs font-semibold text-gray-400 uppercase py-3 px-4">Status</th>
           </tr></thead><tbody>
-            {filteredTx.map(p => (
+            {(Array.isArray(filteredTx) ? filteredTx : []).map(p => (
               <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
                 <td className="py-3 px-4 text-sm">{new Date(p.date || Date.now()).toLocaleDateString()}</td>
                 <td className="py-3 px-4 text-sm font-medium">{p.clientName}</td>
@@ -101,7 +101,7 @@ export default function AdminPayments() {
             <th className="text-center text-xs font-semibold text-gray-400 uppercase py-3 px-4">Status</th>
             <th className="text-right text-xs font-semibold text-gray-400 uppercase py-3 px-4">Actions</th>
           </tr></thead><tbody>
-            {filteredPayouts.map(p => (
+            {(Array.isArray(filteredPayouts) ? filteredPayouts : []).map(p => (
               <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
                 <td className="py-3 px-4 text-sm">{new Date(p.created_at || Date.now()).toLocaleDateString()}</td>
                 <td className="py-3 px-4 text-sm font-medium">{p.driver_name} <p className="text-xs text-gray-400">{p.driver_email}</p></td>

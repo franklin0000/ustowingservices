@@ -89,9 +89,9 @@ export default function DriverProfileModal({ driverId, isOpen, onClose }) {
             {/* Reviews */}
             <div>
               <h4 className="font-bold text-gray-900 mb-4">Recent Reviews</h4>
-              {profile.reviews && profile.reviews.length > 0 ? (
+              {Array.isArray(profile?.reviews) && profile.reviews.length > 0 ? (
                 <div className="space-y-4">
-                  {profile.reviews.map((rev, i) => (
+                  {(Array.isArray(profile.reviews) ? profile.reviews : []).map((rev, i) => (
                     <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-bold text-sm text-gray-800">{rev.clientName}</span>

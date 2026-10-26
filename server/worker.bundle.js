@@ -2975,10 +2975,30 @@ async function handleApiRequest(request, url, env, secret, origin) {
     return jsonResponse(job, 201, origin);
   }
   if (path === "/api/payments/my") {
-    return jsonResponse([], 200, origin);
+    const userPayments = authUser ? MEMORY_DB.payments.filter((p) => p.client_id === authUser.id) : MEMORY_DB.payments;
+    const totalSpent = userPayments.filter((p) => p.status === "completed").reduce((sum, p) => sum + (p.amount || 0), 0);
+    return jsonResponse({
+      totalSpent,
+      completedCount: userPayments.filter((p) => p.status === "completed").length,
+      pendingCount: userPayments.filter((p) => p.status === "pending").length,
+      payments: userPayments.map((p) => ({
+        id: p.id,
+        jobId: p.job_id,
+        amount: p.amount,
+        method: p.method || "card",
+        cardLast4: p.card_last4 || "4242",
+        status: p.status || "completed",
+        serviceType: p.service_type || "tow",
+        pickupLocation: p.pickup_location || "Miami, FL",
+        date: p.created_at || (/* @__PURE__ */ new Date()).toISOString()
+      }))
+    }, 200, origin);
   }
   if (path === "/api/notifications") {
-    return jsonResponse([], 200, origin);
+    return jsonResponse({
+      notifications: Array.isArray(MEMORY_DB.notifications) ? MEMORY_DB.notifications : [],
+      unreadCount: 0
+    }, 200, origin);
   }
   if ((path === "/api/admin/dashboard" || path === "/api/admin/metrics") && method === "GET") {
     const activeDriversList = MEMORY_DB.driver_profiles.map((dp) => {

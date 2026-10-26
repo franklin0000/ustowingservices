@@ -61,7 +61,7 @@ export default function AdminDashboard() {
     { label: 'Pending Requests', value: data.pendingRequests ?? 0, change: (data.pendingRequests ?? 0) > 0 ? 'Needs attention' : 'All clear', icon: Clock, color: 'bg-amber-100 text-amber-600', up: (data.pendingRequests ?? 0) === 0 },
   ]
 
-  const pieData = (data.serviceDistribution || []).map(s => ({
+  const pieData = (Array.isArray(data?.serviceDistribution) ? data.serviceDistribution : []).map(s => ({
     name: s.service_type || s.name || 'Service',
     value: Number(s.count ?? s.value ?? 0),
     color: SERVICE_COLORS[s.service_type || s.name] || '#6b7280'
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-gray-900 mb-4">Monthly Revenue</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.monthlyStats || []}>
+              <BarChart data={Array.isArray(data?.monthlyStats) ? data.monthlyStats : []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" /><XAxis dataKey="month" tick={{ fontSize: 13 }} /><YAxis tick={{ fontSize: 13 }} tickFormatter={v => `$${v / 1000}k`} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} formatter={(v) => [`$${v.toLocaleString()}`, 'Revenue']} />
                 <Bar dataKey="revenue" fill="#2563eb" radius={[6, 6, 0, 0]} />
@@ -186,12 +186,12 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-gray-900 mb-4">Service Distribution</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart><Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
-                {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              <PieChart><Pie data={Array.isArray(pieData) ? pieData : []} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
+                {(Array.isArray(pieData) ? pieData : []).map((entry, i) => <Cell key={i} fill={entry.color} />)}
               </Pie><Tooltip formatter={(v) => [`${v}%`, 'Share']} /></PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-2 mt-2">{pieData.map(s => (
+          <div className="space-y-2 mt-2">{(Array.isArray(pieData) ? pieData : []).map(s => (
             <div key={s.name} className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ background: s.color }} /><span className="text-gray-600">{s.name}</span></div><span className="font-semibold">{s.value}%</span></div>
           ))}</div>
         </div>
@@ -202,13 +202,13 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-gray-900 mb-4">Weekly Trend</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.weeklyRevenue || []}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" /><XAxis dataKey="day" tick={{ fontSize: 13 }} /><YAxis tick={{ fontSize: 13 }} /><Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} /><Line type="monotone" dataKey="jobs" stroke="#2563eb" strokeWidth={2.5} dot={{ fill: '#2563eb', r: 4 }} /></LineChart>
+              <LineChart data={Array.isArray(data?.weeklyRevenue) ? data.weeklyRevenue : []}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" /><XAxis dataKey="day" tick={{ fontSize: 13 }} /><YAxis tick={{ fontSize: 13 }} /><Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} /><Line type="monotone" dataKey="jobs" stroke="#2563eb" strokeWidth={2.5} dot={{ fill: '#2563eb', r: 4 }} /></LineChart>
             </ResponsiveContainer>
           </div>
         </div>
         <div className="card">
           <h3 className="font-bold text-gray-900 mb-4">Recent Requests</h3>
-          <div className="space-y-3">{(data.recentRequests || []).map(req => (
+          <div className="space-y-3">{(Array.isArray(data?.recentRequests) ? data.recentRequests : []).map(req => (
             <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${req.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : req.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
                 {req.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : req.status === 'pending' ? <Clock className="w-5 h-5" /> : <Truck className="w-5 h-5" />}

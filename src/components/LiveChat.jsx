@@ -16,12 +16,13 @@ export default function LiveChat({ jobId, otherPartyName, otherPartyAvatar, onCl
     // Fetch chat history
     jobs.getChat(jobId)
       .then(msgs => {
-        setMessages(msgs)
+        setMessages(Array.isArray(msgs) ? msgs : (Array.isArray(msgs?.messages) ? msgs.messages : []))
         setLoading(false)
         scrollToBottom()
       })
       .catch(err => {
         console.error('Failed to load chat', err)
+        setMessages([])
         setLoading(false)
       })
 
@@ -111,13 +112,13 @@ export default function LiveChat({ jobId, otherPartyName, otherPartyAvatar, onCl
               <div className="flex justify-center py-10">
                 <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full" />
               </div>
-            ) : messages.length === 0 ? (
+            ) : (!Array.isArray(messages) || messages.length === 0) ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 opacity-50">
                 <MapPin className="w-12 h-12 text-gray-400 mb-3" />
                 <p className="text-sm font-medium text-gray-600">Send a message to coordinate the pickup.</p>
               </div>
             ) : (
-              messages.map((msg, i) => {
+              (Array.isArray(messages) ? messages : []).map((msg, i) => {
                 const isMe = msg.senderId === user.id
                 return (
                   <div key={msg.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>

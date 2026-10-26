@@ -19,16 +19,16 @@ export default function AdminAnalytics() {
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full" /></div>
 
   // Add colors to regionData
-  const regionData = (data.topRegions || []).map((r, i) => ({ ...r, color: SERVICE_COLORS[i % SERVICE_COLORS.length] }))
+  const regionData = (Array.isArray(data?.topRegions) ? data.topRegions : []).map((r, i) => ({ ...r, color: SERVICE_COLORS[i % SERVICE_COLORS.length] }))
 
   // Mock response time data for visual effect since we don't track full lifecycle times yet
   const responseTimeData = [
     { month: 'Jan', avgTime: 12 }, { month: 'Feb', avgTime: 10 }, { month: 'Mar', avgTime: 11 },
-    { month: 'Apr', avgTime: 8 }, { month: 'May', avgTime: data.avgResponseTime || 8 },
+    { month: 'Apr', avgTime: 8 }, { month: 'May', avgTime: data?.avgResponseTime || 8 },
   ]
 
   // Format hourly data for display
-  const hourlyData = (data.hourlyDistribution || []).map(h => ({
+  const hourlyData = (Array.isArray(data?.hourlyDistribution) ? data.hourlyDistribution : []).map(h => ({
     hour: h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? '12pm' : `${h.hour - 12}pm`,
     requests: h.requests || 0
   }))
@@ -103,7 +103,7 @@ export default function AdminAnalytics() {
           <h3 className="font-bold text-gray-900 mb-4">Monthly Jobs & Revenue</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.monthlyStats || []}>
+              <BarChart data={Array.isArray(data?.monthlyStats) ? data.monthlyStats : []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 13 }} />
                 <YAxis yAxisId="left" tick={{ fontSize: 13 }} />
@@ -123,8 +123,8 @@ export default function AdminAnalytics() {
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={regionData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value" paddingAngle={3}>
-                  {regionData.map((entry, i) => (
+                <Pie data={Array.isArray(regionData) ? regionData : []} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value" paddingAngle={3}>
+                  {(Array.isArray(regionData) ? regionData : []).map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
@@ -133,7 +133,7 @@ export default function AdminAnalytics() {
             </ResponsiveContainer>
           </div>
           <div className="space-y-2">
-            {regionData.map(r => (
+            {(Array.isArray(regionData) ? regionData : []).map(r => (
               <div key={r.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ background: r.color }} />

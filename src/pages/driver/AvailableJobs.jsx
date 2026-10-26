@@ -118,14 +118,14 @@ export default function AvailableJobs() {
         )}
 
         <div className="space-y-3 flex-1">
-          {jobs.length === 0 ? (
+          {(!Array.isArray(jobs) || jobs.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-gray-800/30 rounded-2xl border border-gray-800 border-dashed">
               <Navigation className="w-12 h-12 text-gray-600 mb-3" />
               <h2 className="text-lg font-semibold text-gray-300">No Jobs Available</h2>
               <p className="text-sm text-gray-500 mt-1">Stay online, new requests will appear here.</p>
             </div>
           ) : (
-            jobs.map((job, i) => {
+            (Array.isArray(jobs) ? jobs : []).map((job, i) => {
               const service = SERVICE_TYPES.find(s => s.id === job.serviceType)
               return (
                 <motion.div key={job.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}

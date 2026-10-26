@@ -452,7 +452,7 @@ export default function MapView({
         )}
 
         {/* Custom manual connections */}
-        {validConnections.length > 0 && validConnections.map((pts, idx) => (
+        {Array.isArray(validConnections) && validConnections.length > 0 && validConnections.map((pts, idx) => (
           <Polyline 
             key={`conn-${idx}`} 
             positions={pts} 
@@ -460,7 +460,7 @@ export default function MapView({
           />
         ))}
 
-        {allDisplayMarkers.map((marker, i) => {
+        {(Array.isArray(allDisplayMarkers) ? allDisplayMarkers : []).map((marker, i) => {
           const icon = marker.type === 'my_location'
             ? myLocationIcon
             : marker.type === 'client'

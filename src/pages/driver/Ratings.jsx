@@ -80,14 +80,14 @@ export default function Ratings() {
           <MessageSquare className="w-5 h-5 text-emerald-400" /> Client Reviews
         </h3>
         <div className="space-y-4">
-          {(!data.reviews || data.reviews.length === 0) ? (
+          {(!Array.isArray(data?.reviews) || data.reviews.length === 0) ? (
             <div className="text-center py-10 bg-gray-900/50 rounded-2xl border border-dashed border-gray-700">
               <MessageSquare className="w-10 h-10 text-gray-600 mx-auto mb-3" />
               <p className="text-gray-400 font-semibold">No reviews yet</p>
               <p className="text-xs text-gray-500 mt-1">Keep providing great service to earn reviews.</p>
             </div>
           ) : (
-            (data.reviews || []).map((r, i) => (
+            (Array.isArray(data?.reviews) ? data.reviews : []).map((r, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 className="p-5 rounded-2xl bg-gray-900/50 border border-gray-700/50 hover:bg-gray-900 transition">
                 <div className="flex items-center justify-between mb-3">

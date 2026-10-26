@@ -42,7 +42,7 @@ export default function NotificationPanel() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {notifications.length === 0 ? (
+          {(!Array.isArray(notifications) || notifications.length === 0) ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <Bell className="w-12 h-12 mb-3" />
               <p className="font-medium">No notifications</p>
@@ -50,7 +50,7 @@ export default function NotificationPanel() {
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {notifications.map(notif => {
+              {(Array.isArray(notifications) ? notifications : []).map(notif => {
                 const Icon = typeIcons[notif.type] || Bell
                 return (
                   <button
