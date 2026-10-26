@@ -17,19 +17,22 @@
     />
     <script>
       (function() {
-        const CURRENT_VERSION = 'v2.3.1-stable';
+        const CURRENT_VERSION = 'v2.3.3-stable';
         const stored = localStorage.getItem('app_pwa_version_tag');
-        if (stored && stored !== CURRENT_VERSION) {
+        if (stored !== CURRENT_VERSION) {
           localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(regs) {
               for (var i = 0; i < regs.length; i++) {
-                regs[i].update();
+                regs[i].unregister();
               }
             }).catch(function() {});
           }
-        } else {
-          localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              names.forEach(function(name) { caches.delete(name); });
+            }).catch(function() {});
+          }
         }
       })();
     </script>

@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import fs from 'node:fs'
 
 export default defineConfig({
+  base: '/',
   build: {
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
@@ -36,7 +37,9 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true
+        skipWaiting: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/ws/, /^\/uploads/]
       },
       includeAssets: ['logo-192.png', 'logo-512.png'],
       manifest: {

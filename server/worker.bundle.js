@@ -2335,19 +2335,26 @@ var worker_default = {
     }
     if (env?.ASSETS) {
       try {
-        let res = await env.ASSETS.fetch(request);
-        if (res.status === 404 && !url.pathname.includes(".")) {
+        const isSpaRoute = !url.pathname.includes(".") && !url.pathname.startsWith("/api/") && !url.pathname.startsWith("/ws");
+        let res;
+        if (isSpaRoute) {
           res = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), {
             method: "GET",
             headers: { "Accept": "text/html" }
           }));
+        } else {
+          res = await env.ASSETS.fetch(request);
+          if (res.status === 404 && !url.pathname.includes(".")) {
+            res = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), {
+              method: "GET",
+              headers: { "Accept": "text/html" }
+            }));
+          }
         }
-        if (res && res.status === 304) {
-          return res;
-        }
-        const isHtmlOrSw = url.pathname === "/" || url.pathname.endsWith(".html") || url.pathname === "/sw.js" || url.pathname.startsWith("/registerSW") || !url.pathname.includes(".");
-        if (isHtmlOrSw && res && res.status === 200) {
+        const isHtmlOrSw = url.pathname === "/" || url.pathname.endsWith(".html") || url.pathname === "/sw.js" || url.pathname.startsWith("/registerSW") || isSpaRoute;
+        if (isHtmlOrSw && res) {
           const newHeaders = new Headers(res.headers);
+          newHeaders.set("Content-Type", url.pathname.endsWith(".js") ? "application/javascript" : "text/html; charset=utf-8");
           newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
           newHeaders.set("Pragma", "no-cache");
           newHeaders.set("Expires", "0");
@@ -2356,6 +2363,9 @@ var worker_default = {
             statusText: "OK",
             headers: newHeaders
           });
+        }
+        if (res && res.status === 304) {
+          return res;
         }
         return res;
       } catch (err) {
