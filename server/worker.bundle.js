@@ -2180,8 +2180,23 @@ var MEMORY_DB = {
       { id: "chat-2", jobId: "job-101", senderId: "99df741a-2495-4dad-9718-cbab7d71baf5", senderName: "Carlos Rivera", message: "Got it, on my way! Arriving in 10 minutes.", createdAt: new Date(Date.now() - 36e5 * 5 + 6e4).toISOString() }
     ]
   },
-  notifications: []
+  notifications: [],
+  payment_methods: [
+    { id: "pm-1", type: "card", brand: "visa", last4: "4242", expMonth: 12, expYear: 2028, isDefault: true },
+    { id: "pm-2", type: "card", brand: "mastercard", last4: "8888", expMonth: 10, expYear: 2027, isDefault: false }
+  ]
 };
+var WS_CLIENTS = /* @__PURE__ */ new Set();
+function broadcastWs(event, payload) {
+  const msg = JSON.stringify({ event, payload, timestamp: Date.now() });
+  for (const client of WS_CLIENTS) {
+    try {
+      client.send(msg);
+    } catch (e) {
+      WS_CLIENTS.delete(client);
+    }
+  }
+}
 async function createJWT(payload, secretStr) {
   const enc = new TextEncoder();
   const header = { alg: "HS256", typ: "JWT" };
@@ -2273,7 +2288,14 @@ var worker_default = {
         const webSocketPair = new WebSocketPair();
         const [client, server] = Object.values(webSocketPair);
         server.accept();
+        WS_CLIENTS.add(server);
         server.send(JSON.stringify({ event: "connected", payload: { time: Date.now() } }));
+        server.addEventListener("close", () => {
+          WS_CLIENTS.delete(server);
+        });
+        server.addEventListener("error", () => {
+          WS_CLIENTS.delete(server);
+        });
         server.addEventListener("message", (event) => {
           try {
             const data = JSON.parse(event.data);
@@ -2289,17 +2311,15 @@ var worker_default = {
                 if (data.speed != null) dp.speed = data.speed;
                 dp.updated_at = (/* @__PURE__ */ new Date()).toISOString();
               }
-              server.send(JSON.stringify({
-                event: "driver_location",
-                payload: {
-                  driverId: dp?.user_id,
-                  latitude: data.lat,
-                  longitude: data.lng,
-                  heading: data.heading || 0,
-                  speed: data.speed || 0,
-                  updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-                }
-              }));
+              const locPayload = {
+                driverId: dp?.user_id,
+                latitude: data.lat,
+                longitude: data.lng,
+                heading: data.heading || 0,
+                speed: data.speed || 0,
+                updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+              };
+              broadcastWs("driver_location", locPayload);
             }
           } catch (e) {
           }
@@ -2715,27 +2735,30 @@ async function handleApiRequest(request, url, env, secret, origin) {
   }
   if (path === "/api/drivers/active-job") {
     const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
-    const job = MEMORY_DB.jobs.find((j) => j.driver_id === u?.id && ["accepted", "negotiating", "en_route", "arrived", "in_service"].includes(j.status));
+    const job = MEMORY_DB.jobs.find(
+      (j) => (j.driver_id === u?.id || j.driverId === u?.id || !u && j.driver_id) && ["accepted", "negotiating", "en_route", "arrived", "in_service"].includes(j.status)
+    );
     if (!job) return jsonResponse(null, 200, origin);
     return jsonResponse({
       id: job.id,
-      clientId: job.client_id,
-      clientName: job.client_name,
-      clientPhone: job.client_phone,
-      serviceType: job.service_type,
-      vehicleType: job.vehicle_type,
-      vehicleDetails: job.vehicle_details,
-      pickupLocation: job.pickup_location,
-      pickupLat: job.pickup_lat,
-      pickupLng: job.pickup_lng,
+      clientId: job.client_id || job.clientId,
+      clientName: job.client_name || job.clientName || "Cliente",
+      clientPhone: job.client_phone || job.clientPhone || "+1 800-555-0102",
+      serviceType: job.service_type || job.serviceType,
+      vehicleType: job.vehicle_type || job.vehicleType || "Sedan",
+      vehicleDetails: job.vehicle_details || job.vehicleDetails || "Standard",
+      pickupLocation: job.pickup_location || job.pickupLocation,
+      pickupLat: Number(job.pickup_lat || job.pickupLat || 25.7617),
+      pickupLng: Number(job.pickup_lng || job.pickupLng || -80.1918),
       destination: job.destination,
-      destLat: job.dest_lat,
-      destLng: job.dest_lng,
-      amount: job.amount,
-      agreedPrice: job.agreed_price,
+      destLat: job.dest_lat ? Number(job.dest_lat) : job.destLat ? Number(job.destLat) : null,
+      destLng: job.dest_lng ? Number(job.dest_lng) : job.destLng ? Number(job.destLng) : null,
+      amount: Number(job.amount || 85),
+      agreedPrice: Number(job.agreed_price || job.agreedPrice || job.amount || 85),
       status: job.status,
       notes: job.notes,
-      createdAt: job.created_at
+      photos: Array.isArray(job.photos) ? job.photos : [],
+      createdAt: job.created_at || job.createdAt
     }, 200, origin);
   }
   if (path === "/api/drivers/earnings") {
@@ -2858,26 +2881,84 @@ async function handleApiRequest(request, url, env, secret, origin) {
   }
   if (path === "/api/jobs/my" && method === "GET") {
     const u = authUser || MEMORY_DB.users[0];
-    const myJobs = MEMORY_DB.jobs.filter((j) => j.client_id === u?.id || j.driver_id === u?.id);
-    return jsonResponse(myJobs, 200, origin);
+    const myJobs = MEMORY_DB.jobs.filter(
+      (j) => !u || u.role === "admin" || j.client_id === u.id || j.clientId === u.id || j.driver_id === u.id || j.driverId === u.id || j.client_id === "client-demo-id"
+    );
+    const formatted = myJobs.map((j) => {
+      const driverUser = j.driver_id ? MEMORY_DB.users.find((usr) => usr.id === j.driver_id) : null;
+      const driverProfile = j.driver_id ? MEMORY_DB.driver_profiles.find((dp) => dp.user_id === j.driver_id) : null;
+      return {
+        id: j.id,
+        clientId: j.client_id || j.clientId || "client-demo-id",
+        client_id: j.client_id || j.clientId || "client-demo-id",
+        driverId: j.driver_id || j.driverId || null,
+        driver_id: j.driver_id || j.driverId || null,
+        clientName: j.client_name || j.clientName || "Cliente",
+        clientPhone: j.client_phone || j.clientPhone || "+1 800-555-0102",
+        driverName: j.driver_name || j.driverName || driverUser?.name || (j.driver_id ? "Carlos Rivera" : null),
+        serviceType: j.service_type || j.serviceType || "tow",
+        service_type: j.service_type || j.serviceType || "tow",
+        vehicleType: j.vehicle_type || j.vehicleType || "Sedan",
+        vehicleDetails: j.vehicle_details || j.vehicleDetails || "Standard",
+        pickupLocation: j.pickup_location || j.pickupLocation || "Miami, FL",
+        pickup_location: j.pickup_location || j.pickupLocation || "Miami, FL",
+        pickupLat: Number(j.pickup_lat || j.pickupLat || 25.7617),
+        pickup_lat: Number(j.pickup_lat || j.pickupLat || 25.7617),
+        pickupLng: Number(j.pickup_lng || j.pickupLng || -80.1918),
+        pickup_lng: Number(j.pickup_lng || j.pickupLng || -80.1918),
+        destination: j.destination || null,
+        destLat: j.dest_lat ? Number(j.dest_lat) : j.destLat ? Number(j.destLat) : null,
+        dest_lat: j.dest_lat ? Number(j.dest_lat) : j.destLat ? Number(j.destLat) : null,
+        destLng: j.dest_lng ? Number(j.dest_lng) : j.destLng ? Number(j.destLng) : null,
+        dest_lng: j.dest_lng ? Number(j.dest_lng) : j.destLng ? Number(j.destLng) : null,
+        amount: Number(j.amount || 85),
+        agreedPrice: Number(j.agreed_price || j.agreedPrice || j.amount || 85),
+        agreed_price: Number(j.agreed_price || j.agreedPrice || j.amount || 85),
+        status: j.status || "pending",
+        photos: Array.isArray(j.photos) ? j.photos : [],
+        notes: j.notes || null,
+        createdAt: j.created_at || j.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+        created_at: j.created_at || j.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+        driver: j.driver_id ? {
+          id: j.driver_id,
+          name: j.driver_name || j.driverName || driverUser?.name || "Carlos Rivera",
+          phone: driverUser?.phone || "+1 800-555-0100",
+          avatar: driverUser?.avatar || null,
+          vehicle: driverProfile?.vehicle || "Flatbed Tow Truck",
+          licensePlate: driverProfile?.license_plate || "TOW-777",
+          latitude: Number(driverProfile?.latitude || 25.7617),
+          longitude: Number(driverProfile?.longitude || -80.1918),
+          rating: Number(driverProfile?.rating || 5)
+        } : null
+      };
+    });
+    return jsonResponse(formatted, 200, origin);
   }
   if (path === "/api/jobs/available" && method === "GET") {
     const available = MEMORY_DB.jobs.filter((j) => j.status === "pending" || !j.driver_id).map((j) => ({
       id: j.id,
       clientId: j.client_id || j.clientId || "client-demo-id",
+      client_id: j.client_id || j.clientId || "client-demo-id",
       clientName: j.client_name || j.clientName || "Cliente",
       clientPhone: j.client_phone || j.clientPhone || "+1 800-555-0102",
       serviceType: j.service_type || j.serviceType || "tow",
+      service_type: j.service_type || j.serviceType || "tow",
       vehicleType: j.vehicle_type || j.vehicleType || "Sedan",
       vehicleDetails: j.vehicle_details || j.vehicleDetails || "Veh\xEDculo Est\xE1ndar",
       pickupLocation: j.pickup_location || j.pickupLocation || "Miami, FL",
+      pickup_location: j.pickup_location || j.pickupLocation || "Miami, FL",
       pickupLat: Number(j.pickup_lat || j.pickupLat || 25.7617),
+      pickup_lat: Number(j.pickup_lat || j.pickupLat || 25.7617),
       pickupLng: Number(j.pickup_lng || j.pickupLng || -80.1918),
+      pickup_lng: Number(j.pickup_lng || j.pickupLng || -80.1918),
       destination: j.destination || null,
-      destLat: j.dest_lat || j.destLat || null,
-      destLng: j.dest_lng || j.destLng || null,
+      destLat: j.dest_lat ? Number(j.dest_lat) : j.destLat ? Number(j.destLat) : null,
+      dest_lat: j.dest_lat ? Number(j.dest_lat) : j.destLat ? Number(j.destLat) : null,
+      destLng: j.dest_lng ? Number(j.dest_lng) : j.destLng ? Number(j.destLng) : null,
+      dest_lng: j.dest_lng ? Number(j.dest_lng) : j.destLng ? Number(j.destLng) : null,
       amount: Number(j.amount || 75),
       agreedPrice: Number(j.agreed_price || j.agreedPrice || j.amount || 75),
+      agreed_price: Number(j.agreed_price || j.agreedPrice || j.amount || 75),
       status: j.status || "pending",
       notes: j.notes || null,
       photos: Array.isArray(j.photos) ? j.photos : [],
@@ -2891,13 +2972,48 @@ async function handleApiRequest(request, url, env, secret, origin) {
     const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
     const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
     if (job) {
-      job.driver_id = u?.id || "driver-demo-id";
-      job.driver_name = u?.name || "Carlos Rivera";
-      job.status = "en_route";
+      const driverId = u?.id || "99df741a-2495-4dad-9718-cbab7d71baf5";
+      const driverName = u?.name || "Carlos Rivera";
+      job.driver_id = driverId;
+      job.driverId = driverId;
+      job.driver_name = driverName;
+      job.driverName = driverName;
+      job.status = "accepted";
+      job.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === driverId) || MEMORY_DB.driver_profiles[0];
+      const driverObj = {
+        id: driverId,
+        name: driverName,
+        phone: u?.phone || "+1 800-555-0100",
+        avatar: u?.avatar || null,
+        vehicle: dp?.vehicle || "Flatbed Tow Truck",
+        licensePlate: dp?.license_plate || "TOW-777",
+        latitude: Number(dp?.latitude || 25.7617),
+        longitude: Number(dp?.longitude || -80.1918),
+        heading: Number(dp?.heading || 0),
+        speed: Number(dp?.speed || 0),
+        rating: Number(dp?.rating || 5)
+      };
+      broadcastWs("job_accepted", {
+        jobId: job.id,
+        job,
+        driver: driverObj,
+        eta: 8
+      });
+      broadcastWs("job_status", {
+        jobId: job.id,
+        status: "accepted",
+        driver: driverObj
+      });
       return jsonResponse({
         id: job.id,
         clientId: job.client_id,
+        client_id: job.client_id,
+        driverId: job.driver_id,
+        driver_id: job.driver_id,
         clientName: job.client_name,
+        clientPhone: job.client_phone,
+        driverName: job.driver_name,
         serviceType: job.service_type,
         pickupLocation: job.pickup_location,
         pickupLat: job.pickup_lat,
@@ -2906,10 +3022,110 @@ async function handleApiRequest(request, url, env, secret, origin) {
         destLat: job.dest_lat,
         destLng: job.dest_lng,
         status: job.status,
-        amount: job.amount
+        amount: job.amount,
+        agreedPrice: job.agreed_price,
+        photos: Array.isArray(job.photos) ? job.photos : [],
+        driver: driverObj
       }, 200, origin);
     }
     return jsonResponse({ error: "Job not found" }, 404, origin);
+  }
+  if (path.startsWith("/api/jobs/") && path.endsWith("/propose-price") && method === "POST") {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
+    if (!job) return jsonResponse({ error: "Job not found" }, 404, origin);
+    try {
+      const body = await request.json();
+      const amount = Number(body.amount);
+      if (!amount) return jsonResponse({ error: "Valid amount required" }, 400, origin);
+      job.agreed_price = amount;
+      job.agreedPrice = amount;
+      job.status = "negotiating";
+      job.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+      const dp = MEMORY_DB.driver_profiles.find((p) => p.user_id === job.driver_id) || MEMORY_DB.driver_profiles[0];
+      const driverObj = {
+        id: job.driver_id,
+        name: job.driver_name || u?.name || "Carlos Rivera",
+        phone: u?.phone || "+1 800-555-0100",
+        avatar: u?.avatar || null,
+        vehicle: dp?.vehicle || "Flatbed Tow Truck",
+        licensePlate: dp?.license_plate || "TOW-777",
+        latitude: Number(dp?.latitude || 25.7617),
+        longitude: Number(dp?.longitude || -80.1918),
+        rating: Number(dp?.rating || 5)
+      };
+      if (!MEMORY_DB.job_chats[job.id]) MEMORY_DB.job_chats[job.id] = [];
+      MEMORY_DB.job_chats[job.id].push({
+        id: "chat-" + Date.now(),
+        jobId: job.id,
+        senderId: u?.id || "driver",
+        senderName: u?.name || "Carlos Rivera",
+        message: `I have proposed a final price of $${amount}. Please review and pay.`,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      broadcastWs("price_proposed", { jobId: job.id, amount });
+      broadcastWs("job_negotiating", { jobId: job.id, amount, driver: driverObj });
+      broadcastWs("job_status", { jobId: job.id, status: "negotiating", agreedPrice: amount, driver: driverObj });
+      return jsonResponse({ success: true, agreedPrice: amount, status: job.status }, 200, origin);
+    } catch (e) {
+      return jsonResponse({ error: "Failed to propose price" }, 400, origin);
+    }
+  }
+  if (path.startsWith("/api/jobs/") && path.endsWith("/cancel") && (method === "PUT" || method === "POST")) {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
+    if (job) {
+      job.status = "cancelled";
+      job.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+      broadcastWs("job_cancelled", { jobId: job.id });
+      broadcastWs("job_status", { jobId: job.id, status: "cancelled" });
+      return jsonResponse({ success: true, status: "cancelled" }, 200, origin);
+    }
+    return jsonResponse({ error: "Job not found" }, 404, origin);
+  }
+  if (path.startsWith("/api/jobs/") && path.endsWith("/rate") && (method === "PUT" || method === "POST")) {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    const body = await request.json().catch(() => ({}));
+    const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
+    if (job) {
+      job.rating = Number(body.rating) || 5;
+      job.review = body.review || "";
+      return jsonResponse({ success: true, rating: job.rating }, 200, origin);
+    }
+    return jsonResponse({ error: "Job not found" }, 404, origin);
+  }
+  if (path === "/api/jobs/upload" && method === "POST") {
+    try {
+      const contentType = request.headers.get("content-type") || "";
+      if (contentType.includes("multipart/form-data")) {
+        const formData = await request.formData();
+        const file = formData.get("photo") || formData.get("file") || formData.get("image");
+        if (file && typeof file === "object") {
+          const buffer = await file.arrayBuffer();
+          const bytes = new Uint8Array(buffer);
+          let binary = "";
+          const chunkSize = 8192;
+          for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+          }
+          const base64 = btoa(binary);
+          const mime = file.type || "image/jpeg";
+          const dataUrl = `data:${mime};base64,${base64}`;
+          return jsonResponse({ photoUrl: dataUrl, success: true }, 200, origin);
+        }
+      } else if (contentType.includes("application/json")) {
+        const body = await request.json();
+        const photoUrl = body.photoUrl || body.photo || "";
+        return jsonResponse({ photoUrl, success: true }, 200, origin);
+      }
+    } catch (err) {
+      return jsonResponse({ error: "Failed to process photo upload" }, 400, origin);
+    }
+    return jsonResponse({ error: "No photo received" }, 400, origin);
   }
   if ((path === "/api/jobs/nearby-drivers" || path.startsWith("/api/jobs/nearby-drivers")) && method === "GET") {
     const lat = parseFloat(url.searchParams.get("lat") || "25.7617");
@@ -2922,13 +3138,13 @@ async function handleApiRequest(request, url, env, secret, origin) {
         latitude: Number(dp.latitude),
         longitude: Number(dp.longitude),
         vehicle: dp.vehicle || "Grua de plataforma",
-        rating: dp.rating || 5,
+        rating: Number(dp.rating || 5),
         phone: u.phone || "+1 800-555-0100"
       };
     });
     return jsonResponse(list, 200, origin);
   }
-  if (path.startsWith("/api/jobs/") && method === "GET" && !path.endsWith("/available") && !path.endsWith("/my") && !path.endsWith("/nearby-drivers")) {
+  if (path.startsWith("/api/jobs/") && method === "GET" && !path.endsWith("/available") && !path.endsWith("/my") && !path.endsWith("/nearby-drivers") && !path.endsWith("/chat")) {
     const parts = path.split("/");
     const jobId = parts[3];
     const job = MEMORY_DB.jobs.find((j) => j.id === jobId) || MEMORY_DB.jobs[0];
@@ -2937,34 +3153,47 @@ async function handleApiRequest(request, url, env, secret, origin) {
     const driverProfile = job.driver_id ? MEMORY_DB.driver_profiles.find((dp) => dp.user_id === job.driver_id) : null;
     return jsonResponse({
       id: job.id,
-      clientId: job.client_id,
-      driverId: job.driver_id,
-      serviceType: job.service_type,
-      vehicleType: job.vehicle_type,
-      vehicleDetails: job.vehicle_details,
-      pickupLocation: job.pickup_location,
-      pickupLat: job.pickup_lat,
-      pickupLng: job.pickup_lng,
+      clientId: job.client_id || job.clientId,
+      client_id: job.client_id || job.clientId,
+      driverId: job.driver_id || job.driverId,
+      driver_id: job.driver_id || job.driverId,
+      clientName: job.client_name || job.clientName || "Cliente",
+      clientPhone: job.client_phone || job.clientPhone || "+1 800-555-0102",
+      driverName: job.driver_name || job.driverName || driverUser?.name || "Carlos Rivera",
+      serviceType: job.service_type || job.serviceType,
+      service_type: job.service_type || job.serviceType,
+      vehicleType: job.vehicle_type || job.vehicleType || "Sedan",
+      vehicleDetails: job.vehicle_details || job.vehicleDetails || "Standard",
+      pickupLocation: job.pickup_location || job.pickupLocation,
+      pickup_location: job.pickup_location || job.pickupLocation,
+      pickupLat: Number(job.pickup_lat || job.pickupLat || 25.7617),
+      pickup_lat: Number(job.pickup_lat || job.pickupLat || 25.7617),
+      pickupLng: Number(job.pickup_lng || job.pickupLng || -80.1918),
+      pickup_lng: Number(job.pickup_lng || job.pickupLng || -80.1918),
       destination: job.destination,
-      destLat: job.dest_lat,
-      destLng: job.dest_lng,
+      destLat: job.dest_lat ? Number(job.dest_lat) : job.destLat ? Number(job.destLat) : null,
+      dest_lat: job.dest_lat ? Number(job.dest_lat) : job.destLat ? Number(job.destLat) : null,
+      destLng: job.dest_lng ? Number(job.dest_lng) : job.destLng ? Number(job.destLng) : null,
+      dest_lng: job.dest_lng ? Number(job.dest_lng) : job.destLng ? Number(job.destLng) : null,
       status: job.status,
-      amount: job.amount,
-      agreedPrice: job.agreed_price,
+      amount: Number(job.amount || 85),
+      agreedPrice: Number(job.agreed_price || job.agreedPrice || job.amount || 85),
+      agreed_price: Number(job.agreed_price || job.agreedPrice || job.amount || 85),
+      photos: Array.isArray(job.photos) ? job.photos : [],
       notes: job.notes,
-      createdAt: job.created_at,
-      driver: driverProfile ? {
-        id: driverProfile.user_id,
-        name: driverUser?.name || "Carlos Rivera",
+      createdAt: job.created_at || job.createdAt,
+      driver: job.driver_id ? {
+        id: job.driver_id,
+        name: job.driver_name || job.driverName || driverUser?.name || "Carlos Rivera",
         phone: driverUser?.phone || "+1 800-555-0100",
         avatar: driverUser?.avatar || null,
-        vehicle: driverProfile.vehicle || "Flatbed Tow Truck",
-        licensePlate: driverProfile.license_plate || "TOW-777",
-        latitude: driverProfile.latitude || 25.7617,
-        longitude: driverProfile.longitude || -80.1918,
-        heading: driverProfile.heading || 0,
-        speed: driverProfile.speed || 0,
-        rating: driverProfile.rating || 5
+        vehicle: driverProfile?.vehicle || "Flatbed Tow Truck",
+        licensePlate: driverProfile?.license_plate || "TOW-777",
+        latitude: Number(driverProfile?.latitude || 25.7617),
+        longitude: Number(driverProfile?.longitude || -80.1918),
+        heading: Number(driverProfile?.heading || 0),
+        speed: Number(driverProfile?.speed || 0),
+        rating: Number(driverProfile?.rating || 5)
       } : null
     }, 200, origin);
   }
@@ -2975,16 +3204,137 @@ async function handleApiRequest(request, url, env, secret, origin) {
     const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
     if (job) {
       if (body.status) job.status = body.status;
+      if (Array.isArray(body.completionPhotos)) {
+        job.completion_photos = body.completionPhotos;
+      }
+      job.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+      broadcastWs("job_status", { jobId: job.id, status: job.status });
       return jsonResponse({ success: true, status: job.status }, 200, origin);
     }
     return jsonResponse({ error: "Job not found" }, 404, origin);
   }
   if (path === "/api/jobs" && method === "POST") {
     const jobData = await request.json();
-    const id = crypto.randomUUID();
-    const job = { id, ...jobData, status: "pending", created_at: (/* @__PURE__ */ new Date()).toISOString() };
-    MEMORY_DB.jobs.push(job);
-    return jsonResponse(job, 201, origin);
+    const id = "job-" + Date.now();
+    const clientId = authUser?.id || jobData.clientId || jobData.client_id || "client-demo-id";
+    const clientName = authUser?.name || jobData.clientName || jobData.client_name || "Cliente";
+    const clientPhone = authUser?.phone || jobData.clientPhone || jobData.client_phone || "+1 800-555-0102";
+    const newJob = {
+      id,
+      client_id: clientId,
+      clientId,
+      driver_id: null,
+      driverId: null,
+      client_name: clientName,
+      clientName,
+      client_phone: clientPhone,
+      clientPhone,
+      service_type: jobData.serviceType || jobData.service_type || "tow",
+      serviceType: jobData.serviceType || jobData.service_type || "tow",
+      vehicle_type: jobData.vehicleType || jobData.vehicle_type || "Sedan",
+      vehicleType: jobData.vehicleType || jobData.vehicle_type || "Sedan",
+      vehicle_details: jobData.vehicleDetails || jobData.vehicle_details || "Standard",
+      vehicleDetails: jobData.vehicleDetails || jobData.vehicle_details || "Standard",
+      pickup_location: jobData.pickupLocation || jobData.pickup_location || "Current Location",
+      pickupLocation: jobData.pickupLocation || jobData.pickup_location || "Current Location",
+      pickup_lat: Number(jobData.pickupLat || jobData.pickup_lat || 25.7617),
+      pickupLat: Number(jobData.pickupLat || jobData.pickup_lat || 25.7617),
+      pickup_lng: Number(jobData.pickupLng || jobData.pickup_lng || -80.1918),
+      pickupLng: Number(jobData.pickupLng || jobData.pickup_lng || -80.1918),
+      destination: jobData.destination || null,
+      dest_lat: jobData.destLat ? Number(jobData.destLat) : jobData.dest_lat ? Number(jobData.dest_lat) : null,
+      destLat: jobData.destLat ? Number(jobData.destLat) : jobData.dest_lat ? Number(jobData.dest_lat) : null,
+      dest_lng: jobData.destLng ? Number(jobData.destLng) : jobData.dest_lng ? Number(jobData.dest_lng) : null,
+      destLng: jobData.destLng ? Number(jobData.destLng) : jobData.dest_lng ? Number(jobData.dest_lng) : null,
+      amount: Number(jobData.amount || 85),
+      agreed_price: Number(jobData.amount || 85),
+      agreedPrice: Number(jobData.amount || 85),
+      status: "pending",
+      photos: Array.isArray(jobData.photos) ? jobData.photos : [],
+      notes: jobData.notes || "",
+      created_at: (/* @__PURE__ */ new Date()).toISOString(),
+      createdAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    MEMORY_DB.jobs.unshift(newJob);
+    broadcastWs("new_job", newJob);
+    return jsonResponse(newJob, 201, origin);
+  }
+  if (path === "/api/stripe/create-job-checkout" && method === "POST") {
+    try {
+      const { jobId } = await request.json();
+      const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
+      if (!job) return jsonResponse({ error: "Job not found" }, 404, origin);
+      const isNegotiating = job.status === "negotiating";
+      const returnStatus = isNegotiating ? "success_negotiating" : "success";
+      const sessionId = "cs_demo_" + Date.now();
+      const successUrl = `/track?payment=${returnStatus}&job_id=${job.id}&session_id=${sessionId}`;
+      const amt = Number(job.agreed_price || job.amount || 85);
+      const fee = Math.round(amt * 0.2 * 100) / 100;
+      const payout = amt - fee;
+      const payRecord = {
+        id: "pay-" + Date.now(),
+        job_id: job.id,
+        client_id: job.client_id || authUser?.id || "client-demo-id",
+        driver_id: job.driver_id || "driver-demo-id",
+        service_type: job.service_type || "tow",
+        amount: amt,
+        platform_fee: fee,
+        driver_payout: payout,
+        method: "card",
+        card_last4: "4242",
+        status: "completed",
+        created_at: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      MEMORY_DB.payments.unshift(payRecord);
+      if (isNegotiating) {
+        job.status = "en_route";
+        broadcastWs("job_status", { jobId: job.id, status: "en_route" });
+      }
+      return jsonResponse({ url: successUrl, sessionId, success: true }, 200, origin);
+    } catch (e) {
+      return jsonResponse({ error: "Payment initialization failed" }, 400, origin);
+    }
+  }
+  if (path === "/api/stripe/verify-session" && method === "GET") {
+    return jsonResponse({ success: true, payment_status: "paid" }, 200, origin);
+  }
+  if (path === "/api/payments/methods") {
+    if (!MEMORY_DB.payment_methods) {
+      MEMORY_DB.payment_methods = [
+        { id: "pm-1", type: "card", brand: "visa", last4: "4242", expMonth: 12, expYear: 2028, isDefault: true },
+        { id: "pm-2", type: "card", brand: "mastercard", last4: "8888", expMonth: 10, expYear: 2027, isDefault: false }
+      ];
+    }
+    if (method === "GET") {
+      return jsonResponse(MEMORY_DB.payment_methods, 200, origin);
+    }
+    if (method === "POST") {
+      try {
+        const body = await request.json();
+        const last4 = (body.cardNumber || "4242").slice(-4);
+        const newMethod = {
+          id: "pm-" + Date.now(),
+          type: "card",
+          brand: "visa",
+          last4,
+          expMonth: 12,
+          expYear: 2029,
+          isDefault: MEMORY_DB.payment_methods.length === 0
+        };
+        MEMORY_DB.payment_methods.push(newMethod);
+        return jsonResponse(newMethod, 201, origin);
+      } catch (e) {
+        return jsonResponse({ error: "Failed to add card" }, 400, origin);
+      }
+    }
+  }
+  if (path.startsWith("/api/payments/methods/") && method === "DELETE") {
+    const parts = path.split("/");
+    const pmId = parts[4];
+    if (MEMORY_DB.payment_methods) {
+      MEMORY_DB.payment_methods = MEMORY_DB.payment_methods.filter((pm) => pm.id !== pmId);
+    }
+    return jsonResponse({ success: true }, 200, origin);
   }
   if (path === "/api/payments/my") {
     const userPayments = authUser ? MEMORY_DB.payments.filter((p) => p.client_id === authUser.id) : MEMORY_DB.payments;

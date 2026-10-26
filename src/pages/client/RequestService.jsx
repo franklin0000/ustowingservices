@@ -21,7 +21,7 @@ export default function RequestService() {
   const [matching, setMatching] = useState(false)
   const [matched,  setMatched]  = useState(false)
   const [nearbyDrivers, setNearbyDrivers] = useState([])
-  const { createJob, getQuote, geocode, fetchNearbyDrivers, uploadJobPhoto } = useApp()
+  const { createJob, getQuote, geocode, fetchNearbyDrivers, uploadJobPhoto, getMyJobs } = useApp()
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
@@ -150,7 +150,7 @@ export default function RequestService() {
       if (form.service === 'cleaning') finalDetails = `Property: ${form.propertyType} | ${finalDetails}`
       if (form.service === 'windshield') finalDetails = `Glass Damage: ${form.glassDamage} | ${finalDetails}`
 
-      await createJob({
+      const created = await createJob({
         serviceType:     form.service,
         vehicleType:     form.vehicleType || 'none',
         vehicleDetails:  finalDetails,
@@ -164,18 +164,59 @@ export default function RequestService() {
         notes:           form.notes,
         photos:          form.photos,
       })
-      
+
+      let transitioned = false
+      let pollInterval = null
+
+      const onMatched = (driverName = 'Your Provider', eta = 8) => {
+        if (transitioned) return
+        transitioned = true
+        if (pollInterval) clearInterval(pollInterval)
+        try { unsubAcc(); } catch (e) {}
+        try { unsubNeg(); } catch (e) {}
+        try { unsubStatus(); } catch (e) {}
+
+        setMatching(false)
+        setMatched(true)
+        addNotification({
+          type: 'job',
+          title: 'Provider Assigned!',
+          message: `${driverName} has accepted your request. Navigation starting...`
+        })
+        setTimeout(() => navigate('/track'), 1200)
+      }
+
       const unsubAcc = onEvent('job_accepted', (data) => {
-        setMatching(false); setMatched(true)
-        addNotification({ type: 'job', title: 'Provider Assigned!', message: `${data.driver.name} is on the way. ETA: ${data.eta} min` })
-        unsubAcc(); setTimeout(() => navigate('/track'), 2000)
+        onMatched(data?.driver?.name || 'Your Provider', data?.eta || 8)
       })
 
       const unsubNeg = onEvent('job_negotiating', (data) => {
-        setMatching(false); setMatched(true)
-        addNotification({ type: 'job', title: 'Provider Available!', message: `${data.driver.name} is ready to negotiate.` })
-        unsubNeg(); setTimeout(() => navigate('/track'), 2000)
+        onMatched(data?.driver?.name || 'Your Provider', 8)
       })
+
+      const unsubStatus = onEvent('job_status', (data) => {
+        if (['accepted', 'negotiating', 'en_route', 'arrived', 'in_service'].includes(data?.status)) {
+          onMatched(data?.driver?.name || 'Your Provider', 8)
+        }
+      })
+
+      // Immediate & resilient 1.5-second background polling fallback
+      pollInterval = setInterval(async () => {
+        try {
+          const myJobs = await getMyJobs()
+          if (Array.isArray(myJobs)) {
+            const active = myJobs.find(j =>
+              (j.id === created?.id || (!created?.id && j.status !== 'completed' && j.status !== 'cancelled')) &&
+              (j.driver_id || j.driverId || ['accepted', 'negotiating', 'en_route', 'arrived', 'in_service'].includes(j.status))
+            )
+            if (active) {
+              onMatched(active.driverName || active.driver?.name || 'Your Provider', 8)
+            }
+          }
+        } catch (e) {
+          // ignore network polling hiccups
+        }
+      }, 1500)
     } catch (err) { setMatching(false); alert('Failed: ' + err.message) }
   }
 

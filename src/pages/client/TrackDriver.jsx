@@ -57,15 +57,22 @@ export default function TrackDriver() {
 
       try {
         const jobs = await getMyJobs()
-        const active = jobs.find(j =>
+        const active = (Array.isArray(jobs) ? jobs : []).find(j =>
           ['accepted', 'negotiating', 'en_route', 'arrived', 'in_service', 'matched'].includes(j.status)
         )
         if (active) {
+          if (!active.driverId && active.driver_id) active.driverId = active.driver_id
           setActiveReq(active)
+          if (active.driver) {
+            setDriver(active.driver)
+            if (active.driver.latitude && active.driver.longitude) {
+              setDriverLoc({ lat: Number(active.driver.latitude), lng: Number(active.driver.longitude) })
+            }
+          }
           jobsApi.get(active.id).then(full => {
-            if (full.driver) {
+            if (full?.driver) {
               setDriver(full.driver)
-              setDriverLoc({ lat: full.driver.latitude, lng: full.driver.longitude })
+              setDriverLoc({ lat: Number(full.driver.latitude), lng: Number(full.driver.longitude) })
             }
           }).catch(() => {})
         }
@@ -191,7 +198,7 @@ export default function TrackDriver() {
   )
 
   /* ── Empty state ── */
-  if (!activeReq || !activeReq.driverId) return (
+  if (!activeReq || (!activeReq.driverId && !activeReq.driver_id)) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
         <Navigation className="w-10 h-10 text-gray-300" />
