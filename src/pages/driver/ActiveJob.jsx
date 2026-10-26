@@ -198,11 +198,34 @@ export default function ActiveJob() {
       
       {/* ── Background Full-Screen Map ── */}
       <div className="absolute inset-0 z-0">
-        <MapView markers={[
-          { lat: job.pickupLat, lng: job.pickupLng, type: 'client', label: 'Pickup', sublabel: job.pickupLocation },
-          ...(driverLoc ? [{ lat: driverLoc.lat, lng: driverLoc.lng, type: 'driver', label: 'You' }] : []),
-          ...(job.destLat ? [{ lat: job.destLat, lng: job.destLng, type: 'destination', label: 'Dropoff', sublabel: job.destination }] : [])
-        ]} className="h-full w-full !border-none !rounded-none" zoom={14} />
+        <MapView
+          markers={[
+            ...(job && (job.pickupLat || job.pickup_lat) && !isNaN(job.pickupLat || job.pickup_lat) ? [{
+              lat: Number(job.pickupLat || job.pickup_lat),
+              lng: Number(job.pickupLng || job.pickup_lng),
+              type: 'client',
+              label: 'Punto de recogida',
+              sublabel: job.pickupLocation || job.pickup_location
+            }] : []),
+            ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng) ? [{
+              lat: Number(driverLoc.lat),
+              lng: Number(driverLoc.lng),
+              type: 'driver',
+              label: 'Tú'
+            }] : []),
+            ...(job && (job.destLat || job.dest_lat) && !isNaN(job.destLat || job.dest_lat) ? [{
+              lat: Number(job.destLat || job.dest_lat),
+              lng: Number(job.destLng || job.dest_lng),
+              type: 'destination',
+              label: 'Destino',
+              sublabel: job.destination
+            }] : [])
+          ]}
+          center={driverLoc ? [driverLoc.lat, driverLoc.lng] : (job?.pickupLat ? [Number(job.pickupLat), Number(job.pickupLng)] : undefined)}
+          onLocationFound={(coords) => setDriverLoc(coords)}
+          className="h-full w-full !border-none !rounded-none"
+          zoom={14}
+        />
       </div>
 
       {/* ── Overlay UI (Floating Elements) ── */}

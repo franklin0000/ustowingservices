@@ -161,17 +161,43 @@ export default function TrackDriver() {
 
   const statusInfo = STATUS_CONFIG[activeReq.status] || STATUS_CONFIG.accepted
   const markers = [
-    { lat: activeReq.pickupLat, lng: activeReq.pickupLng, type: 'client', label: 'Pickup', sublabel: activeReq.pickupLocation },
-    ...(driverLoc ? [{ lat: driverLoc.lat, lng: driverLoc.lng, type: 'driver', label: driver?.name || 'Driver' }] : []),
-    ...(activeReq.destLat ? [{ lat: activeReq.destLat, lng: activeReq.destLng, type: 'destination', label: 'Dropoff', sublabel: activeReq.destination }] : [])
+    ...(activeReq && (activeReq.pickupLat || activeReq.pickup_lat) && !isNaN(activeReq.pickupLat || activeReq.pickup_lat) ? [{
+      lat: Number(activeReq.pickupLat || activeReq.pickup_lat),
+      lng: Number(activeReq.pickupLng || activeReq.pickup_lng),
+      type: 'client',
+      label: 'Recogida',
+      sublabel: activeReq.pickupLocation || activeReq.pickup_location
+    }] : []),
+    ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng) ? [{
+      lat: Number(driverLoc.lat),
+      lng: Number(driverLoc.lng),
+      type: 'driver',
+      label: driver?.name || 'Conductor'
+    }] : []),
+    ...(activeReq && (activeReq.destLat || activeReq.dest_lat) && !isNaN(activeReq.destLat || activeReq.dest_lat) ? [{
+      lat: Number(activeReq.destLat || activeReq.dest_lat),
+      lng: Number(activeReq.destLng || activeReq.dest_lng),
+      type: 'destination',
+      label: 'Destino',
+      sublabel: activeReq.destination
+    }] : [])
   ]
+
+  const trackCenter = driverLoc
+    ? [driverLoc.lat, driverLoc.lng]
+    : (activeReq?.pickupLat ? [Number(activeReq.pickupLat), Number(activeReq.pickupLng)] : undefined)
 
   return (
     <div className="fixed inset-0 bg-gray-900 overflow-hidden">
       
       {/* ── Background Full-Screen Map ── */}
       <div className="absolute inset-0 z-0">
-        <MapView markers={markers} className="w-full h-full !rounded-none !border-none" zoom={14} />
+        <MapView
+          markers={markers}
+          center={trackCenter}
+          className="w-full h-full !rounded-none !border-none"
+          zoom={14}
+        />
       </div>
 
       {/* ── Overlay UI (Floating Elements) ── */}

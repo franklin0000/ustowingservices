@@ -9,7 +9,7 @@ import MapView from '../../components/MapView'
 import { motion } from 'framer-motion'
 
 export default function AvailableJobs() {
-  const { getAvailableJobs, acceptJob, getDriverProfile } = useApp()
+  const { getAvailableJobs, acceptJob, getDriverProfile, updateLocation } = useApp()
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
   const [jobs, setJobs] = useState([])
@@ -19,22 +19,29 @@ export default function AvailableJobs() {
   useEffect(() => {
     getAvailableJobs().then(j => { setJobs(Array.isArray(j) ? j : []); setLoaded(true) }).catch(() => setLoaded(true))
     
-    // Get real GPS location
+    // Get real GPS location with high accuracy
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setDriverLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setDriverLoc(coords)
+          if (updateLocation) updateLocation(coords.lat, coords.lng).catch(() => {})
+        },
         () => {
           // Fallback to profile if GPS fails
           getDriverProfile().then(p => {
-            if (p?.latitude && p?.longitude) {
-              setDriverLoc({ lat: p.latitude, lng: p.longitude })
+            if (p?.latitude && p?.longitude && !isNaN(p.latitude) && !isNaN(p.longitude)) {
+              setDriverLoc({ lat: Number(p.latitude), lng: Number(p.longitude) })
             }
           }).catch(() => {})
-        }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
       )
     } else {
       getDriverProfile().then(p => {
-        if (p?.latitude && p?.longitude) setDriverLoc({ lat: p.latitude, lng: p.longitude })
+        if (p?.latitude && p?.longitude && !isNaN(p.latitude) && !isNaN(p.longitude)) {
+          setDriverLoc({ lat: Number(p.latitude), lng: Number(p.longitude) })
+        }
       }).catch(() => {})
     }
 
@@ -61,9 +68,21 @@ export default function AvailableJobs() {
   )
 
   const mapMarkers = [
-    ...(driverLoc ? [{ lat: driverLoc.lat, lng: driverLoc.lng, type: 'driver', label: 'You' }] : []),
-    ...jobs.map(j => ({ lat: j.pickupLat, lng: j.pickupLng, type: 'client', label: j.clientName, sublabel: j.pickupLocation }))
+    ...(driverLoc && !isNaN(driverLoc.lat) && !isNaN(driverLoc.lng)
+      ? [{ lat: Number(driverLoc.lat), lng: Number(driverLoc.lng), type: 'driver', label: 'Tú (Conductor)' }]
+      : []),
+    ...jobs
+      .filter(j => j && !isNaN(j.pickupLat || j.pickup_lat) && !isNaN(j.pickupLng || j.pickup_lng))
+      .map(j => ({
+        lat: Number(j.pickupLat || j.pickup_lat),
+        lng: Number(j.pickupLng || j.pickup_lng),
+        type: 'client',
+        label: j.clientName || j.client_name || 'Cliente',
+        sublabel: j.pickupLocation || j.pickup_location
+      }))
   ]
+
+  const mapCenter = driverLoc ? [driverLoc.lat, driverLoc.lng] : undefined
 
   return (
     <div className="space-y-6 lg:grid lg:grid-cols-5 lg:gap-8 lg:space-y-0 h-full">
@@ -78,7 +97,12 @@ export default function AvailableJobs() {
         {/* Map on mobile/tablet (hidden on lg) */}
         {jobs.length > 0 && (
           <div className="h-64 rounded-2xl overflow-hidden shadow-md lg:hidden shrink-0 border border-gray-800">
-            <MapView markers={mapMarkers} className="h-full" />
+            <MapView
+              markers={mapMarkers}
+              center={mapCenter}
+              onLocationFound={(coords) => setDriverLoc(coords)}
+              className="h-full"
+            />
           </div>
         )}
 
@@ -165,7 +189,12 @@ export default function AvailableJobs() {
       {/* ── Right Column: Map (lg+ only) ── */}
       <div className="hidden lg:block lg:col-span-2 relative h-[calc(100vh-8rem)]">
         <div className="sticky top-24 h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-800">
-          <MapView markers={mapMarkers} className="h-full" />
+          <MapView
+            markers={mapMarkers}
+            center={mapCenter}
+            onLocationFound={(coords) => setDriverLoc(coords)}
+            className="h-full"
+          />
         </div>
       </div>
 

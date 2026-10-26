@@ -2663,7 +2663,29 @@ async function handleApiRequest(request, url, env, secret, origin) {
     return jsonResponse({ success: true }, 200, origin);
   }
   if (path === "/api/drivers/active-job") {
-    return jsonResponse(null, 200, origin);
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const job = MEMORY_DB.jobs.find((j) => j.driver_id === u?.id && ["accepted", "negotiating", "en_route", "arrived", "in_service"].includes(j.status));
+    if (!job) return jsonResponse(null, 200, origin);
+    return jsonResponse({
+      id: job.id,
+      clientId: job.client_id,
+      clientName: job.client_name,
+      clientPhone: job.client_phone,
+      serviceType: job.service_type,
+      vehicleType: job.vehicle_type,
+      vehicleDetails: job.vehicle_details,
+      pickupLocation: job.pickup_location,
+      pickupLat: job.pickup_lat,
+      pickupLng: job.pickup_lng,
+      destination: job.destination,
+      destLat: job.dest_lat,
+      destLng: job.dest_lng,
+      amount: job.amount,
+      agreedPrice: job.agreed_price,
+      status: job.status,
+      notes: job.notes,
+      createdAt: job.created_at
+    }, 200, origin);
   }
   if (path === "/api/drivers/earnings") {
     const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
@@ -2784,10 +2806,69 @@ async function handleApiRequest(request, url, env, secret, origin) {
     return jsonResponse({ success: true, kycStatus: "approved" }, 200, origin);
   }
   if (path === "/api/jobs/my" && method === "GET") {
-    return jsonResponse([], 200, origin);
+    const u = authUser || MEMORY_DB.users[0];
+    const myJobs = MEMORY_DB.jobs.filter((j) => j.client_id === u?.id || j.driver_id === u?.id);
+    return jsonResponse(myJobs, 200, origin);
   }
   if (path === "/api/jobs/available" && method === "GET") {
-    return jsonResponse([], 200, origin);
+    const available = MEMORY_DB.jobs.filter((j) => j.status === "pending" || !j.driver_id).map((j) => ({
+      id: j.id,
+      clientId: j.client_id,
+      clientName: j.client_name,
+      clientPhone: j.client_phone,
+      serviceType: j.service_type,
+      vehicleType: j.vehicle_type,
+      vehicleDetails: j.vehicle_details,
+      pickupLocation: j.pickup_location,
+      pickupLat: j.pickup_lat,
+      pickupLng: j.pickup_lng,
+      destination: j.destination,
+      destLat: j.dest_lat,
+      destLng: j.dest_lng,
+      amount: j.amount,
+      agreedPrice: j.agreed_price,
+      status: j.status,
+      notes: j.notes,
+      createdAt: j.created_at
+    }));
+    return jsonResponse(available, 200, origin);
+  }
+  if (path.startsWith("/api/jobs/") && path.endsWith("/accept") && (method === "POST" || method === "PUT")) {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    const u = authUser || MEMORY_DB.users.find((usr) => usr.role === "driver");
+    const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
+    if (job) {
+      job.driver_id = u?.id || "driver-demo-id";
+      job.driver_name = u?.name || "Carlos Rivera";
+      job.status = "en_route";
+      return jsonResponse({
+        id: job.id,
+        clientId: job.client_id,
+        clientName: job.client_name,
+        serviceType: job.service_type,
+        pickupLocation: job.pickup_location,
+        pickupLat: job.pickup_lat,
+        pickupLng: job.pickup_lng,
+        destination: job.destination,
+        destLat: job.dest_lat,
+        destLng: job.dest_lng,
+        status: job.status,
+        amount: job.amount
+      }, 200, origin);
+    }
+    return jsonResponse({ error: "Job not found" }, 404, origin);
+  }
+  if (path.startsWith("/api/jobs/") && path.endsWith("/status") && (method === "PUT" || method === "POST")) {
+    const parts = path.split("/");
+    const jobId = parts[3];
+    const body = await request.json().catch(() => ({}));
+    const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
+    if (job) {
+      if (body.status) job.status = body.status;
+      return jsonResponse({ success: true, status: job.status }, 200, origin);
+    }
+    return jsonResponse({ error: "Job not found" }, 404, origin);
   }
   if (path === "/api/jobs" && method === "POST") {
     const jobData = await request.json();

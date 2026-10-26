@@ -71,7 +71,8 @@ export default function RequestService() {
           } catch (err) {}
           setForm(f => ({ ...f, lat, lng, location: f.location || address }))
         },
-        () => {}
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
       )
     }
   }, [])
@@ -195,11 +196,14 @@ export default function RequestService() {
       <p className="text-gray-500 text-sm mb-6">Pinging 100% verified professionals nearby</p>
       <div className="w-full h-48 rounded-2xl overflow-hidden shadow-inner border border-gray-200">
         <MapView 
-          center={form.lat ? [form.lat, form.lng] : [19.4284, -99.1676]}
+          center={form.lat && form.lng ? [Number(form.lat), Number(form.lng)] : [25.7617, -80.1918]}
           markers={[
-            ...(form.lat ? [{ lat: form.lat, lng: form.lng, type: 'client', label: 'You' }] : []),
-            ...nearbyDrivers.map(d => ({ lat: d.latitude, lng: d.longitude, type: 'nearby_driver', label: d.name }))
+            ...(form.lat && form.lng ? [{ lat: Number(form.lat), lng: Number(form.lng), type: 'client', label: 'Tú' }] : []),
+            ...nearbyDrivers
+              .filter(d => d && !isNaN(d.latitude) && !isNaN(d.longitude))
+              .map(d => ({ lat: Number(d.latitude), lng: Number(d.longitude), type: 'nearby_driver', label: d.name }))
           ]}
+          onLocationFound={(coords) => setForm(f => ({ ...f, lat: coords.lat, lng: coords.lng }))}
           className="h-full" 
         />
       </div>
@@ -275,11 +279,14 @@ export default function RequestService() {
               {/* Live Map Preview */}
               <div className="mt-8 rounded-3xl overflow-hidden border border-gray-200 shadow-soft h-[250px] sm:h-[300px] relative">
                 <MapView 
-                  center={form.lat ? [form.lat, form.lng] : [19.4284, -99.1676]}
+                  center={form.lat && form.lng ? [Number(form.lat), Number(form.lng)] : [25.7617, -80.1918]}
                   markers={[
-                    ...(form.lat ? [{ lat: form.lat, lng: form.lng, type: 'client', label: 'You' }] : []),
-                    ...nearbyDrivers.map(d => ({ lat: d.latitude, lng: d.longitude, type: 'nearby_driver', label: d.name }))
+                    ...(form.lat && form.lng ? [{ lat: Number(form.lat), lng: Number(form.lng), type: 'client', label: 'Tú' }] : []),
+                    ...nearbyDrivers
+                      .filter(d => d && !isNaN(d.latitude) && !isNaN(d.longitude))
+                      .map(d => ({ lat: Number(d.latitude), lng: Number(d.longitude), type: 'nearby_driver', label: d.name }))
                   ]}
+                  onLocationFound={(coords) => setForm(f => ({ ...f, lat: coords.lat, lng: coords.lng }))}
                   className="h-full w-full" 
                 />
                 <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-2xl p-3 sm:p-4 shadow-lg border border-white/50 flex items-center justify-between">
