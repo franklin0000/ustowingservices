@@ -140,7 +140,7 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-gray-900 mb-4">Monthly Revenue</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.monthlyStats}>
+              <BarChart data={data.monthlyStats || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" /><XAxis dataKey="month" tick={{ fontSize: 13 }} /><YAxis tick={{ fontSize: 13 }} tickFormatter={v => `$${v / 1000}k`} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} formatter={(v) => [`$${v.toLocaleString()}`, 'Revenue']} />
                 <Bar dataKey="revenue" fill="#2563eb" radius={[6, 6, 0, 0]} />

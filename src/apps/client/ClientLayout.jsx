@@ -50,7 +50,7 @@ export default function ClientLayout() {
 
             <div className="flex items-center gap-2 pl-2 border-l border-gray-100">
               <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {(user?.name || 'User').split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
               {/* Show name on md+ */}
               <span className="hidden md:block text-sm font-semibold text-gray-800">{user?.name}</span>

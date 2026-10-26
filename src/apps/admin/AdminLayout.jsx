@@ -49,7 +49,7 @@ export default function AdminLayout() {
 
             <div className="flex items-center gap-3 pl-3 border-l border-gray-700">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md border border-purple-400/20">
-                {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {(user?.name || 'Admin').split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
               <div className="hidden md:block">
                 <p className="text-sm font-semibold text-gray-200">{user?.name}</p>

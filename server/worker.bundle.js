@@ -2802,7 +2802,7 @@ async function handleApiRequest(request, url, env, secret, origin) {
   if (path === "/api/notifications") {
     return jsonResponse([], 200, origin);
   }
-  if (path === "/api/admin/dashboard" && method === "GET") {
+  if ((path === "/api/admin/dashboard" || path === "/api/admin/metrics") && method === "GET") {
     const activeDriversList = MEMORY_DB.driver_profiles.map((dp) => {
       const u = MEMORY_DB.users.find((usr) => usr.id === dp.user_id) || {};
       return {

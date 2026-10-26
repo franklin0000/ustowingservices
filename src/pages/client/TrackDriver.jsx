@@ -224,7 +224,7 @@ export default function TrackDriver() {
                     {driver.avatar ? (
                       <img src={driver.avatar} alt="Driver" className="w-full h-full object-cover" />
                     ) : (
-                      driver.name?.split(' ').map(n => n[0]).join('').slice(0, 2)
+                      (driver.name || 'Driver').split(' ').map(n => n[0]).join('').slice(0, 2)
                     )}
                   </div>
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full shadow border border-gray-100 flex items-center gap-1 text-[10px] font-bold">

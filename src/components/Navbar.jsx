@@ -63,7 +63,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
           <div className="w-8 h-8 bg-brand-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-            {user?.name?.split(' ').map(n => n[0]).join('')}
+            {(user?.name || 'User').split(' ').map(n => n[0]).join('')}
           </div>
           <div className="hidden md:block">
             <p className="text-sm font-semibold text-gray-800">{user?.name}</p>

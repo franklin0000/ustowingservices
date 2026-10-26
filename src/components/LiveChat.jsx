@@ -86,7 +86,7 @@ export default function LiveChat({ jobId, otherPartyName, otherPartyAvatar, onCl
                 {otherPartyAvatar ? (
                   <img src={otherPartyAvatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  otherPartyName?.split(' ').map(n => n[0]).join('').slice(0, 2) || <User className="w-5 h-5" />
+                  (otherPartyName || 'User').split(' ').map(n => n[0]).join('').slice(0, 2)
                 )}
               </div>
               <div>

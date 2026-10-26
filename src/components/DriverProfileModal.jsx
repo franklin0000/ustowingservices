@@ -63,7 +63,7 @@ export default function DriverProfileModal({ driverId, isOpen, onClose }) {
                 {profile.avatar ? (
                   <img src={profile.avatar} alt="Driver" className="w-full h-full object-cover" />
                 ) : (
-                  profile.name?.split(' ').map(n => n[0]).join('').slice(0, 2)
+                  (profile.name || 'Driver').split(' ').map(n => n[0]).join('').slice(0, 2)
                 )}
               </div>
               <h3 className="font-bold text-xl text-gray-900">{profile.name}</h3>

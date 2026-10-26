@@ -7,6 +7,7 @@ import { AppProvider } from './context/AppContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { registerSW } from 'virtual:pwa-register'
+import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
 // Register PWA service worker
@@ -16,16 +17,18 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '568574805136-
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <AuthProvider>
-          <AppProvider>
-            <NotificationProvider>
-              <App />
-            </NotificationProvider>
-          </AppProvider>
-        </AuthProvider>
-      </GoogleOAuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <AuthProvider>
+            <AppProvider>
+              <NotificationProvider>
+                <App />
+              </NotificationProvider>
+            </AppProvider>
+          </AuthProvider>
+        </GoogleOAuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 )

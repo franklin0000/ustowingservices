@@ -67,7 +67,7 @@ export default function DriverLayout() {
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2)
+                  (user?.name || 'Driver').split(' ').map(n => n[0]).join('').slice(0, 2)
                 )}
               </div>
               <span className="hidden md:block text-sm font-semibold text-gray-200">{user?.name}</span>

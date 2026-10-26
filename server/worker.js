@@ -1054,7 +1054,7 @@ async function handleApiRequest(request, url, env, secret, origin) {
   }
 
   // 12. Admin Dashboard & Settings
-  if (path === '/api/admin/dashboard' && method === 'GET') {
+  if ((path === '/api/admin/dashboard' || path === '/api/admin/metrics') && method === 'GET') {
     const activeDriversList = MEMORY_DB.driver_profiles.map(dp => {
       const u = MEMORY_DB.users.find(usr => usr.id === dp.user_id) || {};
       return {

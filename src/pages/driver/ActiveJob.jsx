@@ -240,7 +240,7 @@ export default function ActiveJob() {
                 {job.clientAvatar ? (
                   <img src={job.clientAvatar} alt="Client" className="w-full h-full object-cover" />
                 ) : (
-                  job.clientName?.split(' ').map(n => n[0]).join('').slice(0, 2)
+                  (job.clientName || 'Client').split(' ').map(n => n[0]).join('').slice(0, 2)
                 )}
               </div>
               <div className="flex-1">
