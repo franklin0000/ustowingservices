@@ -2331,6 +2331,18 @@ var worker_default = {
       if (res.status === 404 && request.method === "GET" && !url.pathname.includes(".")) {
         res = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
       }
+      const isHtmlOrSw = url.pathname === "/" || url.pathname.endsWith(".html") || url.pathname === "/sw.js" || url.pathname.startsWith("/registerSW") || !url.pathname.includes(".") && request.method === "GET";
+      if (isHtmlOrSw && res && (res.status === 200 || res.status === 304)) {
+        const newHeaders = new Headers(res.headers);
+        newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+        newHeaders.set("Pragma", "no-cache");
+        newHeaders.set("Expires", "0");
+        return new Response(res.body, {
+          status: res.status,
+          statusText: res.statusText,
+          headers: newHeaders
+        });
+      }
       return res;
     }
     return new Response("Not Found", { status: 404 });

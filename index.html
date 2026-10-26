@@ -15,6 +15,28 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
+    <script>
+      (function() {
+        const CURRENT_VERSION = 'v2.1.0-fix-markers';
+        const stored = localStorage.getItem('app_pwa_version_tag');
+        if (stored && stored !== CURRENT_VERSION) {
+          if ('caches' in window) {
+            caches.keys().then(function(keys) {
+              for (let k of keys) caches.delete(k);
+            });
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              for (let r of regs) r.unregister();
+            });
+          }
+          localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
+          window.location.reload(true);
+        } else {
+          localStorage.setItem('app_pwa_version_tag', CURRENT_VERSION);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -10,8 +10,19 @@ import { registerSW } from 'virtual:pwa-register'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
-// Register PWA service worker
-registerSW({ immediate: true })
+// Register PWA service worker with immediate refresh on update
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    updateSW(true)
+  },
+  onRegistered(r) {
+    if (r) {
+      r.update()
+      setInterval(() => r.update(), 60 * 1000)
+    }
+  }
+})
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '568574805136-l54avvs7tem537hsai3s768i227mul5s.apps.googleusercontent.com'
 

@@ -33,6 +33,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
+      },
       includeAssets: ['logo-192.png', 'logo-512.png'],
       manifest: {
         name: 'US Towing Services',
