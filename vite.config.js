@@ -35,6 +35,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
+        cacheId: 'ustowingservices-v4',
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

@@ -2336,23 +2336,38 @@ var worker_default = {
     if (env?.ASSETS) {
       try {
         const isSpaRoute = !url.pathname.includes(".") && !url.pathname.startsWith("/api/") && !url.pathname.startsWith("/ws");
+        const isIndexHtml = url.pathname === "/index.html" || url.pathname === "/";
         let res;
-        if (isSpaRoute) {
-          res = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), {
+        if (isSpaRoute || isIndexHtml) {
+          const indexUrl = new URL("/", request.url);
+          indexUrl.search = url.search;
+          const cleanHeaders = new Headers(request.headers);
+          cleanHeaders.delete("if-none-match");
+          cleanHeaders.delete("if-modified-since");
+          cleanHeaders.set("Accept", "text/html");
+          res = await env.ASSETS.fetch(new Request(indexUrl, {
             method: "GET",
-            headers: { "Accept": "text/html" }
+            headers: cleanHeaders
           }));
         } else {
           res = await env.ASSETS.fetch(request);
           if (res.status === 404 && !url.pathname.includes(".")) {
-            res = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), {
+            const indexUrl = new URL("/", request.url);
+            const cleanHeaders = new Headers(request.headers);
+            cleanHeaders.delete("if-none-match");
+            cleanHeaders.delete("if-modified-since");
+            cleanHeaders.set("Accept", "text/html");
+            res = await env.ASSETS.fetch(new Request(indexUrl, {
               method: "GET",
-              headers: { "Accept": "text/html" }
+              headers: cleanHeaders
             }));
           }
         }
-        const isHtmlOrSw = url.pathname === "/" || url.pathname.endsWith(".html") || url.pathname === "/sw.js" || url.pathname.startsWith("/registerSW") || isSpaRoute;
-        if (isHtmlOrSw && res) {
+        if (res && res.status >= 300 && res.status < 400) {
+          return res;
+        }
+        const isHtmlOrSw = isIndexHtml || url.pathname.endsWith(".html") || url.pathname === "/sw.js" || url.pathname.startsWith("/registerSW") || isSpaRoute;
+        if (isHtmlOrSw && res && res.status === 200) {
           const newHeaders = new Headers(res.headers);
           newHeaders.set("Content-Type", url.pathname.endsWith(".js") ? "application/javascript" : "text/html; charset=utf-8");
           newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
@@ -2363,9 +2378,6 @@ var worker_default = {
             statusText: "OK",
             headers: newHeaders
           });
-        }
-        if (res && res.status === 304) {
-          return res;
         }
         return res;
       } catch (err) {

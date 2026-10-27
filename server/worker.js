@@ -523,31 +523,52 @@ export default {
     if (env?.ASSETS) {
       try {
         const isSpaRoute = !url.pathname.includes('.') && !url.pathname.startsWith('/api/') && !url.pathname.startsWith('/ws');
+        const isIndexHtml = url.pathname === '/index.html' || url.pathname === '/';
         
         let res;
-        if (isSpaRoute) {
-          // For all SPA navigation routes, fetch /index.html unconditionally with clean headers
-          res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), {
+        if (isSpaRoute || isIndexHtml) {
+          // Cloudflare Assets serves index.html at root '/'.
+          // Fetching '/index.html' directly triggers a 307 redirect to '/'.
+          // Fetch root '/' with query params, removing conditional headers so we always get full 200 OK HTML payload.
+          const indexUrl = new URL('/', request.url);
+          indexUrl.search = url.search;
+          const cleanHeaders = new Headers(request.headers);
+          cleanHeaders.delete('if-none-match');
+          cleanHeaders.delete('if-modified-since');
+          cleanHeaders.set('Accept', 'text/html');
+
+          res = await env.ASSETS.fetch(new Request(indexUrl, {
             method: 'GET',
-            headers: { 'Accept': 'text/html' }
+            headers: cleanHeaders
           }));
         } else {
           res = await env.ASSETS.fetch(request);
           if (res.status === 404 && !url.pathname.includes('.')) {
-            res = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), {
+            const indexUrl = new URL('/', request.url);
+            const cleanHeaders = new Headers(request.headers);
+            cleanHeaders.delete('if-none-match');
+            cleanHeaders.delete('if-modified-since');
+            cleanHeaders.set('Accept', 'text/html');
+            res = await env.ASSETS.fetch(new Request(indexUrl, {
               method: 'GET',
-              headers: { 'Accept': 'text/html' }
+              headers: cleanHeaders
             }));
           }
         }
 
-        const isHtmlOrSw = url.pathname === '/' || 
+        // If ASSETS returned any redirect (301, 302, 307, 308) or 304 Not Modified, pass it through directly!
+        // NEVER convert a redirect or 304 into a 200 with empty body!
+        if (res && res.status >= 300 && res.status < 400) {
+          return res;
+        }
+
+        const isHtmlOrSw = isIndexHtml || 
                            url.pathname.endsWith('.html') || 
                            url.pathname === '/sw.js' || 
                            url.pathname.startsWith('/registerSW') ||
                            isSpaRoute;
 
-        if (isHtmlOrSw && res) {
+        if (isHtmlOrSw && res && res.status === 200) {
           const newHeaders = new Headers(res.headers);
           newHeaders.set('Content-Type', url.pathname.endsWith('.js') ? 'application/javascript' : 'text/html; charset=utf-8');
           newHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -558,10 +579,6 @@ export default {
             statusText: 'OK',
             headers: newHeaders
           });
-        }
-
-        if (res && res.status === 304) {
-          return res;
         }
 
         return res;
