@@ -2050,10 +2050,10 @@ var MEMORY_DB = {
     {
       id: "job-104",
       client_id: "client-demo-id",
-      driver_id: null,
+      driver_id: "99df741a-2495-4dad-9718-cbab7d71baf5",
       client_name: "Juan Perez",
       client_phone: "+1 800-555-0103",
-      driver_name: null,
+      driver_name: "Frank Familia",
       service_type: "lockout",
       vehicle_type: "Truck",
       vehicle_details: "Ford F-150 (Silver)",
@@ -2065,11 +2065,11 @@ var MEMORY_DB = {
       dest_lng: null,
       amount: 85,
       agreed_price: 85,
-      status: "pending",
-      rating: null,
+      status: "completed",
+      rating: 5,
       notes: "Keys locked inside running engine",
-      created_at: new Date(Date.now() - 18e5).toISOString(),
-      completed_at: null
+      created_at: new Date(Date.now() - 36e5 * 3).toISOString(),
+      completed_at: new Date(Date.now() - 36e5 * 2).toISOString()
     },
     {
       id: "job-105",
@@ -3226,6 +3226,7 @@ async function handleApiRequest(request, url, env, secret, origin) {
     const job = MEMORY_DB.jobs.find((j) => j.id === jobId);
     if (job) {
       if (body.status) job.status = body.status;
+      if (body.status === "completed") job.completed_at = (/* @__PURE__ */ new Date()).toISOString();
       if (Array.isArray(body.completionPhotos)) {
         job.completion_photos = body.completionPhotos;
       }
